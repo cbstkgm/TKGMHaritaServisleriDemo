@@ -70,3 +70,4 @@
 /Users/erdem/Desktop/owsLab/owsLab/obj/Debug/net8.0/owsLab.pdb
 /Users/erdem/Desktop/owsLab/owsLab/obj/Debug/net8.0/owsLab.genruntimeconfig.cache
 /Users/erdem/Desktop/owsLab/owsLab/obj/Debug/net8.0/ref/owsLab.dll
+/Users/erdem/MyPage/owsLab/owsLab/obj/Debug/net8.0/owsLab.sourcelink.json

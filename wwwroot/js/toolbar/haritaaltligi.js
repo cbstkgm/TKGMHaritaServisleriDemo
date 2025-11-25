@@ -64,10 +64,9 @@ var tkgmParcelsLayer = L.tileLayer.wms("https://cbsservis.tkgm.gov.tr/tkgm.ows/w
     version: '1.1.1',
     attribution: "TKGM"
 });
-console.log("katman eklendi1");
-alert("katman eklendi2");
+
 document.getElementById("tkgm-parcels").addEventListener("change", function() {
-    console.log("katman eklendi");
+
     if(this.checked) {
         tkgmParcelsLayer.addTo(map);
     } else {
