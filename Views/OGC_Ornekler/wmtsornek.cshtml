@@ -1,0 +1,347 @@
+@{
+Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OGC WMTS Eğitim ve Fayans Harita Portalı</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #333; }
+        .navbar { background: linear-gradient(135deg, #2980b9 0%, #3498db 100%); }
+        .map-container { height: 600px; width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border: 2px solid #e0e0e0; z-index: 1; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card-header { background-color: #fff; border-bottom: 1px solid #eee; font-weight: 600; color: #2980b9; }
+        .code-block { background-color: #2d2d2d; color: #e74c3c; padding: 15px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 0.85rem; overflow-x: auto; white-space: pre-wrap; }
+        .param-badge { background-color: #e0f7fa; color: #00bcd4; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: bold; }
+        
+        #loading-indicator { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background: rgba(255,255,255,0.9); padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2); text-align: center; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="#">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-grid-3x3-gap me-2" viewBox="0 0 16 16">
+                <path d="M4 2v2H2V2zm1 1h2v2H5zm0 2h2v2H5zm1 1h2v2H7zm-5 1h2v2H2zm-1 1h2v2H1zm3 1h2v2H4zm-1 1h2v2H1zm6 0h2v2H7zm-3 1h2v2H4zm-2 1h2v2H2zm9-11v2h-2V2zm1 1h2v2h-2zm-2 1h2v2h-2zm-1 1h2v2h-2zm4-3v2h-2V2zm1 1h2v2h-2zm-3 1h2v2h-2zm-1 1h2v2h-2z"/>
+            </svg>
+            OGC WMTS (Fayans) Portalı
+        </a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-4">
+
+            <div class="card">
+                <div class="card-header">
+                    📚 WMTS Nedir? (Web Map Tile Service)
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">WMTS, WMS gibi harita görüntüsü sunar, ancak performansı artırmak için haritayı önceden oluşturulmuş **fayanslar (tiles)** halinde sunar. Harita tarayıcıda daha hızlı yüklenir.</p>
+                    <hr />
+                    <h6>Temel Parametreler:</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-1"><span class="param-badge">SERVICE</span>: WMTS</li>
+                        <li class="mb-1"><span class="param-badge">REQUEST</span>: GetTile (Fayansı getir)</li>
+                        <li class="mb-1"><span class="param-badge">LAYER</span>: Katman Adı</li>
+                        <li class="mb-1"><span class="param-badge">TILEMATRIXSET</span>: Koordinat Sistemi/Fayans Düzeni</li>
+                        <li class="mb-1"><span class="param-badge">TILEMATRIX</span>: Zoom Seviyesi (Z)</li>
+                        <li class="mb-1"><span class="param-badge">TILEROW / TILECOL</span>: Fayans Konumu (Y/X)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card bg-light">
+                <div class="card-header">
+                    ⚙️ WMTS Servis Ayarları
+                </div>
+                <div class="card-body">
+                    <form id="wmtsForm">
+                        <div class="mb-3">
+                            <label for="wmtsUrlSelect" class="form-label fw-bold">WMTS Servis URL</label>
+                            <select class="form-select" id="wmtsUrlSelect">
+                                <option value="https://services.arcgisonline.com/arcgis/rest/services/World_Street_Map/MapServer/WMTS">ArcGIS Online (World Street Map)</option>
+                                <option value="https://tiles.maps.eox.at/wmtsc">EOX Satellite Map (Global)</option>
+                                <option value="https://tile.openstreetmap.org">OpenStreetMap (Geleneksel Tile Servisi)</option>
+                            </select>
+                            <input type="text" class="form-control mt-2" id="wmtsUrlInput" value="https://services.arcgisonline.com/arcgis/rest/services/World_Street_Map/MapServer/WMTS" readonly>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="layerName" class="form-label fw-bold">Katman (Layer)</label>
+                            <input type="text" class="form-control" id="layerName" value="World_Street_Map" disabled>
+                            <div class="form-text small" id="layerInfo">Seçili WMTS servisine özel katman adları burada görünecektir.</div>
+                        </div>
+
+                        <div class="mb-3">
+                             <label for="tileMatrixSet" class="form-label fw-bold">TileMatrixSet (Koordinat Sistemi)</label>
+                             <select class="form-select" id="tileMatrixSet">
+                                 <option value="default028mm" selected>default028mm (ArcGIS Varsayılan)</option>
+                                 <option value="g">g (EOX/Global)</option>
+                                 <option value="EPSG:3857">EPSG:3857 (Web Mercator - Popüler)</option>
+                             </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                             <label for="outputFormat" class="form-label fw-bold">Format (Image Format)</label>
+                             <select class="form-select" id="outputFormat">
+                                 <option value="image/png" selected>image/png (Şeffaf/Detaylı)</option>
+                                 <option value="image/jpeg">image/jpeg (Daha Küçük Dosya Boyutu)</option>
+                             </select>
+                        </div>
+                        
+                        <div class="alert alert-info mt-3 small p-2">
+                             ℹ️ **Bilgi:** WMTS servislerinde harita verisi, Leaflet'e **URL Şablonu** olarak tanımlanır. Harita hareket ettikçe, Leaflet dinamik olarak WMTS servisine fayans isteği gönderir.
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-primary" onclick="loadWmtsLayer()">
+                                WMTS Fayans Katmanını Yükle
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>🗺️ WMTS Harita Görünümü (Fayanslar)</span>
+                    <span class="badge bg-primary" id="currentZoom">Zoom: 4</span>
+                </div>
+                <div class="card-body p-0 position-relative">
+                    <div id="loading-indicator">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <div>Fayanslar Yükleniyor...</div>
+                    </div>
+                    <div id="map" class="map-container"></div>
+                </div>
+                <div class="card-footer text-muted small">
+                    Harita üzerinde gezinirken ve yakınlaşırken, alttaki URL'in **TILEMATRIX (Z)**, **TILEROW (Y)** ve **TILECOL (X)** parametrelerinin nasıl değiştiğini gözlemleyiniz.
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    💻 Örnek WMTS GetTile İstek URL Şablonu
+                </div>
+                <div class="card-body bg-dark p-0">
+                    <div class="code-block" id="requestCode">
+                        WMTS URL şablonu burada gösterilecektir.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="text-center py-4 text-muted mt-5 border-top">
+    <div class="container">
+        <p class="mb-0">owsLab - WMTS Fayans Harita Entegrasyon Demosu</p>
+    </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // ---------------------------------------------------------
+    // 1. HARİTA BAŞLATMA
+    // ---------------------------------------------------------
+    var map = L.map('map').setView([40.0, 35.0], 4); 
+
+    // OpenStreetMap baz katmanı (Geleneksel TMS)
+    var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(map);
+
+    var wmtsLayer = null; 
+
+    // Harita hareketini ve zoom seviyesini dinle
+    map.on('zoomend', updateRequestCode);
+    map.on('moveend', updateRequestCode);
+    
+    function updateZoomDisplay() {
+        document.getElementById('currentZoom').innerText = `Zoom: ${map.getZoom()}`;
+    }
+    map.on('zoomend', updateZoomDisplay);
+    updateZoomDisplay();
+
+
+    // ---------------------------------------------------------
+    // 2. WMTS SERVİS SEÇİM MANTIĞI
+    // ---------------------------------------------------------
+    
+    document.getElementById('wmtsUrlSelect').addEventListener('change', function() {
+        var selectedVal = this.value;
+        var inputUrl = document.getElementById('wmtsUrlInput');
+        var layerInput = document.getElementById('layerName');
+        var matrixSetSelect = document.getElementById('tileMatrixSet');
+
+        inputUrl.value = selectedVal;
+        
+        // Dropdown'ları servise göre güncelle
+        matrixSetSelect.innerHTML = '';
+        if (selectedVal.includes('arcgis')) {
+            layerInput.value = 'World_Street_Map';
+            matrixSetSelect.innerHTML = `<option value="default028mm" selected>default028mm (ArcGIS Varsayılan)</option><option value="WebMercator_Aux_Sphere">WebMercator_Aux_Sphere</option>`;
+            map.setView([40.0, -98.0], 4);
+        } else if (selectedVal.includes('eox')) {
+            layerInput.value = 's2cloudless';
+            matrixSetSelect.innerHTML = `<option value="g" selected>g (Global)</option>`;
+            map.setView([0, 0], 2);
+        } else if (selectedVal.includes('openstreetmap')) {
+             layerInput.value = 'osm'; // Geleneksel TMS olduğu için
+             matrixSetSelect.innerHTML = `<option value="OSM_TMS" selected>OSM_TMS (Geleneksel TMS)</option>`;
+             alert("OpenStreetMap, OGC WMTS standardı değil, geleneksel TMS/ZXY kullanır. Sadece örnek amaçlı dahil edilmiştir.");
+             map.setView([40.0, 35.0], 4);
+        }
+        
+        // Yeni seçim yapıldığında mevcut WMTS katmanını temizle
+        if (wmtsLayer) map.removeLayer(wmtsLayer);
+        wmtsLayer = null;
+        updateRequestCode();
+    });
+
+
+    // ---------------------------------------------------------
+    // 3. WMTS KATMANINI YÜKLEME FONKSİYONU
+    // ---------------------------------------------------------
+    function loadWmtsLayer() {
+        const baseUrl = document.getElementById('wmtsUrlInput').value;
+        const layerName = document.getElementById('layerName').value;
+        const matrixSet = document.getElementById('tileMatrixSet').value;
+        const format = document.getElementById('outputFormat').value;
+
+        // OpenStreetMap özel durumu: Bu bir WMTS değil, TMS'dir.
+        if (baseUrl.includes('openstreetmap')) {
+            alert("Seçilen OpenStreetMap, OGC WMTS standardında değil, geleneksel TMS/ZXY yapısındadır. Lütfen diğer servisleri deneyiniz.");
+            // Yine de Leaflet'in TileLayer'ı ile yükleyelim
+            if (wmtsLayer) map.removeLayer(wmtsLayer);
+            wmtsLayer = L.tileLayer(baseUrl + '/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+            updateRequestCode();
+            return;
+        }
+
+        // WMTS URL Şablonu oluşturma
+        // Arcgis ve EOX gibi bazı servisler WMTS standardını biraz farklı URL yapılarıyla kullanır.
+        let tileUrlTemplate;
+
+        // Standart OGC WMTS GetTile şablonu (Z/Y/X yerine TileMatrix/Row/Col)
+        const wmtsParams = [
+            'SERVICE=WMTS',
+            'REQUEST=GetTile',
+            'VERSION=1.0.0',
+            `LAYER=${layerName}`,
+            `TILEMATRIXSET=${matrixSet}`,
+            `TILEMATRIX={z}`, // Leaflet'te {z} zoom'a denk gelir
+            `TILEROW={y}`,    // Leaflet'te {y} satıra denk gelir
+            `TILECOL={x}`,    // Leaflet'te {x} sütuna denk gelir
+            `FORMAT=${format}`
+        ].join('&');
+
+        // ArcGIS WMTS servisi genellikle REST veya benzeri bir yapıda gelir
+        if (baseUrl.includes('arcgis')) {
+            // ArcGIS Online'ın WMTS'i için özel endpoint yapısı
+            tileUrlTemplate = baseUrl.replace('/WMTS', '/tile/1.0.0') + 
+                              `/${layerName}/default/${matrixSet}/{z}/{y}/{x}?${wmtsParams}`;
+            
+            // Genelde ArcGIS WMTS'de TILEMATRIXSET ve LAYER URL içinde belirtildiği için parametreleri sadeleştirelim
+            tileUrlTemplate = baseUrl + `/tile/1.0.0/${layerName}/${matrixSet}/{z}/{y}/{x}?FORMAT=${format}&SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0`;
+
+        } else if (baseUrl.includes('eox')) {
+             // EOX'un standart WMTS'i
+             tileUrlTemplate = `${baseUrl}?${wmtsParams}`;
+        } else {
+             // Diğer standart sunucular için
+             tileUrlTemplate = `${baseUrl}?${wmtsParams}`;
+        }
+
+
+        // Eski katmanı temizle
+        if (wmtsLayer) map.removeLayer(wmtsLayer);
+        
+        // WMTS katmanını ekle (Leaflet'in WMTS desteği için hafifçe adapte edilmiş TileLayer kullanılır)
+        wmtsLayer = L.tileLayer(tileUrlTemplate, {
+            attribution: 'WMTS Layer | Zoom: {z}, Row: {y}, Col: {x}',
+            maxZoom: 18,
+            minZoom: 0
+        }).addTo(map);
+
+        updateRequestCode(tileUrlTemplate);
+        document.getElementById('loading-indicator').style.display = 'none';
+
+        // Varsayılan OSM katmanını kaldır ki WMTS net görünsün
+        if (map.hasLayer(osmLayer)) map.removeLayer(osmLayer);
+        
+        // İlk fayansları yüklemek için harita hareketini simüle et
+        map.fire('moveend');
+    }
+
+    
+    // ---------------------------------------------------------
+    // 4. İSTEK URL'İNİ GÜNCELLEME (Mevcut Harita Durumuna Göre)
+    // ---------------------------------------------------------
+    function updateRequestCode(templateUrl) {
+        const requestCodeElement = document.getElementById('requestCode');
+        
+        // Eğer template URL fonksiyon çağrısında gelmediyse, mevcut WMTS layer'dan al
+        const currentTemplate = templateUrl || (wmtsLayer ? wmtsLayer.getTileUrl({x: 0, y: 0, z: 0}).replace('/0/0/0', '/{z}/{y}/{x}') : "Lütfen WMTS katmanını yükleyiniz.");
+
+        const currentZoom = map.getZoom();
+
+        // Haritanın ortasındaki fayansı hesaplayarak örnek bir URL oluşturma (Sadece görselleştirme için)
+        if (wmtsLayer && !currentTemplate.includes('openstreetmap')) {
+            const centerPoint = map.latLngToContainerPoint(map.getCenter());
+            const tileSize = 256; // Standart fayans boyutu
+            
+            // Tile x ve y indekslerini hesapla (basit Leaflet/TMS mantığı)
+            const mapPixelOrigin = map.getPixelOrigin();
+            const tileX = Math.floor((centerPoint.x + mapPixelOrigin.x) / tileSize);
+            const tileY = Math.floor((centerPoint.y + mapPixelOrigin.y) / tileSize);
+            
+            // TILEMATRIX={z}, TILEROW={y}, TILECOL={x} değerlerini gerçek değerlerle değiştirerek örnek bir URL oluştur.
+            let exampleUrl = currentTemplate
+                .replace(/{z}/g, currentZoom)
+                .replace(/{y}/g, tileY)
+                .replace(/{x}/g, tileX);
+                
+            // Not: ArcGIS URL'leri {y} ve {x} için özeldir. Eğer çok karmaşıklaşırsa sadece şablonu gösterelim.
+            if (exampleUrl.includes('{z}') || exampleUrl.includes('{y}') || exampleUrl.includes('{x}')) {
+                 // Eğer hala yer tutucular varsa, sadece şablonu göster.
+                 requestCodeElement.innerText = currentTemplate;
+            } else {
+                 // Başarılı bir örnek URL oluştuysa, onu göster.
+                 requestCodeElement.innerText = "Şablon:\n" + currentTemplate + "\n\n" + 
+                                                "Örnek Fayans İsteği (Z,Y,X ile):\n" + decodeURIComponent(exampleUrl);
+            }
+
+        } else {
+             requestCodeElement.innerText = currentTemplate;
+        }
+    }
+
+
+    // İlk yüklemede dropdown change olayını tetikleyerek varsayılan ayarları yükle
+    window.onload = function() {
+        document.getElementById('wmtsUrlSelect').dispatchEvent(new Event('change'));
+        // LoadWmtsLayer'ı manuel olarak çağırmayı kullanıcıya bırakalım.
+    };
+    
+</script>
+</body>
+</html>

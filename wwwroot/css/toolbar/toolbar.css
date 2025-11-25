@@ -1,0 +1,270 @@
+/* ==========================================================
+   TOP TOOLBAR
+   ========================================================== */
+#top-toolbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px; /* YÜKSEKLİK ARTTIRILDI: 50px yerine 60px */
+    background: #222;
+    color: white;
+    display: flex;
+    align-items: flex-end; /* Sekmeleri alta hizalar */
+    gap: 4px; /* Sekmeler arasında boşluk bırakılır */
+    padding: 0 10px;
+    z-index: 9999;
+    border-bottom: none; /* Sekme çizgisi direkt butonlarda verilecektir */
+}
+
+.tool-btn {
+    /* Sekme Temel Stili */
+    background: #34495e; /* Koyu arka plan */
+    color: #ecf0f1; /* Açık yazı */
+    border: none;
+    padding: 12px 20px; /* Daha fazla dolgu */
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 10px 10px 0 0; /* KENAR YUVARLAŞTIRMA: Üst köşeler 10px */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: none;
+    transition: background 0.3s, color 0.3s, transform 0.2s;
+    height: 50px; /* Sekmenin kendi yüksekliği (topbar'dan biraz kısa) */
+    position: relative;
+    bottom: 0;
+}
+
+.tool-btn:hover {
+    /* Fare Üzerindeyken Stili */
+    background: #4a6682; /* Hafif koyu ton */
+    color: #efd606;
+    transform: translateY(-3px); /* Daha belirgin yukarı kayma efekti */
+}
+
+.tool-btn.active {
+    /* Aktif Sekme Stili */
+    background: white; /* Beyaz veya ana renk */
+    color: #ea082a; /* Mavi yazı rengi */
+    font-weight: bold;
+    transform: translateY(0); /* Aktifken kayma yok */
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2); /* Üstte belirgin gölge */
+    z-index: 10000;
+    height: 55px; /* Aktif sekme biraz daha uzun olur */
+    margin-bottom: 0;
+    border-top: 3px solid #ea0d27; /* Mavi vurgu üst çizgi */
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    border-bottom: 0px solid white; /* Sekmenin alta oturması için beyaz çizgi */
+}
+
+.tool-btn.active:hover {
+    background: white;
+    color: #e30726;
+    transform: none;
+}
+
+/* ==========================================================
+   SIDE PANELS (GENEL)
+   ========================================================== */
+.side-panel {
+    position: absolute;
+    left: -320px;
+    top: 50px;
+    width: 300px;
+    height: calc(100% - 90px);
+    background: white;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+    z-index: 9998;
+    transition: left .3s;
+}
+
+.side-panel.show {
+    left: 0;
+}
+
+.side-panel-right {
+    position: absolute;
+    right: -420px;
+    top: 50px;
+    width: 400px;
+    height: calc(100% - 90px);
+    background: rgba(248, 249, 250, 0.7) !important; /* Tam şeffaf */
+    box-shadow: none !important;; /* Gölgeyi kaldır */
+    z-index: 9998;
+    transition: right .3s;
+}
+
+.side-panel-right.show {
+    right: 0;
+}
+
+.panel-header {
+    background: #222;
+    color: white;
+    padding: 10px;
+}
+
+.panel-content {
+    padding: 10px;
+}
+
+/* ==========================================================
+   LEFT PANEL - KATMANLAR PANELİ
+   ========================================================== */
+#left-layer-panel {
+    position: absolute;
+    left: -320px;
+    top: 50px;
+    width: 300px;
+    height: calc(100% - 90px);
+    background: rgba(248, 249, 250, 0.7) !important; /* Tam şeffaf */
+    box-shadow: none !important;; /* Gölgeyi kaldır */
+    z-index: 9998;
+    transition: left 0.3s ease-in-out;
+    border-radius: 0 8px 8px 0;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+
+#left-layer-panel.show {
+    left: 0;
+}
+
+#left-layer-panel .panel-header {
+    background: #343a40;
+    color: white;
+    padding: 12px 15px;
+    font-size: 18px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #495057;
+}
+
+#left-layer-panel .panel-content {
+    padding: 10px 12px;
+}
+
+/* Tabs */
+#left-layer-panel .nav-tabs {
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 10px;
+}
+
+#left-layer-panel .nav-tabs .nav-link {
+    font-size: 14px;
+    font-weight: 500;
+    color: #495057 ;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 4px 4px 0 0;
+    transition: background 0.2s, color 0.2s;
+}
+
+#left-layer-panel .nav-tabs .nav-link:hover {
+    background: #e9ecef;
+    color: #212529;
+}
+
+#left-layer-panel .nav-tabs .nav-link.active {
+    background: #0078ff;
+    color: white;
+    font-weight: bold;
+}
+
+/* Tab content */
+#left-layer-panel .tab-content {
+    padding: 6px 0;
+}
+
+/* Input & button */
+#left-layer-panel input.form-control {
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    padding: 6px 10px;
+    transition: border 0.2s, box-shadow 0.2s;
+}
+
+#left-layer-panel input.form-control:focus {
+    border-color: #0078ff;
+    box-shadow: 0 0 4px rgba(0, 120, 255, 0.4);
+}
+
+#left-layer-panel button.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+#left-layer-panel button.btn:hover {
+    background-color: #005fcc;
+    color: white;
+    transform: scale(1.03);
+}
+
+/* Icons in tabs */
+.nav-link i {
+    font-size: 16px;
+    color: inherit;
+    transition: color 0.2s;
+}
+
+.nav-link:hover i {
+    color: #0078ff;
+}
+
+/* Basemap switch item */
+.basemap-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #0078ff;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}

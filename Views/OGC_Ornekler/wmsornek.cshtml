@@ -1,0 +1,769 @@
+@{
+Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OGC WMS Eğitim ve Demo Portalı + TKGM</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #333; }
+        .navbar { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); }
+        .map-container { height: 600px; width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border: 2px solid #e0e0e0; z-index: 1; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card-header { background-color: #fff; border-bottom: 1px solid #eee; font-weight: 600; color: #1e3c72; }
+        /* Kod bloğu stilini, BBOX çıktısını daha iyi göstermek için güncelledim */
+        .code-block { background-color: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 0.9rem; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+        .param-badge { background-color: #e3f2fd; color: #0d47a1; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: bold; }
+
+        /* --- Toggle Switch CSS (TKGM Butonu İçin) --- */
+        .basemap-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid #eee; }
+        .basemap-label { font-weight: 500; color: #555; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; margin-bottom: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #1e3c72; }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* --- Yeni Kontrol Stili (Koordinat ve Zoom) --- */
+        .leaflet-control-coordinates {
+            background: rgba(30, 60, 114, 0.9); /* #1e3c72 koyu mavi */
+            color: white;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 8px;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.5);
+        }
+        /* Yeni Katman Listesi Stili */
+        #availableLayersList .list-group-item:hover {
+            background-color: #f0f4f7;
+        }
+        #availableLayersList .list-group-item.active {
+            background-color: #d1e7dd; /* Light green/success color */
+            border-left: 4px solid #0f5132;
+        }
+        /* Yeni eklendi: Tıklama uyarısı */
+        .click-info {
+            font-size: 0.8rem;
+            color: #1e3c72;
+            font-weight: 500;
+            padding-top: 5px;
+        }
+        /* Iframe Stili */
+        #requestIframe {
+            width: 100%;
+            height: 400px;
+            border: none;
+            background-color: #fff;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="#">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-globe-americas me-2" viewBox="0 0 16 16">
+                <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0ZM2.04 4.326c.325 1.329 2.532 2.54 3.717 3.19.48.263.793.434.743.484-.08.08-.662.08-.82.079-.318-.002-.759.042-.998.237a1.12 1.12 0 0 0-.296.687l-.04.49c-.115 1.15.376 1.947 1.112 2.455.358.248.825.423 1.216.461.405.04.743-.037.774-.048a.45.45 0 0 0 .15-.083c.143-.11.123-.33.08-.573a2.22 2.22 0 0 0-.114-.452l-.114-.323c-.335-.95-.404-1.656-.166-2.477.026-.09.12-.226.256-.214.088.008.19.09.247.227.35.835 1.026 1.81 2.053 2.625.45.355 1.24.717 1.737.893.197.07.398.127.6.164a8 8 0 1 1-10.4-5.44Z"/>
+            </svg>
+            OGC WMS & TKGM Portalı
+        </a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-4">
+
+            <div class="card">
+                <div class="card-header">
+                    📚 WMS Nedir? (Web Map Service)
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">WMS, coğrafi verileri vektör (veri) olarak değil, sunucuda oluşturulmuş <strong>harita resmi (PNG, JPEG)</strong> olarak sunar. Veriler görselleştirilip gönderildiği için istemci tarafında işlem gücü gerektirmez.</p>
+                    <hr />
+                    <h6>Temel Parametreler:</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-1"><span class="param-badge">SERVICE</span>: WMS</li>
+                        <li class="mb-1"><span class="param-badge">REQUEST</span>: GetMap (Harita resmini getir)</li>
+                        <li class="mb-1"><span class="param-badge">LAYERS</span>: Katman Adı (Gösterilecek veri)</li>
+                        <li class="mb-1"><span class="param-badge">BBOX</span>: Harita Sınırları (Koordinatlar)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card bg-light">
+                <div class="card-header">
+                    ⚙️ Genel WMS Servis Ayarları
+                </div>
+                <div class="card-body">
+                    <form id="wmsForm">
+                        <div class="mb-3">
+                            <label for="wmsUrl" class="form-label fw-bold">WMS URL</label>
+                            <select class="form-select" id="wmsUrlSelect">
+                                <option value="custom">Özel URL Gir...</option>
+
+                                <option value="https://csb.gov.tr/map/rest/services/Planlama/MapServer/WMSServer" selected>🇹🇷 T.C. Çevre Şehircilik (Planlama)</option>
+                                <option value="https://cbsservis.tkgm.gov.tr/tkgm.ows/wms">🇹🇷 T.C. TKGM (Harita Servisleri)</option>
+
+                                <option value="https://creodias.sentinel-hub.com/ogc/wms/ceb32402-23c2-49af-b076-291771141151">🇪🇺 Copernicus (Sentinel-2 Uydu)</option>
+                                <option value="https://discomap.eea.europa.eu/arcgis/services/AAS_A2_UrbanAtlas_2018/MapServer/WMSServer">🇪🇺 EEA (Kentsel Atlas)</option>
+
+                                <option value="https://sedac.ciesin.columbia.edu/geoserver/wms">NASA SEDAC (Nüfus Yoğunluğu)</option>
+                                <option value="https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi">Iowa State (Hava Durumu Radarı)</option>
+                                <option value="https://ahocevar.com/geoserver/wms">Geoserver Demo (ABD Eyaletleri)</option>
+                                <option value="https://basemap.nationalmap.gov/arcgis/services/USGSTopo/MapServer/WMSServer">USGS Topo (ABD Topoğrafyası)</option>
+                                <option value="https://worldpop.arcgis.com/arcgis/services/WorldPop_Population_Density/MapServer/WMSServer">World Population Density (UN)</option>
+                                <option value="https://wms.met.no/wms">Weather Radar (Global)</option>
+                            </select>
+                            <input type="text" class="form-control mt-2" id="wmsUrlInput" value="https://csb.gov.tr/map/rest/services/Planlama/MapServer/WMSServer" readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="wmsRequestType" class="form-label fw-bold">WMS İşlem (REQUEST) Tipi</label>
+                            <select class="form-select" id="wmsRequestType" onchange="processWMSRequest(); updateRequestResultArea()">
+                                <option value="GetMap" selected>GetMap (Haritayı Ekle/Görüntüle)</option>
+                                <option value="GetCapabilities">GetCapabilities (Servis Bilgilerini Al)</option>
+                                <option value="GetFeatureInfo">GetFeatureInfo (Nokta Sorgulama Şablonu)</option>
+                                <option value="GetLegendGraphic">GetLegendGraphic (Lejant Resmini Al)</option>
+                                <option value="DescribeLayer">DescribeLayer (Katman Detaylarını Al)</option>
+                            </select>
+                            <div class="form-text text-danger small" id="mapWarning">
+                                Sadece **GetMap** haritaya katman ekler. Diğerleri URL oluşturup istek kodu alanında gösterilir.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="layerName" class="form-label fw-bold">Katman Adı (LAYERS)</label>
+                            <input type="text" class="form-control" id="layerName" value="Planlama:Planlar" oninput="updateRequestResultArea()">
+                        </div>
+
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="button" class="btn btn-primary" onclick="processWMSRequest()">
+                                İstek URL'ini Oluştur / Haritayı Güncelle
+                            </button>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-success" id="showRequestResultButton" disabled onclick="showRequestResultInIframe()">
+                                ⚙️ İstek Sonucunu Alan İçinde Göster
+                            </button>
+                            <div class="form-text text-muted small" id="describeLayerInfo">
+                                Bu buton sadece **GetMap** dışındaki OGC istekleri seçiliyken (ve gerekiyorsa Katman Adı girilmişken) aktif olur.
+                            </div>
+                        </div>
+                        
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    📑 Yayınlanan Katmanlar (LAYERS)
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush" id="availableLayersList">
+                    </ul>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    🇹🇷 Özel Yerel Katmanlar
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-2">Türkiye verileri için özel servisler.</p>
+
+                    <div class="basemap-item">
+                        <span class="basemap-label">TKGM Parseller (Sabit URL)</span>
+                        <label class="switch">
+                            <input type="checkbox" id="tkgm-parcels">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="text-muted small mt-1" style="font-size: 0.75rem;">
+                        ⚠️ Sadece yakınlaştırma (Zoom 15+) seviyesinde çalışır.
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>🗺️ Canlı Önizleme</span>
+                    <span class="badge bg-success">Map Ready</span>
+                </div>
+                <div class="card-body p-0">
+                    <div id="map" class="map-container"></div>
+                </div>
+                <div class="card-footer text-muted small">
+                    Harita altlığı: OpenStreetMap | Overlay: Leaflet WMS
+                    <p class="click-info mb-0">💡 İPUCU: Haritaya tıkladığınızda **BBOX** parametresi otomatik olarak güncellenecektir.</p>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    💻 Oluşan İstek (Request URL)
+                </div>
+                <div class="card-body bg-dark p-0">
+                    <div class="code-block" id="requestCode">
+                        Henüz bir istek yapılmadı...
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4" id="responseCard" style="display:none;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>📄 İstek Yanıtı (IFrame)</span>
+                    <span class="badge bg-info" id="responseFormat">XML/Metin</span>
+                </div>
+                <div class="card-body p-0">
+                    <iframe id="requestIframe"></iframe>
+                </div>
+                <div class="card-footer text-muted small" id="iframeMessage">
+                    İstek sonucunun tarayıcı tarafından desteklenen şekilde gösterimi.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="text-center py-4 text-muted mt-5 border-top">
+    <div class="container">
+        <p class="mb-0">owsLab - OGC Eğitim ve TKGM Entegrasyon Demosu</p>
+    </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+
+    // ---------------------------------------------------------
+    // WMS Katman Bilgileri ve Sabitler
+    // ---------------------------------------------------------
+
+    const WMS_LAYERS_MAP = {
+        "https://csb.gov.tr/map/rest/services/Planlama/MapServer/WMSServer": [
+            "Planlama:Planlar (Mekânsal Planlama)",
+            "Planlama:HaliHazirHaritalar (Halihazır)",
+            "Planlama:NazimImar (Nazım İmar)",
+            "Planlama:UygulamaImar (Uygulama İmar)"
+        ],
+        "https://cbsservis.tkgm.gov.tr/tkgm.ows/wms": [
+            "TKGM:parseller (Parsel Bilgileri - Zoom 15+)",
+            "TKGM:sinirlar (İdari Sınırlar)"
+        ],
+        "https://creodias.sentinel-hub.com/ogc/wms/ceb32402-23c2-49af-b076-291771141151": [
+            "SENTINEL2_L1C (Yüksek Çözünürlüklü Görüntü)",
+            "SENTINEL2_L2A (Yüzey Yansıtma)"
+        ],
+        "https://discomap.eea.europa.eu/arcgis/services/AAS_A2_UrbanAtlas_2018/MapServer/WMSServer": [
+            "UA2018_CLC2018_20m_v020 (Kentsel Alanlar)",
+            "CLC2018_v2018_20m (Arazi Örtüsü)"
+        ],
+        "https://sedac.ciesin.columbia.edu/geoserver/wms": [
+            "gpw-v3:gpw-v3-population-density-future-estimates_2015",
+            "gpw-v3:gpw-v3-population-count-future-estimates_2015"
+        ],
+        "https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi": [
+            "nexrad-n0r-900913 (Hava Radarı)",
+            "nexrad-n0r-900913-topo (Topoğrafyalı Hava Radarı)"
+        ],
+        "https://ahocevar.com/geoserver/wms": [
+            "topp:states (ABD Eyaletleri)",
+            "topp:capitals (ABD Başkentleri)"
+        ],
+        "https://basemap.nationalmap.gov/arcgis/services/USGSTopo/MapServer/WMSServer": [
+            "USGSTopo (Topoğrafya)",
+            "USGSHydroCached (Su Kaynakları)"
+        ],
+        "https://worldpop.arcgis.com/arcgis/services/WorldPop_Population_Density/MapServer/WMSServer": [
+            "WorldPop_Population_Density (Yoğunluk)",
+            "WorldPop_Population_Count (Sayım)"
+        ],
+        "https://wms.met.no/wms": [
+            "radarmet_europe_weather_radar_composite (Avrupa Hava Radarı)",
+            "sea_surface_temperature (Deniz Yüzey Sıcaklığı)"
+        ]
+    };
+
+    const INITIAL_COORDS = {
+        'TR': [39.93, 32.85], // Türkiye merkez
+        'EU': [50, 10],      // Avrupa merkez
+        'US': [40, -95],     // ABD merkez
+        'GLOBAL': [30, 0]
+    };
+
+    function listLayersForSelectedWMS(wmsUrl) {
+        const layerListElement = document.getElementById('availableLayersList');
+        layerListElement.innerHTML = '';
+        const layers = WMS_LAYERS_MAP[wmsUrl];
+
+        if (layers && layers.length > 0) {
+            layers.forEach(layer => {
+                const parts = layer.split(' ');
+                const layerName = parts[0];
+                const description = parts.slice(1).join(' ');
+
+                const listItem = document.createElement('li');
+                listItem.className = 'list-group-item list-group-item-action py-2 px-3 small';
+                listItem.style.cursor = 'pointer';
+
+                listItem.onclick = function() {
+                    document.getElementById('layerName').value = layerName;
+                    document.querySelectorAll('#availableLayersList .list-group-item').forEach(item => item.classList.remove('active'));
+                    listItem.classList.add('active');
+                    processWMSRequest(); // Otomatik güncelle
+                    updateRequestResultArea(); // Yeni katman seçilince butonu güncelle
+                };
+
+                listItem.innerHTML = `<span class="fw-bold text-primary">${layerName}</span> <br><span class="text-muted" style="font-size: 0.75rem;">${description}</span>`;
+                layerListElement.appendChild(listItem);
+            });
+        } else {
+            layerListElement.innerHTML = '<li class="list-group-item text-muted small">Bu WMS için statik katman bilgisi bulunmamaktadır. Lütfen Layer Adı alanına manuel giriniz.</li>';
+        }
+    }
+
+
+    // ---------------------------------------------------------
+    // Harita Başlatma ve Servis Güncelleme
+    // ---------------------------------------------------------
+    var map = L.map('map').setView(INITIAL_COORDS.TR, 6);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    var genericWmsLayer = null;
+
+    document.getElementById('wmsUrlSelect').addEventListener('change', function() {
+        var selectedVal = this.value;
+        var input = document.getElementById('wmsUrlInput');
+        var layerInput = document.getElementById('layerName');
+
+        let defaultLayer = '';
+        let view = INITIAL_COORDS.TR;
+        let zoom = 6;
+
+        if (selectedVal === 'custom') {
+            input.readOnly = false;
+            input.value = '';
+            layerInput.value = '';
+            input.focus();
+            view = INITIAL_COORDS.TR;
+            zoom = 6;
+        } else {
+            input.readOnly = true;
+            input.value = selectedVal;
+
+            if (selectedVal.includes('csb.gov.tr')) {
+                defaultLayer = 'Planlama:Planlar';
+            } else if (selectedVal.includes('tkgm.ows')) {
+                defaultLayer = 'TKGM:parseller';
+            } else if (selectedVal.includes('sentinel-hub.com')) {
+                defaultLayer = 'SENTINEL2_L1C';
+                view = INITIAL_COORDS.EU;
+            } else if (selectedVal.includes('eea.europa.eu')) {
+                defaultLayer = 'UA2018_CLC2018_20m_v020';
+                view = INITIAL_COORDS.EU;
+                zoom = 5;
+            } else if (selectedVal.includes('sedac') || selectedVal.includes('worldpop.arcgis.com')) {
+                defaultLayer = selectedVal.includes('sedac') ? 'gpw-v3:gpw-v3-population-density-future-estimates_2015' : 'WorldPop_Population_Density';
+                view = INITIAL_COORDS.GLOBAL;
+                zoom = 3;
+            } else if (selectedVal.includes('mesonet') || selectedVal.includes('ahocevar') || selectedVal.includes('basemap.nationalmap.gov')) {
+                defaultLayer = selectedVal.includes('mesonet') ? 'nexrad-n0r-900913' : (selectedVal.includes('ahocevar') ? 'topp:states' : 'USGSTopo');
+                view = INITIAL_COORDS.US;
+                zoom = 4;
+            } else if (selectedVal.includes('wms.met.no')) {
+                defaultLayer = 'radarmet_europe_weather_radar_composite';
+                view = [60, 10];
+                zoom = 4;
+            }
+            layerInput.value = defaultLayer;
+            map.setView(view, zoom);
+        }
+
+        listLayersForSelectedWMS(selectedVal);
+        processWMSRequest(); // URL değişince istek kodunu güncelle
+        updateRequestResultArea(); // URL değişince butonu güncelle
+    });
+
+    // ---------------------------------------------------------
+    // DescribeLayer Buton Yönetimi (YENİ FONKSİYONLAR)
+    // ---------------------------------------------------------
+
+    function getCleanBaseUrl(url) {
+        // URL'in sonundaki / veya ? işaretini kaldırır
+        if (url.endsWith('/') || url.endsWith('?')) {
+            return url.slice(0, -1);
+        }
+        return url;
+    }
+
+    // YENİ FONKSİYON: REQUEST tipine göre URL oluşturur (BBOX/I/J içermeyen temiz istekler için)
+    function createRequestUrl(requestType) {
+        const baseUrl = document.getElementById('wmsUrlInput').value;
+        const layerName = document.getElementById('layerName').value;
+
+        if (!baseUrl) return null;
+
+        const cleanUrl = getCleanBaseUrl(baseUrl);
+        let url = `${cleanUrl}?SERVICE=WMS&VERSION=1.1.1&REQUEST=${requestType}`;
+
+        // GetMap ve GetCapabilities dışındaki istekler Katman Adı (LAYERS/QUERY_LAYERS) gerektirir.
+        if (requestType !== 'GetCapabilities' && requestType !== 'GetMap') {
+            if (!layerName) return null;
+
+            if (requestType === 'DescribeLayer' || requestType === 'GetLegendGraphic') {
+                // GetLegendGraphic request için LAYER, DescribeLayer için LAYERS kullanılır.
+                url += `&LAYER=${layerName}`;
+            }
+            if (requestType === 'GetFeatureInfo') {
+                // GetFeatureInfo template'i, gerçek I/J ve BBOX olmadan sadece yapıyı göstermek için.
+                url += `&QUERY_LAYERS=${layerName}&INFO_FORMAT=text/html&I=50&J=50&BBOX=-1000,-1000,1000,1000&WIDTH=100&HEIGHT=100&SRS=EPSG:3857`;
+            }
+        }
+        return url;
+    }
+
+    // YENİ FONKSİYON: Butonun ve bilgi alanının durumunu günceller.
+    function updateRequestResultArea() {
+        const requestType = document.getElementById('wmsRequestType').value;
+        const layerName = document.getElementById('layerName').value;
+        const button = document.getElementById('showRequestResultButton');
+        const infoText = document.getElementById('describeLayerInfo');
+        const responseCard = document.getElementById('responseCard');
+        const responseFormatBadge = document.getElementById('responseFormat');
+
+        // Iframe alanını varsayılan olarak gizle
+        responseCard.style.display = 'none';
+
+        // GetMap dışındaki tüm istekler için butonu aktif hale getirmeye çalış
+        const isInteractiveRequest = (requestType === 'GetCapabilities' || requestType === 'DescribeLayer' || requestType === 'GetLegendGraphic' || requestType === 'GetFeatureInfo');
+        const requiresLayer = (requestType !== 'GetCapabilities'); // GetCapabilities hariç hepsi layer gerektirir.
+
+        let isButtonActive = isInteractiveRequest;
+
+        if (requiresLayer) {
+            isButtonActive = isButtonActive && (layerName.trim() !== '');
+        }
+
+        button.disabled = !isButtonActive;
+
+        // Butonun stilini ve açıklamasını güncelle
+        if (isButtonActive) {
+            button.classList.remove('btn-secondary');
+            button.classList.add('btn-success');
+
+            let formatText = 'XML/Metin';
+            if (requestType === 'GetCapabilities' || requestType === 'DescribeLayer') {
+                formatText = 'XML';
+            } else if (requestType === 'GetFeatureInfo') {
+                formatText = 'HTML/JSON';
+            } else if (requestType === 'GetLegendGraphic') {
+                formatText = 'PNG/GIF (Resim)';
+            }
+            responseFormatBadge.innerText = formatText;
+
+            infoText.innerHTML = `✅ Hazır: **${requestType}** isteği sonucu için butona tıklayınız. Tahmini Format: **${formatText}**.`;
+        } else {
+            button.classList.remove('btn-success');
+            button.classList.add('btn-secondary');
+            if (requestType === 'GetMap') {
+                infoText.innerHTML = `Bu buton **GetMap** haricindeki OGC istekleri için aktiftir.`;
+            } else {
+                infoText.innerHTML = `⚠️ Katman Adı (**LAYERS**) alanı boş olduğu için buton pasiftir.`;
+            }
+        }
+    }
+
+    // YENİ FONKSİYON: URL'i oluşturur ve iframe'e yükler.
+    function showRequestResultInIframe() {
+        const requestType = document.getElementById('wmsRequestType').value;
+        const url = createRequestUrl(requestType);
+        const iframe = document.getElementById('requestIframe');
+        const responseCard = document.getElementById('responseCard');
+        const iframeMessage = document.getElementById('iframeMessage');
+
+        if (url) {
+            // Kartı göster
+            responseCard.style.display = 'block';
+
+            // Iframe'i temizle ve yeni URL'i yükle
+            iframe.src = 'about:blank'; // Önceki içeriği temizlemek için
+            iframe.src = url;
+
+            let message = 'İstek sonucu tarayıcıda doğrudan gösterildi. (Tarayıcı, sunucudan dönen içeriğe göre bu alanı biçimlendirir.)';
+            if (requestType === 'GetLegendGraphic') {
+                message = 'İstek bir resim (PNG/GIF) döndürdü. Resmin görüntülenmesi tarayıcı desteğine bağlıdır.';
+            } else if (requestType === 'GetFeatureInfo') {
+                message = 'İstek, öznitelik bilgisi (HTML/XML/JSON) döndürdü. URL bir şablondur, canlı tıklama sonucu değildir.';
+            }
+            iframeMessage.innerText = message;
+        } else {
+            responseCard.style.display = 'none';
+            alert('URL oluşturulamadı. Lütfen WMS URL ve Katman Adı alanlarını kontrol edin.');
+        }
+    }
+
+
+    // ---------------------------------------------------------
+    // Ana İstek İşleyici (GetMap / Diğer OGC İstekleri)
+    // ---------------------------------------------------------
+
+    function processWMSRequest() {
+        const requestType = document.getElementById('wmsRequestType').value;
+
+        if (requestType === 'GetMap') {
+            updateMapLayer();
+        } else {
+            // Harita Katmanını Temizle
+            if (genericWmsLayer) {
+                map.removeLayer(genericWmsLayer);
+                genericWmsLayer = null;
+            }
+            updateRequestCodeForWMSOptions(requestType);
+        }
+    }
+
+    function updateMapLayer() {
+        var url = document.getElementById('wmsUrlInput').value;
+        var layerName = document.getElementById('layerName').value;
+
+        if (!url || !layerName) {
+            alert("Lütfen URL ve Katman Adı alanlarını doldurunuz.");
+            return;
+        }
+
+        if (genericWmsLayer) {
+            map.removeLayer(genericWmsLayer);
+        }
+
+        const cleanUrl = getCleanBaseUrl(url);
+
+        genericWmsLayer = L.tileLayer.wms(cleanUrl, {
+            layers: layerName,
+            format: 'image/png',
+            transparent: true,
+            version: '1.1.1',
+            attribution: 'WMS Demo'
+        });
+
+        genericWmsLayer.addTo(map);
+        updateRequestCodeForWMSOptions('GetMap');
+    }
+
+    function updateRequestCodeForWMSOptions(request = document.getElementById('wmsRequestType').value, customBBOX = null, clickLatlng = null) {
+        var baseUrl = document.getElementById('wmsUrlInput').value;
+        var layer = document.getElementById('layerName').value;
+        var requestCodeElement = document.getElementById('requestCode');
+
+        const cleanUrl = getCleanBaseUrl(baseUrl);
+        const defaultBBOX = "{minX,minY,maxX,maxY}";
+        const mapBBOX = customBBOX || defaultBBOX;
+
+        // Temizlenmiş baseUrl'e tek bir soru işareti eklenerek sorgu başlatılıyor
+        let url = `${cleanUrl}?SERVICE=WMS&VERSION=1.1.1&REQUEST=${request}`;
+        let description = ``;
+        let layerParams = ``;
+        let extraInfo = '';
+
+        // İstek Tipine göre URL'i özelleştir
+        switch (request) {
+            case 'GetCapabilities':
+                description = `
+                ${url}
+                \nBu istek, servisin desteklediği tüm katmanları, koordinat sistemlerini ve diğer özelliklerini XML formatında döndürür.`;
+                break;
+
+            case 'GetMap':
+                layerParams = `&LAYERS=${layer}&STYLES=&SRS=EPSG:3857&BBOX=${mapBBOX}&WIDTH=256&HEIGHT=256&FORMAT=image/png&TRANSPARENT=TRUE`;
+                url += layerParams;
+                description = `
+                ${url}
+                \nBu istek, belirtilen katmanın, sınırların (BBOX), boyutların ve formatın harita görüntüsünü (PNG) döndürür. (Leaflet bu şablonu kullanır.)`;
+                break;
+
+            case 'GetFeatureInfo':
+                layerParams = `&QUERY_LAYERS=${layer}&INFO_FORMAT=text/html&I={pixelX}&J={pixelY}&BBOX=${mapBBOX}&WIDTH=256&HEIGHT=256&SRS=EPSG:3857`;
+                url += layerParams;
+                description = `
+                ${url}
+                \nBu istek, harita üzerindeki (I, J koordinatında) bir noktada bulunan belirtilen katmanın öznitelik bilgilerini (genellikle HTML/XML/JSON) döndürür.`;
+
+                if (customBBOX) {
+                    extraInfo += `\n   * I/J (pixel koordinatları) bilgileri, tıklanan noktanın piksel konumuna göre hesaplanır.`;
+                }
+                break;
+
+            case 'GetLegendGraphic':
+                url += `&LAYER=${layer}&FORMAT=image/png&WIDTH=20&HEIGHT=20`;
+                description = `
+                ${url}
+                \nBu istek, belirtilen katmanın haritada kullanılan sembollerini gösteren bir lejant resmi (PNG) döndürür.`;
+                break;
+
+            case 'DescribeLayer':
+                url += `&LAYERS=${layer}`;
+                description = `
+                ${url}
+                \nBu istek, belirtilen katmanın detaylı şemasını (genellikle XML) döndürür.`;
+                break;
+        }
+
+        if (customBBOX) {
+            extraInfo += `\n\n🎯 SON TIKLAMA BİLGİSİ: \n   Tıklanan Nokta (Lat/Lng): ${clickLatlng.lat.toFixed(6)}, ${clickLatlng.lng.toFixed(6)}\n   Hesaplanan BBOX (EPSG:3857, 100m² alan): ${customBBOX}`;
+        }
+
+
+        requestCodeElement.innerText = description.trim() + extraInfo;
+    }
+
+
+    // ---------------------------------------------------------
+    // 5. HARİTA TIKLAMA VE BBOX HESAPLAMA LOGİĞİ
+    // ---------------------------------------------------------
+
+    map.on('click', function(e) {
+        // Tıklanan noktanın LatLng koordinatları
+        var latlng = e.latlng;
+
+        // Leaflet'in projeksiyon sistemi (L.CRS.EPSG3857) kullanılarak 
+        // LatLng koordinatları EPSG:3857 (metre) cinsinden X/Y'ye dönüştürülür
+        var projectedPoint = L.CRS.EPSG3857.project(latlng);
+        var x = projectedPoint.x;
+        var y = projectedPoint.y;
+
+        // Göstermek için 100 metrelik bir kare (50m yarıçap) buffer tanımlayalım.
+        var buffer = 50;
+
+        var minX = (x - buffer).toFixed(2);
+        var minY = (y - buffer).toFixed(2);
+        var maxX = (x + buffer).toFixed(2);
+        var maxY = (y + buffer).toFixed(2);
+
+        // WMS BBOX formatı: minX,minY,maxX,maxY (EPSG:3857)
+        var bboxString = `${minX},${minY},${maxX},${maxY}`;
+
+        // URL gösterimini, hesaplanan BBOX ile güncelle
+        updateRequestCodeForWMSOptions(document.getElementById('wmsRequestType').value, bboxString, latlng);
+    });
+    
+    // ---------------------------------------------------------
+    // 3. TKGM PARSELLER ENTEGRASYONU
+    // ---------------------------------------------------------
+    
+    
+    
+    var tkgmParcelsLayer = L.tileLayer.wms('https://cbsservis.tkgm.gov.tr/tkgm.ows/wms', {
+        layers: 'TKGM:parseller',
+        format: 'image/png',
+        transparent: true,
+        version: '1.1.1',
+        maxZoom: 22,
+        minZoom: 15,
+        attribution: 'TKGM'
+    });
+
+    var tkgmCheckbox = document.getElementById("tkgm-parcels");
+
+    if (tkgmCheckbox) {
+        tkgmCheckbox.addEventListener("change", function () {
+            if (this.checked) {
+                tkgmParcelsLayer.addTo(map);
+                // TKGM isteğini sabit ve temiz bir şekilde göster.
+                const fullWmsRequest =
+                    `https://cbsservis.tkgm.gov.tr/tkgm.ows/wms?` +
+                    `SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=TKGM:parseller&STYLES=&SRS=EPSG:3857&BBOX={minX,minY,maxX,maxY}&WIDTH=256&HEIGHT=256&FORMAT=image/png&TRANSPARENT=TRUE`;
+                document.getElementById('requestCode').innerText = "TKGM WMS İsteği (Harita Katmanı):\n" + fullWmsRequest;
+
+                if (map.getZoom() < 15) {
+                    var confirmZoom = confirm("TKGM Parselleri görebilmek için haritanın yakınlaşması gerekiyor (Zoom 15+). Yakınlaştırılsın mı?");
+                    if(confirmZoom) {
+                        map.flyTo(map.getCenter(), 16);
+                    }
+                }
+            } else {
+                if (map.hasLayer(tkgmParcelsLayer)) {
+                    map.removeLayer(tkgmParcelsLayer);
+                }
+                document.getElementById('requestCode').innerText = "TKGM Katmanı Kapatıldı. Ana WMS İsteğine Dönüldü.";
+                updateRequestCodeForWMSOptions(); // Ana formdaki seçimi tekrar göster
+            }
+        });
+    }
+
+    // ---------------------------------------------------------
+    // 4. KOORDİNAT VE ZOOM KONTROLÜ
+    // ---------------------------------------------------------
+
+    L.Control.CustomCoords = L.Control.extend({
+        onAdd: function(map) {
+            this._div = L.DomUtil.create('div', 'leaflet-control-coordinates');
+            this._div.innerHTML = 'Zoom: - | Enlem: - | Boylam: -';
+            L.DomEvent.disableClickPropagation(this._div);
+            return this._div;
+        },
+        updateCoords: function(latlng, zoom) {
+            var lat = latlng.lat.toFixed(4);
+            var lng = latlng.lng.toFixed(4);
+            this._div.innerHTML = `Zoom: ${zoom} | Enlem: ${lat}° | Boylam: ${lng}°`;
+        },
+        updateMouseCoords: function(latlng) {
+            var lat = latlng.lat.toFixed(4);
+            var lng = latlng.lng.toFixed(4);
+            this._div.innerHTML = `Zoom: ${map.getZoom()} | Enlem: ${lat}° | Boylam: ${lng}°`;
+        }
+    });
+
+    L.control.customCoords = function(opts) {
+        return new L.Control.CustomCoords(opts);
+    }
+
+    var coordsControl = L.control.customCoords({ position: 'bottomleft' }).addTo(map);
+
+    map.on('moveend zoomend', function() {
+        coordsControl.updateCoords(map.getCenter(), map.getZoom());
+    });
+
+    map.on('mousemove', function(e) {
+        coordsControl.updateMouseCoords(e.latlng);
+    });
+
+    map.on('load', function() {
+        coordsControl.updateCoords(map.getCenter(), map.getZoom());
+    });
+
+    // Sayfa açılışında varsayılan WMS'i yükle ve görünümü ayarla
+    window.onload = function() {
+        const defaultUrl = "https://csb.gov.tr/map/rest/services/Planlama/MapServer/WMSServer";
+
+        document.getElementById('wmsUrlSelect').value = defaultUrl;
+        document.getElementById('wmsUrlInput').value = defaultUrl;
+        document.getElementById('layerName').value = "Planlama:Planlar";
+        document.getElementById('wmsRequestType').value = "GetMap";
+
+        listLayersForSelectedWMS(defaultUrl);
+
+        // Başlangıçta GetMap isteğini çalıştır ve haritayı yükle
+        processWMSRequest();
+        map.setView(INITIAL_COORDS.TR, 6);
+        updateRequestResultArea(); // Sayfa yüklendiğinde butonu ve alanı kontrol et
+    };
+
+</script>
+</body>
+</html>

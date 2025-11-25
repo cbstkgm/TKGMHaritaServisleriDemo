@@ -1,0 +1,548 @@
+@{
+Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OGC Servisleri Eğitim ve Filtreleme Portalı (WFS, WMS, CSW)</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #333; }
+        .navbar { background: linear-gradient(135deg, #1d457c 0%, #0099cc 100%); } /* OGC Mavi Tonları */
+        .map-container { height: 600px; width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border: 2px solid #e0e0e0; z-index: 1; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card-header { background-color: #fff; border-bottom: 1px solid #eee; font-weight: 600; color: #1d457c; }
+        .code-block { background-color: #2d2d2d; color: #a6e22e; padding: 15px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 0.85rem; overflow-x: auto; white-space: pre-wrap; }
+        .param-badge { background-color: #e6f7ff; color: #007bff; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: bold; }
+        .filter-editor { resize: vertical; min-height: 120px; font-family: 'Consolas', monospace; font-size: 0.8rem; background-color: #f8f8f8; }
+        .nav-link.active { font-weight: bold; color: #1d457c !important; border-bottom: 3px solid #0099cc; }
+        
+        #loading-indicator { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background: rgba(255,255,255,0.9); padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2); text-align: center; }
+
+        /* WMS Hata Yönetimi (Önceki koddan) */
+        .wms-error-alert { position: absolute; top: 10px; left: 10px; z-index: 1000; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-satellite-dish me-2"></i> OGC Servisleri Eğitim ve Filtreleme Portalı
+        </a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row">
+        
+        <div class="col-lg-4">
+            
+            <ul class="nav nav-tabs mb-3" id="serviceTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="wfs-tab" data-bs-toggle="tab" data-bs-target="#wfs-content" type="button" role="tab" aria-controls="wfs-content" aria-selected="true"><i class="fas fa-vector-square me-1"></i> WFS</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="wms-tab" data-bs-toggle="tab" data-bs-target="#wms-content" type="button" role="tab" aria-controls="wms-content" aria-selected="false"><i class="fas fa-image me-1"></i> WMS</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="csw-tab" data-bs-toggle="tab" data-bs-target="#csw-content" type="button" role="tab" aria-controls="csw-content" aria-selected="false"><i class="fas fa-database me-1"></i> CSW</button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                
+                <div class="tab-pane fade show active" id="wfs-content" role="tabpanel" aria-labelledby="wfs-tab">
+                    
+                    <div class="card bg-light">
+                        <div class="card-header">⚙️ WFS Ayarları (Vektör Veri)</div>
+                        <div class="card-body">
+                            <form id="wfsForm">
+                                <div class="mb-3">
+                                    <label for="wfsUrlSelect" class="form-label fw-bold">WFS URL</label>
+                                    <select class="form-select" id="wfsUrlSelect">
+                                        <option value="https://ahocevar.com/geoserver/wfs" data-typename="topp:states" data-center="40.0, -98.0" data-zoom="4" selected>1. GeoServer Demo (ABD Eyaletleri)</option>
+                                        <option value="https://geoserver.sdi.sintef.no/geoserver/wfs" data-typename="norway:kommuner" data-center="65.0, 15.0" data-zoom="4">2. Sintef WFS (Norveç Komünleri)</option>
+                                        <option value="https://wfs.geo.admin.ch/geoserver/wfs" data-typename="ch.swisstopo.swissnames3d" data-center="46.8, 8.2" data-zoom="9">3. Swisstopo - Yer Adları (Yüksek Zoom Gerekli)</option>
+                                    </select>
+                                    <input type="text" class="form-control mt-2" id="wfsUrlInput" value="https://ahocevar.com/geoserver/wfs" readonly>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="typeName" class="form-label fw-bold">TypeName (Katman)</label>
+                                    <input type="text" class="form-control" id="wfsTypeName" value="topp:states">
+                                </div>
+                                
+                                <div class="mb-3">
+                                     <label class="form-label fw-bold">Max Features</label>
+                                     <input type="number" class="form-control" id="wfsMaxFeatures" value="50">
+                                </div>
+                                
+                                <div class="mb-3">
+                                     <label for="outputFormat" class="form-label fw-bold">OUTPUTFORMAT</label>
+                                     <select class="form-select" id="wfsOutputFormat">
+                                         <option value="application/json" selected>application/json (GeoJSON)</option>
+                                         <option value="text/xml; subtype=gml/3.2">GML 3.2 (Vektör XML)</option>
+                                     </select>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">🔎 Filter Encoding (OGC Filtresi)</div>
+                        <div class="card-body">
+                            <textarea id="wfsFilter" class="form-control filter-editor" rows="5">
+&lt;ogc:Filter&gt;
+  &lt;ogc:PropertyIsGreaterThan&gt;
+    &lt;ogc:PropertyName&gt;POP1990&lt;/ogc:PropertyName&gt;
+    &lt;ogc:Literal&gt;10000000&lt;/ogc:Literal&gt;
+  &lt;/ogc:PropertyIsGreaterThan&gt;
+&lt;/ogc:Filter&gt;
+                            </textarea>
+                            <div class="form-text small mt-2">Filter Encoding (XML) içeriği `FILTER` veya `CQL_FILTER` ile gönderilir.</div>
+                            <div class="d-grid gap-2 mt-3">
+                                <button type="button" class="btn btn-success" onclick="loadWfsLayer(true)">
+                                    <i class="fas fa-filter me-1"></i> Filtre İle Vektör Veriyi Çiz
+                                </button>
+                                <button type="button" class="btn btn-primary" onclick="loadWfsLayer(false)">
+                                    <i class="fas fa-download me-1"></i> Filtresiz Tüm Veriyi Çiz
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="wms-content" role="tabpanel" aria-labelledby="wms-tab">
+                    <div class="card bg-light">
+                        <div class="card-header">⚙️ WMS Ayarları (Raster Harita)</div>
+                        <div class="card-body">
+                            <form id="wmsForm">
+                                <div class="mb-3">
+                                    <label for="wmsUrlSelect" class="form-label fw-bold">WMS URL</label>
+                                    <select class="form-select" id="wmsUrlSelect">
+                                        <option value="https://ahocevar.com/geoserver/wms" data-layers="topp:states" data-center="40.0, -98.0" data-zoom="4" selected>1. GeoServer Demo (ABD Eyaletleri)</option>
+                                        <option value="https://wms.geo.admin.ch/" data-layers="ch.swisstopo.swissboundaries3d-kanton-flaeche.fill" data-center="46.8, 8.2" data-zoom="7">2. Swisstopo - Kanton Sınırları</option>
+                                        <option value="https://ows.emodnet-bathymetry.eu/wms" data-layers="emodnet:mean_d80" data-center="50.0, 0.0" data-zoom="4">3. EMODNET (Batimetri)</option>
+                                    </select>
+                                    <input type="text" class="form-control mt-2" id="wmsUrlInput" value="https://ahocevar.com/geoserver/wms" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="wmsLayers" class="form-label fw-bold">LAYERS (Katman Adı)</label>
+                                    <input type="text" class="form-control" id="wmsLayers" value="topp:states">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">🔎 CQL Filter (Daha Basit Filtre)</div>
+                        <div class="card-body">
+                             <textarea id="wmsFilter" class="form-control filter-editor" rows="3">
+// Örnek: ABD eyaletlerinde STATE_NAME 'California' olanları filtrele (Sadece tek tırnak kullanın!)
+STATE_NAME = 'California'
+                            </textarea>
+                            <div class="form-text small mt-2">WMS'te filtreleme için GeoServer'ın desteklediği `CQL_FILTER` parametresi daha yaygındır.</div>
+                            <div class="d-grid gap-2 mt-3">
+                                <button type="button" class="btn btn-success" onclick="loadWmsLayer(true)">
+                                    <i class="fas fa-filter me-1"></i> Filtre İle Raster Harita Çiz
+                                </button>
+                                <button type="button" class="btn btn-primary" onclick="loadWmsLayer(false)">
+                                    <i class="fas fa-image me-1"></i> Filtresiz Raster Harita Çiz
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="csw-content" role="tabpanel" aria-labelledby="csw-tab">
+                     <div class="card bg-light">
+                        <div class="card-header">⚙️ CSW Ayarları (Katalog Servisi)</div>
+                        <div class="card-body">
+                            <p class="small text-muted">CSW (Catalog Service for the Web), coğrafi verilerin **metaverilerini** aramaya ve keşfetmeye yarar.</p>
+                            <form id="cswForm">
+                                <div class="mb-3">
+                                    <label for="cswUrlSelect" class="form-label fw-bold">CSW URL</label>
+                                    <select class="form-select" id="cswUrlSelect">
+                                        <option value="https://geoportal.bafg.de/csw/srv/eng/csw" selected>1. BfG (Almanya Federal Jeoloji)</option>
+                                        <option value="https://data.gov.au/geoportal/csw">2. Data.gov.au (Avustralya)</option>
+                                        <option value="https://www.geocat.ch/geonetwork/srv/eng/csw">3. Swisstopo (Geocat - İsviçre Katalogu)</option>
+                                    </select>
+                                    <input type="text" class="form-control mt-2" id="cswUrlInput" value="https://geoportal.bafg.de/csw/srv/eng/csw" readonly>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="cswElementSet" class="form-label fw-bold">ElementSet (Çıktı Detayı)</label>
+                                    <select class="form-select" id="cswElementSet">
+                                        <option value="summary" selected>summary (Özet Bilgi)</option>
+                                        <option value="full">full (Tüm Detaylar)</option>
+                                        <option value="brief">brief (Çok Kısa Bilgi)</option>
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">🔎 Arama Sorgusu (Query)</div>
+                        <div class="card-body">
+                             <input type="text" class="form-control" id="cswQuery" value="wasser">
+                            <div class="form-text small mt-2">GetRecords isteğinde aranacak anahtar kelime (örn: su, rüzgar, sınır).</div>
+                            <div class="d-grid gap-2 mt-3">
+                                <button type="button" class="btn btn-success" onclick="loadCswRequest()">
+                                    <i class="fas fa-search me-1"></i> Katalog Kayıtlarını Ara (GetRecords)
+                                </button>
+                                <button type="button" class="btn btn-info" onclick="loadCswRequest(true)">
+                                    <i class="fas fa-list me-1"></i> GetCapabilities (Yetenekleri Listele)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>🗺️ Harita ve Görselleştirme Alanı</span>
+                    <span class="badge bg-info text-dark" id="request-status">Bekleniyor...</span>
+                </div>
+                <div class="card-body p-0 position-relative">
+                    <div id="loading-indicator">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <div>Veri İşleniyor...</div>
+                    </div>
+                    <div id="map" class="map-container"></div>
+                </div>
+                <div class="card-footer text-muted small" id="map-footer-text">
+                    WFS: Mavi çizgiler GeoJSON vektör verisidir. WMS: Harita resmidir. CSW: Harita göstermez.
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    💻 Yapılan HTTP İsteği URL'i
+                </div>
+                <div class="card-body bg-dark p-0">
+                    <div class="code-block" id="requestCode">
+                        İstek URL'i burada gösterilecektir.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="text-center py-4 text-muted mt-5 border-top">
+    <div class="container">
+        <p class="mb-0">owsLab - OGC Servisleri Eğitim Demosu (WFS, WMS, CSW)</p>
+    </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ---------------------------------------------------------
+    // 1. HARİTA BAŞLATMA
+    // ---------------------------------------------------------
+    var map = L.map('map').setView([40.0, -98.0], 4); 
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    var currentFeatureLayer = null; // WFS için
+    var currentWmsLayer = null;     // WMS için
+    var hasWmsErrorOccurred = false; // WMS hata bayrağı (tek uyarı)
+
+    // ---------------------------------------------------------
+    // 2. WFS FONKSİYONLARI (Vektör Veri - GetFeature, Filter Encoding)
+    // ---------------------------------------------------------
+    
+    document.getElementById('wfsUrlSelect').addEventListener('change', function() {
+        var selectedOption = this.options[this.selectedIndex];
+        document.getElementById('wfsUrlInput').value = selectedOption.value;
+        document.getElementById('wfsTypeName').value = selectedOption.getAttribute('data-typename');
+        
+        var center = selectedOption.getAttribute('data-center').split(',').map(c => parseFloat(c));
+        var zoom = parseInt(selectedOption.getAttribute('data-zoom'));
+        map.setView(center, zoom);
+    });
+
+    async function loadWfsLayer(useFilter) {
+        var typeName = document.getElementById('wfsTypeName').value; 
+        var baseUrl = document.getElementById('wfsUrlInput').value;
+        var maxFeatures = document.getElementById('wfsMaxFeatures').value;
+        var outputFormat = document.getElementById('wfsOutputFormat').value;
+        var filterXml = document.getElementById('wfsFilter').value.trim();
+
+        document.getElementById('loading-indicator').style.display = 'block';
+        document.getElementById('request-status').innerText = "WFS İsteği Hazırlanıyor...";
+        
+        // Önceki WMS/CSW çıktılarını temizle
+        if (currentWmsLayer) map.removeLayer(currentWmsLayer);
+        
+        // WFS URL yapısı
+        var wfsUrl = new URL(baseUrl);
+        wfsUrl.searchParams.append("service", "WFS");
+        wfsUrl.searchParams.append("version", "1.1.0"); 
+        wfsUrl.searchParams.append("request", "GetFeature");
+        wfsUrl.searchParams.append("typeName", typeName);
+        wfsUrl.searchParams.append("outputFormat", outputFormat); 
+        wfsUrl.searchParams.append("maxFeatures", maxFeatures);
+        wfsUrl.searchParams.append("srsName", "EPSG:4326");
+        
+        if (useFilter && filterXml) {
+            // Filter Encoding XML'i URL encode edip FILTER parametresiyle gönderiyoruz.
+            wfsUrl.searchParams.append("filter", filterXml);
+            document.getElementById('request-status').innerText = "WFS İsteği (Filtreli)";
+        } else {
+            document.getElementById('request-status').innerText = "WFS İsteği (Filtresiz)";
+        }
+        
+        var finalUrl = decodeURIComponent(wfsUrl.toString());
+        document.getElementById('requestCode').innerText = finalUrl;
+
+        // Harita çizimi sadece GeoJSON için
+        if (!outputFormat.includes("json")) {
+            alert(`GeoJSON dışındaki formatlar (${outputFormat.split(';')[0]}) haritada gösterilemez. İstek URL'i oluşturuldu.`);
+            document.getElementById('loading-indicator').style.display = 'none';
+            if (currentFeatureLayer) map.removeLayer(currentFeatureLayer);
+            document.getElementById('request-status').className = "badge bg-secondary";
+            return;
+        }
+
+        try {
+            const response = await fetch(wfsUrl);
+            if (!response.ok) throw new Error("Veri indirilemedi: " + response.statusText);
+            
+            const data = await response.json(); 
+
+            if (currentFeatureLayer) map.removeLayer(currentFeatureLayer);
+
+            currentFeatureLayer = L.geoJSON(data, {
+                style: { color: "#3388ff", weight: 3, opacity: 0.8, fillOpacity: 0.2 },
+                onEachFeature: function (feature, layer) {
+                    var popupContent = "<div style='max-height:200px; overflow-y:auto;'><table class='table table-sm table-striped small'>";
+                    for (var key in feature.properties) {
+                        popupContent += `<tr><td><strong>${key}</strong></td><td>${feature.properties[key]}</td></tr>`;
+                    }
+                    popupContent += "</table></div>";
+                    layer.bindPopup(popupContent);
+                }
+            }).addTo(map);
+
+            if (data.features && data.features.length > 0) {
+                map.fitBounds(currentFeatureLayer.getBounds());
+                document.getElementById('request-status').innerText = data.features.length + " Obje Çizildi";
+                document.getElementById('request-status').className = "badge bg-success";
+            } else {
+                 document.getElementById('request-status').innerText = "0 Obje Bulundu";
+                 document.getElementById('request-status').className = "badge bg-info text-dark";
+            }
+            
+
+        } catch (error) {
+            alert("WFS Hatası: " + error.message);
+            console.error(error);
+            document.getElementById('request-status').innerText = "Hata";
+            document.getElementById('request-status').className = "badge bg-danger";
+        } finally {
+            document.getElementById('loading-indicator').style.display = 'none';
+        }
+    }
+
+
+    // ---------------------------------------------------------
+    // 3. WMS FONKSİYONLARI (Raster Harita - GetMap, CQL Filter)
+    // ---------------------------------------------------------
+
+    document.getElementById('wmsUrlSelect').addEventListener('change', function() {
+        var selectedOption = this.options[this.selectedIndex];
+        document.getElementById('wmsUrlInput').value = selectedOption.value;
+        document.getElementById('wmsLayers').value = selectedOption.getAttribute('data-layers');
+        
+        var center = selectedOption.getAttribute('data-center').split(',').map(c => parseFloat(c));
+        var zoom = parseInt(selectedOption.getAttribute('data-zoom'));
+        map.setView(center, zoom);
+    });
+
+    function loadWmsLayer(useFilter) {
+        document.getElementById('loading-indicator').style.display = 'block';
+
+        const baseUrl = document.getElementById('wmsUrlInput').value;
+        const layers = document.getElementById('wmsLayers').value;
+        const cqlFilter = document.getElementById('wmsFilter').value.trim();
+
+        if (currentFeatureLayer) map.removeLayer(currentFeatureLayer); // WFS'i temizle
+        if (currentWmsLayer) map.removeLayer(currentWmsLayer); // Eski WMS'i temizle
+
+        let wmsParams = {
+            service: 'WMS',
+            version: '1.1.1', 
+            request: 'GetMap',
+            layers: layers,
+            styles: '', 
+            format: 'image/png',
+            transparent: true,
+            srs: 'EPSG:4326', 
+            // WMS/GeoServer'da filtre için kullanılan parametre
+            ...(useFilter && cqlFilter && { CQL_FILTER: cqlFilter })
+        };
+
+        // URL gösterimi (BBOX ve Boyutlar hariç)
+        let requestUrl = `${baseUrl}?SERVICE=${wmsParams.service}&VERSION=${wmsParams.version}&REQUEST=${wmsParams.request}&LAYERS=${wmsParams.layers}&STYLES=${wmsParams.styles}&FORMAT=${wmsParams.format}&TRANSPARENT=${wmsParams.transparent}&SRS=${wmsParams.srs}`;
+        
+        if (useFilter && cqlFilter) {
+            requestUrl += `&CQL_FILTER=${encodeURIComponent(cqlFilter)}`;
+            document.getElementById('request-status').innerText = "WMS İsteği (Filtreli)";
+        } else {
+            document.getElementById('request-status').innerText = "WMS İsteği (Filtresiz)";
+        }
+
+        document.getElementById('requestCode').innerText = requestUrl + ' (BBOX ve Boyutlar eksik)';
+        document.getElementById('request-status').className = "badge bg-primary";
+
+        // Leaflet WMS Katmanını Oluşturma
+        currentWmsLayer = L.tileLayer.wms(baseUrl, wmsParams).addTo(map);
+
+        hasWmsErrorOccurred = false; // Hata bayrağını sıfırla
+
+        currentWmsLayer.on('load', function() {
+            document.getElementById('loading-indicator').style.display = 'none';
+            document.getElementById('request-status').innerText = "WMS Başarıyla Yüklendi";
+            document.getElementById('request-status').className = "badge bg-success";
+        });
+        
+        currentWmsLayer.on('tileerror', function(e) {
+            document.getElementById('loading-indicator').style.display = 'none';
+            if (!hasWmsErrorOccurred) {
+                alert("WMS Hatası: Servis yanıt vermedi veya CORS/SLD/CQL sorunu var. Lütfen URL'yi ve Filtreyi kontrol edin.");
+                hasWmsErrorOccurred = true; 
+            }
+            document.getElementById('request-status').innerText = "WMS Hata";
+            document.getElementById('request-status').className = "badge bg-danger";
+            console.error("WMS Tile Error:", e);
+        });
+    }
+
+    // ---------------------------------------------------------
+    // 4. CSW FONKSİYONLARI (Katalog Servisi - GetRecords)
+    // ---------------------------------------------------------
+    
+    document.getElementById('cswUrlSelect').addEventListener('change', function() {
+        document.getElementById('cswUrlInput').value = this.value;
+    });
+
+    async function loadCswRequest(isCapabilities = false) {
+        const baseUrl = document.getElementById('cswUrlInput').value;
+        const elementSet = document.getElementById('cswElementSet').value;
+        const query = document.getElementById('cswQuery').value.trim();
+
+        document.getElementById('loading-indicator').style.display = 'block';
+        
+        // Harita katmanlarını temizle (CSW harita göstermez)
+        if (currentFeatureLayer) map.removeLayer(currentFeatureLayer); 
+        if (currentWmsLayer) map.removeLayer(currentWmsLayer); 
+
+        let cswUrl = new URL(baseUrl);
+        cswUrl.searchParams.append("service", "CSW");
+        cswUrl.searchParams.append("version", "2.0.2"); 
+
+        if (isCapabilities) {
+            cswUrl.searchParams.append("request", "GetCapabilities");
+            document.getElementById('request-status').innerText = "CSW GetCapabilities İsteği";
+        } else {
+            cswUrl.searchParams.append("request", "GetRecords");
+            cswUrl.searchParams.append("resultType", "results"); 
+            cswUrl.searchParams.append("elementSet", elementSet);
+            cswUrl.searchParams.append("typeNames", "csw:Record");
+            // Arama filtresi (Filter Encoding veya XML payload gereklidir, basit key-value'dan farklıdır)
+            // Kolaylık için basit 'q' parametresi (ancak her sunucu desteklemez) veya XML'i kullanmalıyız.
+            // Bu örnekte, basit bir GetRecords URL'si oluşturup, arama terimini manuel olarak eklemek daha pratiktir.
+            
+            // Basit arama terimi ekleme (Kullanılan CSW sunucusunun desteklemesi gerekir)
+            const searchParam = `<ogc:Filter><ogc:PropertyIsLike wildCard="%" singleChar="_" escapeChar="\\"><ogc:PropertyName>AnyText</ogc:PropertyName><ogc:Literal>%${query}%</ogc:Literal></ogc:PropertyIsLike></ogc:Filter>`;
+
+            // CSW'de XML body veya POST methodu çok yaygındır. GET ile XML'i URL'ye gömelim (Pratik ama doğru CSW kullanımı değil).
+            // Daha temiz bir GET isteği için:
+            cswUrl.searchParams.append("constraintLanguage", "FILTER");
+            cswUrl.searchParams.append("constraint", searchParam);
+            
+            document.getElementById('request-status').innerText = "CSW GetRecords İsteği (Arama)";
+        }
+        
+        // URL'yi göster
+        var finalUrl = decodeURIComponent(cswUrl.toString());
+        document.getElementById('requestCode').innerText = finalUrl;
+        document.getElementById('request-status').className = "badge bg-info text-dark";
+
+        // Fetch (Sadece görüntülemek için yapmıyoruz, sunucudan yanıt bekliyoruz)
+        try {
+            const response = await fetch(cswUrl);
+            if (!response.ok) throw new Error("CSW Servis Hatası: " + response.statusText);
+            
+            const text = await response.text();
+            
+            // XML çıktısını daha okunur hale getirip konsola yazdır
+            document.getElementById('requestCode').innerText = finalUrl + "\n\n--- CSW Sunucu Yanıtı (XML) Konsolda ---";
+            console.log("CSW Sunucu Yanıtı (XML):", text);
+            
+            document.getElementById('request-status').innerText = isCapabilities ? "CSW Yetenekler Konsolda" : "CSW Kayıtlar Konsolda";
+            document.getElementById('request-status').className = "badge bg-success";
+
+        } catch (error) {
+             document.getElementById('request-status').innerText = "CSW Hata";
+             document.getElementById('request-status').className = "badge bg-danger";
+             alert("CSW İsteği Hatası: CORS veya Servis Sorunu. Detaylar için konsolu kontrol edin.");
+             console.error("CSW Hata:", error);
+        } finally {
+            document.getElementById('loading-indicator').style.display = 'none';
+        }
+    }
+    
+    // ---------------------------------------------------------
+    // 5. BAŞLANGIÇ YÜKLEMESİ VE SEKME YÖNETİMİ
+    // ---------------------------------------------------------
+
+    // Sekme değişimi olay yöneticisi
+    document.querySelectorAll('#serviceTabs button').forEach(button => {
+        button.addEventListener('click', () => {
+            // Harita katmanlarını temizle
+            if (currentFeatureLayer) map.removeLayer(currentFeatureLayer);
+            if (currentWmsLayer) map.removeLayer(currentWmsLayer);
+            document.getElementById('requestCode').innerText = "İstek URL'i burada gösterilecektir.";
+            document.getElementById('request-status').innerText = "Bekleniyor...";
+            document.getElementById('request-status').className = "badge bg-info text-dark";
+            
+            // WFS sekmesine geçildiğinde varsayılan ayarları yükle
+            if (button.id === 'wfs-tab') {
+                document.getElementById('wfsUrlSelect').dispatchEvent(new Event('change'));
+            } else if (button.id === 'wms-tab') {
+                document.getElementById('wmsUrlSelect').dispatchEvent(new Event('change'));
+            }
+        });
+    });
+
+
+    // İlk yüklemede WFS'i tetikle
+    window.onload = function() {
+        // Dropdown change event'ini tetikleyerek WFS varsayılanlarını yükle
+        document.getElementById('wfsUrlSelect').dispatchEvent(new Event('change'));
+        // İlk yüklemeyi yap
+        loadWfsLayer(false);
+        document.getElementById('loading-indicator').style.display = 'none';
+    };
+
+</script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - owsLab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Bootstrap (opsiyonel) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Leaflet Draw (Alan, çizgi, nokta, edit için) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="~/css/owslab.css" />
+    <link rel="stylesheet" href="~/css/toolbar/toolbar.css" />
+    <link rel="stylesheet" href="~/css/sil1.css" />
+</head>
+
+<body>
+
+    <!-- TOP TOOLBAR (Header yok, bunun yerine) -->
+    <div id="top-toolbar">
+        <button class="tool-btn" id="btnLayers">🗂️ Katmanlar</button>
+        
+        <button class="tool-btn" id="btnDrawPolygon">📐 Alan Çiz</button>
+        <button class="tool-btn" id="btnDrawLine">📏 Çizgi Çiz</button>
+        <button class="tool-btn" id="btnDrawPoint">📍 Nokta At</button>
+        <button class="tool-btn" id="btnDrawCircle">⭕ Daire Çiz</button>
+        <button class="tool-btn" id="btnDragGeometry">🧲 Taşı (Drag)</button>
+        <button class="tool-btn" id="btnDeleteOne">❌ Sil</button>
+        <button class="tool-btn" id="btnClearAll">🧹 Temizle</button>
+        <button class="tool-btn" id="btnDrawText">🔤 Yazı</button>
+        <button class="tool-btn" id="btnEditGeometry">✏️ Edit</button>
+        <button class="tool-btn" id="btnSplitLayer">✂️ Split</button>
+        <button class="tool-btn" id="btnUnionLayer">🔗 Union</button>
+        <button class="tool-btn" id="btnScaleLayer">📐 Scala</button>
+        <button class="tool-btn" id="btnCutLayer">🔪 Cut</button>
+        <button class="tool-btn" id="btnShowWKT">📄 WKT Göster</button>
+
+        <button class="tool-btn" id="btnOGC">🌐 OGC Servisleri</button>
+    </div>
+
+    <!-- SOLDA LAYER PANEL -->
+    <div id="left-layer-panel" class="side-panel">
+        <div class="panel-header">Katmanlar</div>
+        <div class="panel-content">
+            <!-- Tab Menü -->
+            <ul class="nav nav-tabs" id="layerTabs">
+                <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#basemaps">Haritalar</a></li>
+                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#goto">Konuma Git</a></li>
+                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#others">Diğer</a></li>
+            </ul>
+
+            <div class="tab-content p-2">
+                <div class="tab-pane fade show active" id="basemaps">
+                    
+                    <!-- HARİTA ALTLIKLARI (Switch) -->
+                    <div class="basemap-item">
+                        <span class="basemap-label">OpenStreetMap (Default)</span>
+                        <label class="switch">
+                            <input type="radio" name="basemap" value="osm" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="basemap-item">
+                        <span class="basemap-label">Google Uydu</span>
+                        <label class="switch">
+                            <input type="radio" name="basemap" value="googleSat">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="basemap-item">
+                        <span class="basemap-label">Google Hybrid</span>
+                        <label class="switch">
+                            <input type="radio" name="basemap" value="googleHybrid">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="basemap-item">
+                        <span class="basemap-label">Leaflet Uydu</span>
+                        <label class="switch">
+                            <input type="radio" name="basemap" value="leafletSat">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- ALTLIK ETİKETLERİ (Checkbox) -->
+                    <div class="basemap-item" style="margin-top:16px;">
+                        <span class="basemap-label">Google Etiket</span>
+                        <label class="switch checkbox-switch">
+                            <input type="checkbox" id="google-label">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="basemap-item">
+                        <span class="basemap-label">OSM Etiket</span>
+                        <label class="switch checkbox-switch">
+                            <input type="checkbox" id="osm-label">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- TKGM PARSELLER (Switch) -->
+                    <div class="basemap-item" style="margin-top:32px;">
+                        <span class="basemap-label">TKGM Parseller (WMS)</span>
+                        <label class="switch">
+                            <input type="checkbox" id="tkgm-parcels">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+
+                <div class="tab-pane fade" id="goto">
+                    <label>Boylam:</label>
+                    <input id="goto-lon" class="form-control mb-2">
+                    <label>Enlem:</label>
+                    <input id="goto-lat" class="form-control mb-2">
+
+                    <button id="btnGotoCografi" class="btn btn-primary w-100">Git</button>
+
+                    <hr style="margin: 12px 0; border: 1px solid #dee2e6;">
+
+                    <label>x:</label>
+                    <input id="goto-x" class="form-control mb-2">
+                    <label>y:</label>
+                    <input id="goto-y" class="form-control mb-2">
+                    <button id="btnGotoKartezyen" class="btn btn-primary w-100">Git</button>
+                </div>
+                <div class="tab-pane fade" id="others">
+                    Diğer özellikler gelecek…
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SAĞDA OGC PANELİ -->
+    <div id="right-ogc-panel" class="side-panel-right">
+        <div class="panel-header">OGC Servisleri</div>
+        <div class="panel-content">
+
+            <!-- Sekme Menü -->
+            <ul class="nav nav-tabs" id="ogcTabs">
+                <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#wms">WMS</a></li>
+                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#wfs">WFS</a></li>
+                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#wmts">WMTS</a></li>
+                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#wcs">WCS</a></li>
+                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#csw">CSW</a></li>
+                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#wps">WPS</a></li>
+                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#sos">SOS</a></li>
+                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#sld">SLD</a></li>
+                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#filter">Filter Encoding</a></li>
+                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#gml">GML</a></li>
+                <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#kml">KML</a></li>
+            </ul>
+
+           <!-- Tab İçerikleri -->
+            <div class="tab-content p-2" style="max-height:80vh; overflow-y:auto;">
+
+                <!-- WMS Tab -->
+                <div class="tab-pane fade show active" id="wms">
+                    <p>WMS (Web Map Service), harita servislerini görselleştirmenizi sağlar.</p>
+                    <div class="d-flex justify-content-between mt-2 mb-2">
+                        <button class="btn btn-primary btn-sm">WMS Sorgula</button>
+                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("WmsOrnek","OGC_Ornekler")">WMS Örnekleri Sayfasına Git</button>
+                    </div>
+                </div>
+
+                <!-- WFS Tab -->
+                <div class="tab-pane fade" id="wfs">
+                    <p>WFS (Web Feature Service), coğrafi verileri sorgulayıp çekmenizi sağlar.</p>
+                    <div class="d-flex justify-content-between mt-2 mb-2">
+                        <button class="btn btn-primary btn-sm">WFS Sorgula</button>
+                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("WfsOrnek","OGC_Ornekler")">WFS Örnekleri Sayfasına Git</button>
+                    </div>
+                </div>
+
+                <!-- WMTS Tab -->
+                <div class="tab-pane fade" id="wmts">
+                    <p>WMTS (Web Map Tile Service), harita servislerini tile (kare) bazlı sağlar.</p>
+                    <div class="d-flex justify-content-between mt-2 mb-2">
+                        <button class="btn btn-primary btn-sm">WMTS Sorgula</button>
+                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("WmtsOrnek","OGC_Ornekler")">WMTS Örnekleri Sayfasına Git</button>
+                    </div>
+                </div>
+
+                <!-- WCS Tab -->
+                <div class="tab-pane fade" id="wcs">
+                    <p>WCS (Web Coverage Service), raster verileri almanızı sağlar.</p>
+                    <div class="d-flex justify-content-between mt-2 mb-2">
+                        <button class="btn btn-primary btn-sm">WCS Sorgula</button>
+                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("WcsOrnek","OGC_Ornekler")">WCS Örnekleri Sayfasına Git</button>
+                    </div>
+                </div>
+
+                <!-- CSW Tab -->
+                <div class="tab-pane fade" id="csw">
+                    <p>CSW (Catalog Service for the Web), veri kataloglarını sorgulamanızı sağlar.</p>
+                    <div class="d-flex justify-content-between mt-2 mb-2">
+                        <button class="btn btn-primary btn-sm">CSW Sorgula</button>
+                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("CswOrnek","OGC_Ornekler")">CSW Örnekleri Sayfasına Git</button>
+                    </div>
+                </div>
+
+                <!-- WPS Tab -->
+                <div class="tab-pane fade" id="wps">
+                    <p>WPS (Web Processing Service), uzaktan coğrafi analiz ve işlem yapmanıza olanak verir.</p>
+                    <div class="d-flex justify-content-between mt-2 mb-2">
+                        <button class="btn btn-primary btn-sm">WPS Sorgula</button>
+                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("WpsOrnek","OGC_Ornekler")">WPS Örnekleri Sayfasına Git</button>
+                    </div>
+                </div>
+
+                <!-- SOS Tab -->
+                <div class="tab-pane fade" id="sos">
+                    <p>SOS (Sensor Observation Service), sensör verilerini sorgulamanızı sağlar.</p>
+                    <div class="d-flex justify-content-between mt-2 mb-2">
+                        <button class="btn btn-primary btn-sm">SOS Sorgula</button>
+                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("SosOrnek","OGC_Ornekler")">SOS Örnekleri Sayfasına Git</button>
+                    </div>
+                </div>
+
+                <!-- SLD Tab -->
+                <div class="tab-pane fade" id="sld">
+                    <p>SLD (Styled Layer Descriptor), harita katmanlarını özelleştirmenizi sağlar.</p>
+                    <div class="d-flex justify-content-between mt-2 mb-2">
+                        <button class="btn btn-primary btn-sm">SLD Sorgula</button>
+                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("SldOrnek","OGC_Ornekler")">SLD Örnekleri Sayfasına Git</button>
+                    </div>
+                </div>
+
+                <!-- Filter Encoding Tab -->
+                <div class="tab-pane fade" id="filter">
+                    <p>Filter Encoding, sorgular için filtreleme kurallarını tanımlar.</p>
+                    <div class="d-flex justify-content-between mt-2 mb-2">
+                        <button class="btn btn-primary btn-sm">Filter Sorgula</button>
+                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("FilterOrnek","OGC_Ornekler")">Filter Örnekleri Sayfasına Git</button>
+                    </div>
+                </div>
+
+                <!-- GML Tab -->
+                <div class="tab-pane fade" id="gml">
+                    <p>GML (Geography Markup Language), coğrafi verileri XML formatında gösterir.</p>
+                    <div class="d-flex justify-content-between mt-2 mb-2">
+                        <button class="btn btn-primary btn-sm">GML Sorgula</button>
+                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("GmlOrnek","OGC_Ornekler")">GML Örnekleri Sayfasına Git</button>
+                    </div>
+                </div>
+
+                <!-- KML Tab -->
+                <div class="tab-pane fade" id="kml">
+                    <p>KML (Keyhole Markup Language), Google Earth ve harita uygulamaları için veri sağlar.</p>
+                    <div class="d-flex justify-content-between mt-2 mb-2">
+                        <button class="btn btn-primary btn-sm">KML Sorgula</button>
+                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("KmlOrnek","OGC_Ornekler")">KML Örnekleri Sayfasına Git</button>
+                    </div>
+                </div>
+
+            </div>
+
+
+        </div>
+    </div>
+
+
+    <!-- FULL SCREEN MAP -->
+    <div id="map"></div>
+    <div style="display:none;">
+        @RenderBody()
+    </div>
+
+    <!-- FOOTER -->
+    <footer id="main-footer">
+        <p class="text-center m-0 p-2">design by erdemalpar© 2025 owsLab - OGC Eğitim ve Dokümantasyon Laboratuvarı</p>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.1/proj4.js"></script>
+
+ 
+    <!-- Leaflet ve Draw CSS/JS zaten ekli -->
+    <script src="https://unpkg.com/terraformer@1.0.12/terraformer.min.js"></script>
+    <script src="https://unpkg.com/terraformer-wkt-parser@1.2.1/terraformer-wkt-parser.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+
+    <!-- Kendi JS dosyalarım ~  -->
+    
+    <script src="~/js/map.js"></script>
+    <script src="~/js/toolbar/toolbar.js"></script>
+    <script src="~/js/toolbar/haritaaltligi.js"></script>
+    <script src="~/js/toolbar/konumagit.js"></script>
+    <!-- <script src="~/js/toolbar/ogcButtons.js"></script> -->
+    
+    <script src="~/js/toolbar/ogcButton.js" asp-append-version="true"></script>
+
+
+    
+
+    
+    </body>
+</html>

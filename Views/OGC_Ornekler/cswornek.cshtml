@@ -1,0 +1,336 @@
+@{
+Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OGC CSW Eğitim ve Katalog Servisi Portalı</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #333; }
+        .navbar { background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%); }
+        .card { border: none; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card-header { background-color: #fff; border-bottom: 1px solid #eee; font-weight: 600; color: #8e44ad; }
+        .code-block { background-color: #2d2d2d; color: #66d9ef; padding: 15px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 0.85rem; overflow-x: auto; white-space: pre-wrap; height: 300px; }
+        .param-badge { background-color: #f4e8f9; color: #8e44ad; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: bold; }
+
+        #loading-indicator { display: none; text-align: center; padding: 10px; }
+        .result-container { max-height: 400px; overflow-y: auto; background-color: #fff; border-radius: 8px; padding: 15px; border: 1px solid #eee;}
+        .metadata-item { border-bottom: 1px solid #f0f0f0; padding: 10px 0; }
+        .metadata-item:last-child { border-bottom: none; }
+        .title-link { font-weight: 600; color: #2980b9; text-decoration: none; }
+        .title-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="#">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-journal-album me-2" viewBox="0 0 16 16">
+                <path d="M5.5 4a.5.5 0 0 0-.5.5v5a.5.5 0 0 0 .5.5h5a.5.5 0 0 0 .5-.5v-5a.5.5 0 0 0-.5-.5zm.5 1h4v4H6z"/>
+                <path d="M3 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm0 1h10a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1"/>
+            </svg>
+            OGC CSW (Katalog) Portalı
+        </a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-4">
+
+            <div class="card">
+                <div class="card-header">
+                    📚 CSW Nedir? (Catalog Service for the Web)
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">CSW, coğrafi verilerin (WFS, WMS, vb.) nerede olduğunu, içeriğini ve kullanım koşullarını içeren **meta veri kayıtlarını** bulmaya yarayan bir servistir. Kataloglama ve arama işlevi görür.</p>
+                    <hr />
+                    <h6>Temel Parametreler:</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-1"><span class="param-badge">SERVICE</span>: CSW</li>
+                        <li class="mb-1"><span class="param-badge">REQUEST</span>: GetRecords (Kayıtları getir)</li>
+                        <li class="mb-1"><span class="param-badge">RESULTTYPE</span>: results (Sonuç listesi), hits (Sadece adet)</li>
+                        <li class="mb-1"><span class="param-badge">TYPE NAMES</span>: csw:Record</li>
+                        <li class="mb-1"><span class="param-badge">CONSTRAINT</span>: Filtreleme anahtar kelimesi/metni</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card bg-light">
+                <div class="card-header">
+                    ⚙️ CSW Servis Ayarları & Arama
+                </div>
+                <div class="card-body">
+                    <form id="cswForm">
+                        <div class="mb-3">
+                            <label for="cswUrlSelect" class="form-label fw-bold">CSW Servis URL (10 Açık Kaynak Örnek)</label>
+                            <select class="form-select" id="cswUrlSelect">
+                                <option value="https://metadatacatalogue.org/srv/api/records">1. GeoNetwork (Global - JSON API)</option>
+                                <option value="https://geocatalog.gfz-potsdam.de/srv/api/records">2. GFZ Potsdam (Almanya - JSON API)</option>
+                                <option value="https://data.gns.cri.nz/catalogue/srv/eng/csw">3. GNS Science (Yeni Zelanda - XML)</option>
+                                <option value="https://ecat.ga.gov.au/geonetwork/srv/en/csw">4. Geoscience Australia (XML)</option>
+                                <option value="https://geoportal.bgr.de/csw-inspire">5. BGR INSPIRE (Almanya - XML)</option>
+                                <option value="https://portal.opengeospatial.org/resource/pub/id/wps/csw/200">6. OGC Testbed (Global - XML)</option>
+                                <option value="https://data.gov.uk/spatial-data/csw">7. data.gov.uk (UK - XML)</option>
+                                <option value="https://data.nodc.noaa.gov/geoportal/csw">8. NOAA (ABD - XML)</option>
+                                <option value="http://www.idee.es/csw-inspire/srv/eng/csw">9. IDEE (İspanya - XML)</option>
+                                <option value="https://www.gina.alaska.edu/catalogs/csw">10. GINA (Alaska - XML)</option>
+                            </select>
+                            <input type="text" class="form-control mt-2" id="cswUrlInput" value="https://metadatacatalogue.org/srv/api/records" readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="searchText" class="form-label fw-bold">Arama Anahtar Kelimesi</label>
+                            <input type="text" class="form-control" id="searchText" value="water">
+                            <div class="form-text small">Örn: `water`, `satellite`, `dem`</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="maxRecords" class="form-label fw-bold">Max Kayıt Sayısı</label>
+                            <input type="number" class="form-control" id="maxRecords" value="10">
+                            <div class="form-text small">Tek seferde getirilecek maksimum meta veri kayıt sayısı.</div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-primary" onclick="searchCswRecords()">
+                                Meta Veri Kayıtlarını Sorgula
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="getCapabilities()">
+                                GetCapabilities (Servis Bilgisini Al)
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="alert alert-warning mt-3 small p-2">
+                ⚠️ **Önemli:** Sadece 1. ve 2. sıradaki servisler (GeoNetwork API), arama sonuçlarını doğrudan listeleyebilmemiz için basit **JSON** döndürmektedir. Diğer servisler **XML** döndürür, bu nedenle sonuçları alttaki kod bloğunda XML olarak göreceksiniz.
+            </div>
+
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>📑 Sorgu Sonuçları ve Meta Veri</span>
+                    <span class="badge bg-info text-dark" id="recordCount">0 Kayıt Bulundu</span>
+                </div>
+                <div class="card-body p-0 position-relative">
+                    <div id="loading-indicator">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <div>Katalog Sorgulanıyor...</div>
+                    </div>
+                    <div id="results" class="result-container">
+                        Sorgulama sonuçları burada görünecektir.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    💻 Oluşturulan CSW İsteği URL'i (GetRecords)
+                </div>
+                <div class="card-body bg-dark p-0">
+                    <div class="code-block" id="requestCode">
+                        İstek URL'i burada gösterilecektir.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="text-center py-4 text-muted mt-5 border-top">
+    <div class="container">
+        <p class="mb-0">owsLab - CSW Katalog Servisi Entegrasyon Demosu</p>
+    </div>
+</footer>
+
+<script>
+
+    // ---------------------------------------------------------
+    // 1. SERVİS SEÇİM MANTIĞI
+    // ---------------------------------------------------------
+    document.getElementById('cswUrlSelect').addEventListener('change', function() {
+        var selectedVal = this.value;
+        document.getElementById('cswUrlInput').value = selectedVal;
+
+        // GeoNetwork URL'i ise JSON API kullanacağız, bu yüzden başlangıç kelimesini "water" yapalım.
+        if (selectedVal.includes('metadatacatalogue.org/srv/api/records') || selectedVal.includes('gfz-potsdam.de/srv/api/records')) {
+            document.getElementById('searchText').value = 'water';
+        } else {
+            // Standart XML CSW için daha genel bir arama yapalım.
+            document.getElementById('searchText').value = 'land';
+        }
+
+        document.getElementById('results').innerHTML = "Lütfen sorgulama yapın.";
+        document.getElementById('recordCount').innerText = "Hazır";
+        document.getElementById('requestCode').innerText = "Servis URL güncellendi.";
+    });
+
+    // ---------------------------------------------------------
+    // 2. GETCAPABILITIES İSTEĞİ
+    // ---------------------------------------------------------
+    async function getCapabilities() {
+        const baseUrl = document.getElementById('cswUrlInput').value;
+        document.getElementById('loading-indicator').style.display = 'block';
+
+        // Standart CSW URL'ine geri dönme (API URL'den kurtulma)
+        let standardCswUrl = baseUrl.includes('/srv/api/records') ? baseUrl.replace('/srv/api/records', '/srv/eng/csw') : baseUrl;
+
+
+        const capabilitiesUrl = new URL(standardCswUrl);
+        capabilitiesUrl.searchParams.append("service", "CSW");
+        capabilitiesUrl.searchParams.append("version", "2.0.2");
+        capabilitiesUrl.searchParams.append("request", "GetCapabilities");
+
+        const finalUrl = decodeURIComponent(capabilitiesUrl.toString());
+        document.getElementById('requestCode').innerText = finalUrl;
+        document.getElementById('results').innerHTML = "";
+        document.getElementById('recordCount').innerText = "GetCapabilities";
+
+
+        try {
+            document.getElementById('results').innerHTML = `
+                <div class="alert alert-warning small">
+                    **GetCapabilities İsteği:** Bu istek XML formatında sunucunun yeteneklerini döndürür. Lütfen aşağıdaki URL'i yeni sekmede açarak XML çıktısını inceleyiniz.
+                </div>
+                <a href="${finalUrl}" target="_blank" class="btn btn-sm btn-outline-info">XML Çıktısını Görüntüle</a>
+            `;
+
+        } catch (error) {
+            document.getElementById('results').innerHTML = `<div class="alert alert-danger">Hata: ${error.message}</div>`;
+        } finally {
+            document.getElementById('loading-indicator').style.display = 'none';
+        }
+    }
+
+
+    // ---------------------------------------------------------
+    // 3. GETRECORDS İSTEĞİ (Arama İşlemi)
+    // ---------------------------------------------------------
+    async function searchCswRecords() {
+        const baseUrl = document.getElementById('cswUrlInput').value;
+        const searchText = document.getElementById('searchText').value;
+        const maxRecords = document.getElementById('maxRecords').value;
+        document.getElementById('loading-indicator').style.display = 'block';
+
+        let cswUrl;
+        let isGeoNetworkAPI = baseUrl.includes('/srv/api/records');
+
+
+        if (isGeoNetworkAPI) {
+            // GeoNetwork/GFZ için Basit JSON API Sorgusu
+            cswUrl = new URL(baseUrl);
+            cswUrl.searchParams.set("q", searchText);
+            cswUrl.searchParams.set("fast", "true");
+            cswUrl.searchParams.set("max", maxRecords);
+            cswUrl.searchParams.set("from", "1");
+            cswUrl.searchParams.set("outputSchema", "csw:Record");
+        } else {
+            // Standart OGC CSW (XML Çıktısı Bekleniyor)
+            cswUrl = new URL(baseUrl);
+            cswUrl.searchParams.append("service", "CSW");
+            cswUrl.searchParams.append("version", "2.0.2");
+            cswUrl.searchParams.append("request", "GetRecords");
+            cswUrl.searchParams.append("resultType", "results");
+            cswUrl.searchParams.append("ElementSetName", "full");
+            cswUrl.searchParams.append("typenames", "csw:Record");
+            cswUrl.searchParams.append("maxRecords", maxRecords);
+            // Filtreleme (AnyText LIKE 'keyword')
+            cswUrl.searchParams.append("CONSTRAINTLANGUAGE", "FILTER");
+            cswUrl.searchParams.append("CONSTRAINT", `AnyText LIKE '%${searchText}%'`);
+        }
+
+        const finalUrl = decodeURIComponent(cswUrl.toString());
+        document.getElementById('requestCode').innerText = finalUrl;
+        document.getElementById('results').innerHTML = "";
+        document.getElementById('recordCount').innerText = "Sorgulanıyor...";
+
+        try {
+            const response = await fetch(finalUrl);
+
+            if (!response.ok) throw new Error("Katalog servisi hatası: " + response.statusText);
+
+            const contentType = response.headers.get("content-type");
+
+            if (isGeoNetworkAPI && contentType && contentType.includes("json")) {
+                // 1. Durum: JSON API yanıtı (Kolay işlenebilir)
+                const data = await response.json();
+                let totalRecords = data.total;
+                let recordsHtml = '';
+
+                if (data.records && data.records.length > 0) {
+                    data.records.forEach(record => {
+                        const title = record.title || 'Başlık Yok';
+                        const abstractText = record.abstract || 'Açıklama Yok';
+                        const uuid = record.id;
+                        const link = record.link ? record.link : '#';
+
+                        recordsHtml += `
+                            <div class="metadata-item">
+                                <a href="${link}" target="_blank" class="title-link">${title}</a> 
+                                <span class="badge bg-secondary ms-2">${uuid}</span>
+                                <p class="small text-muted mt-1 mb-0">${abstractText.substring(0, 150)}...</p>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('results').innerHTML = recordsHtml;
+                    document.getElementById('recordCount').innerText = `${data.records.length} / ${totalRecords} Kayıt Bulundu`;
+
+                } else {
+                    document.getElementById('results').innerHTML = '<div class="alert alert-warning">Aradığınız kritere uygun meta veri kaydı bulunamadı.</div>';
+                    document.getElementById('recordCount').innerText = `0 Kayıt Bulundu`;
+                }
+
+            } else {
+                // 2. Durum: Standart CSW XML yanıtı
+                const xmlText = await response.text();
+
+                // Kayıt sayısını tahmini olarak bulmaya çalışalım (hits sayımı)
+                const totalRecordsMatch = xmlText.match(/numberOfRecordsMatched="(\d+)"/);
+                const returnedRecordsMatch = xmlText.match(/numberOfRecordsReturned="(\d+)"/);
+
+                const total = totalRecordsMatch ? totalRecordsMatch[1] : '?';
+                const returned = returnedRecordsMatch ? returnedRecordsMatch[1] : '?';
+
+                document.getElementById('results').innerHTML = `
+                    <div class="alert alert-info small">
+                        Servis **XML** formatında yanıt verdi. Arama sonuçlarını detaylı görmek için aşağıdaki URL'i yeni sekmede açınız.
+                    </div>
+                    <a href="${finalUrl}" target="_blank" class="btn btn-sm btn-outline-info">XML Çıktısını Görüntüle</a>
+                    <pre class="code-block mt-3" style="height: 150px;">${xmlText.substring(0, 500)}...</pre>
+                `;
+                document.getElementById('recordCount').innerText = `${returned} / ${total} XML Sonucu`;
+            }
+
+        } catch (error) {
+            console.error(error);
+            document.getElementById('results').innerHTML = `<div class="alert alert-danger">Hata: ${error.message}. CORS hatası veya geçersiz sorgu olabilir.</div>`;
+            document.getElementById('recordCount').innerText = "Hata";
+        } finally {
+            document.getElementById('loading-indicator').style.display = 'none';
+        }
+    }
+
+
+    // ---------------------------------------------------------
+    // 4. İLK YÜKLEME
+    // ---------------------------------------------------------
+    window.onload = function() {
+        document.getElementById('cswUrlSelect').dispatchEvent(new Event('change'));
+        // İlk yüklemede GetRecords'u çalıştır
+        searchCswRecords();
+    };
+
+</script>
+</body>
+</html>

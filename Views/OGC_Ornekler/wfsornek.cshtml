@@ -1,0 +1,450 @@
+@{
+Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OGC WFS Eğitim ve Vektör Veri Portalı</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #333; }
+        .navbar { background: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%); }
+        .map-container { height: 600px; width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border: 2px solid #e0e0e0; z-index: 1; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card-header { background-color: #fff; border-bottom: 1px solid #eee; font-weight: 600; color: #2c3e50; }
+        .code-block { background-color: #2d2d2d; color: #a6e22e; padding: 15px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 0.85rem; overflow-x: auto; white-space: pre-wrap; }
+        .param-badge { background-color: #e0f2f1; color: #00695c; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: bold; }
+        
+        #loading-indicator { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background: rgba(255,255,255,0.9); padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2); text-align: center; }
+
+        .basemap-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid #eee; }
+        .basemap-label { font-weight: 500; color: #555; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; margin-bottom: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #4ca1af; }
+        input:checked + .slider:before { transform: translateX(26px); }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="#">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-vector-pen me-2" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M10.646.646a.5.5 0 0 1 .708 0l4 4a.5.5 0 0 1 0 .708l-1.902 1.902-.829 3.313a1.5 1.5 0 0 1-1.024 1.073L1.254 14.746 4.358 4.4A1.5 1.5 0 0 1 5.43 3.377l3.313-.828L10.646.646zm-1.8 2.908-3.173.793a.5.5 0 0 0-.358.342l-2.57 8.565 8.567-2.57a.5.5 0 0 0 .34-.357l.794-3.174-3.6-3.6z"/>
+            </svg>
+            OGC WFS (Vektör) Portalı
+        </a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-4">
+
+            <div class="card">
+                <div class="card-header">
+                    📚 WFS Nedir? (Web Feature Service)
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">WFS, coğrafi verileri resim olarak değil, **vektör veri (GML, GeoJSON)** olarak sunar. Bu sayede haritadaki objelere tıklayabilir ve verilerini görebilirsiniz.</p>
+                    <hr />
+                    <h6>Temel Parametreler:</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-1"><span class="param-badge">SERVICE</span>: WFS</li>
+                        <li class="mb-1"><span class="param-badge">REQUEST</span>: GetFeature (Veriyi getir)</li>
+                        <li class="mb-1"><span class="param-badge">TYPENAME</span>: Katman Adı (WMS'teki Layers yerine)</li>
+                        <li class="mb-1"><span class="param-badge">OUTPUTFORMAT</span>: application/json (Tercihen)</li>
+                        <li class="mb-1"><span class="param-badge">MAXFEATURES</span>: Veri limiti (Tarayıcıyı kasmamak için)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    📚 WMS Nedir? (Web Map Service)
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted">WMS, coğrafi verileri vektör olarak değil, sunucuda oluşturulmuş **harita resmi (PNG, JPEG)** olarak sunar.</p>
+                </div>
+            </div>
+
+            <div class="card bg-light">
+                <div class="card-header">
+                    ⚙️ WFS Servis Ayarları
+                </div>
+                <div class="card-body">
+                    <form id="wfsForm">
+                        <div class="mb-3">
+                            <label for="wfsUrl" class="form-label fw-bold">WFS URL</label>
+                            <select class="form-select" id="wfsUrlSelect">
+                                <option value="https://ahocevar.com/geoserver/wfs">GeoServer Demo (ABD Eyaletleri)</option>
+                                <option value="https://sedac.ciesin.columbia.edu/geoserver/wfs">NASA SEDAC (Global)</option>
+                                <option value="https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs">TKGM (Parsel - Türkiye)</option>
+                            </select>
+                            <input type="text" class="form-control mt-2" id="wfsUrlInput" value="https://ahocevar.com/geoserver/wfs" readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="typeNameContainer" class="form-label fw-bold">TypeName (Katman)</label>
+                            <div id="typeNameContainer">
+                                <input type="text" class="form-control" id="typeName" value="topp:states">
+                            </div>
+                            <div class="form-text small">WFS'de katman adı 'TypeName' parametresi ile çağrılır.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                             <label class="form-label fw-bold">Max Features</label>
+                             <input type="number" class="form-control" id="maxFeatures" value="50">
+                             <div class="form-text small">Çok fazla veri tarayıcıyı dondurabilir.</div>
+                        </div>
+
+                        <div class="mb-3">
+                             <label for="outputFormat" class="form-label fw-bold">OUTPUTFORMAT</label>
+                             <select class="form-select" id="outputFormat">
+                                 <option value="application/json" selected>application/json (Leaflet ile Çizilebilir)</option>
+                                 <option value="text/xml; subtype=gml/3.2">GML 3.2 (Vektör XML)</option>
+                                 <option value="text/xml; subtype=gml/3.1.1">GML 3.1.1 (Vektör XML)</option>
+                                 <option value="csv">CSV (Öznitelik Tablosu)</option>
+                             </select>
+                             <div class="form-text small text-danger">⚠️ GeoJSON dışında bir format seçerseniz, veri haritaya çizilemez, sadece URL oluşturulur.</div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-primary" onclick="loadWfsLayer()">
+                                Vektör Veriyi İndir ve Çiz
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    🇹🇷 TKGM WFS (Otomatik BBOX)
+                </div>
+                <div class="card-body">
+                    <div class="basemap-item">
+                        <span class="basemap-label">Parsel Verisini Getir</span>
+                        <label class="switch">
+                            <input type="checkbox" id="tkgm-wfs-toggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="alert alert-warning mt-2 small p-2">
+                        ⚠️ **Dikkat:** TKGM WFS servisi çok yoğundur. Tarayıcıda açmak için "BBOX" (Ekran Sınırı) filtresi uygulanacaktır. Sadece çok yaklaştığınızda (Zoom 16+) çalışır.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>🗺️ Vektör Harita (Tıklanabilir)</span>
+                    <span class="badge bg-info text-dark" id="feature-count">0 Obje</span>
+                </div>
+                <div class="card-body p-0 position-relative">
+                    <div id="loading-indicator">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <div>Veri İndiriliyor...</div>
+                    </div>
+                    <div id="map" class="map-container"></div>
+                </div>
+                <div class="card-footer text-muted small">
+                    <span style="color:blue">Mavi çizgiler</span> GeoJSON vektör verisidir. Üzerine tıklayarak özniteliklerini görebilirsiniz.
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    💻 Yapılan Fetch İsteği (GeoJSON URL)
+                </div>
+                <div class="card-body bg-dark p-0">
+                    <div class="code-block" id="requestCode">
+                        Henüz istek yapılmadı...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="text-center py-4 text-muted mt-5 border-top">
+    <div class="container">
+        <p class="mb-0">owsLab - WFS Vektör Veri Entegrasyon Demosu</p>
+    </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // ---------------------------------------------------------
+    // 1. HARİTA BAŞLATMA
+    // ---------------------------------------------------------
+    var map = L.map('map').setView([40.0, -98.0], 4); 
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    var geoJsonLayer = null; 
+    var tkgmVectorLayer = null; 
+
+    // TKGM Katman Listesi
+    const tkgmLayerList = [
+        "TKGM:eklentiler",
+        "TKGM:ilceler",
+        "TKGM:iller",
+        "TKGM:irtifakhaklari",
+        "TKGM:kulturvarliklarialan",
+        "TKGM:mahalleler",
+        "TKGM:muhdesatlar",
+        "TKGM:ozelalanbirlesimview",
+        "TKGM:ozelguvenlikbolgeleri",
+        "TKGM:pafta",
+        "TKGM:parseller",
+        "TKGM:parseller_adalar",
+        "TKGM:pasif_parseller",
+        "TKGM:planyuzbin_hazineparsel_view",
+        "TKGM:planyuzbinview",
+        "TKGM:tescilharicialanlar",
+        "TKGM:yapilar",
+        "TKGM:yerkontrolnoktalari"
+    ];
+
+
+    // ---------------------------------------------------------
+    // 2. GENEL WFS FONKSİYONLARI (DROPDOWN LOJİĞİ GÜNCELLENDİ)
+    // ---------------------------------------------------------
+    
+    document.getElementById('wfsUrlSelect').addEventListener('change', function() {
+        var selectedVal = this.value;
+        var inputUrl = document.getElementById('wfsUrlInput');
+        var typeNameContainer = document.getElementById('typeNameContainer');
+        var defaultTypeName = "";
+
+        inputUrl.value = selectedVal;
+        typeNameContainer.innerHTML = ''; // İçeriği temizle
+
+        if (selectedVal.includes('ahocevar')) {
+            defaultTypeName = 'topp:states';
+            map.setView([40, -98], 4); // ABD'ye odaklanma
+            
+            // Standart Input oluştur
+            typeNameContainer.innerHTML = `<input type="text" class="form-control" id="typeName" value="${defaultTypeName}">`;
+        
+        } else if (selectedVal.includes('sedac')) {
+            defaultTypeName = 'gpw-v3:gpw-v3-population-density_2000';
+            map.setView([0, 0], 2); // Global'e odaklanma
+
+            // Standart Input oluştur
+            typeNameContainer.innerHTML = `<input type="text" class="form-control" id="typeName" value="${defaultTypeName}">`;
+
+        } 
+        // --- TKGM MANTIĞI: DİNAMİK SELECT OLUŞTURMA ---
+        else if (selectedVal.includes('tkgm')) {
+            defaultTypeName = 'TKGM:parseller1'; // Varsayılanı parsel yap
+            map.setView([39.92, 32.85], 6); // Türkiye'ye odaklanma
+            
+            // SELECT elementini oluştur
+            let selectHtml = '<select class="form-select" id="typeName">';
+            tkgmLayerList.forEach(layer => {
+                const isSelected = (layer === defaultTypeName) ? 'selected' : '';
+                selectHtml += `<option value="${layer}" ${isSelected}>${layer}</option>`;
+            });
+            selectHtml += '</select>';
+            
+            // Oluşturulan Select'i konteynere yerleştir
+            typeNameContainer.innerHTML = selectHtml;
+            
+            // Uyarı
+            alert("TKGM Servisi seçildi. Bu servisten veri çekmek için BBOX filtresi gerekebilir (otomatik BBOX için aşağıdaki switch'i kullanın).");
+        }
+    });
+
+    async function loadWfsLayer() {
+        // Dinamik olarak oluşturulmuş input veya select'ten güncel typeName değerini al
+        var typeName = document.getElementById('typeName').value; 
+        var baseUrl = document.getElementById('wfsUrlInput').value;
+        var maxFeatures = document.getElementById('maxFeatures').value;
+        // YENİ: Output format değerini al
+        var outputFormat = document.getElementById('outputFormat').value;
+
+        document.getElementById('loading-indicator').style.display = 'block';
+
+        var wfsUrl = new URL(baseUrl);
+        wfsUrl.searchParams.append("service", "WFS");
+        wfsUrl.searchParams.append("version", "1.1.0"); // GeoServer 1.1.0 yaygındır
+        wfsUrl.searchParams.append("request", "GetFeature");
+        wfsUrl.searchParams.append("typeName", typeName);
+        // GÜNCELLENDİ: Output format
+        wfsUrl.searchParams.append("outputFormat", outputFormat); 
+        wfsUrl.searchParams.append("maxFeatures", maxFeatures);
+        wfsUrl.searchParams.append("srsName", "EPSG:4326");
+
+        // Haritadaki TKGM katmanını temizle (çakışmaması için)
+        if (tkgmVectorLayer) map.removeLayer(tkgmVectorLayer);
+
+        document.getElementById('requestCode').innerText = decodeURIComponent(wfsUrl.toString());
+
+        // Eğer GeoJSON istenmiyorsa, sadece URL'i göster ve fonksiyondan çık.
+        if (!outputFormat.includes("json")) {
+            alert(`GeoJSON dışındaki (${outputFormat.split(';')[0]}) formatları Leaflet haritasında gösterilemez. İstek URL'i oluşturuldu.`);
+            document.getElementById('loading-indicator').style.display = 'none';
+            // Eski GeoJSON katmanını da temizleyelim
+            if (geoJsonLayer) map.removeLayer(geoJsonLayer);
+            document.getElementById('feature-count').innerText = "Format: " + outputFormat.split(';')[0];
+            document.getElementById('feature-count').className = "badge bg-secondary";
+            return;
+        }
+
+        try {
+            const response = await fetch(wfsUrl);
+            if (!response.ok) throw new Error("Veri indirilemedi: " + response.statusText);
+            
+            const contentType = response.headers.get("content-type");
+            // GeoJSON kontrolü (response.json() kullanmak için)
+            if (!contentType || !contentType.includes("json")) {
+                throw new Error("Sunucu GeoJSON formatı döndürmedi (Muhtemelen XML geldi veya CORS hatası). Format: " + contentType);
+            }
+
+            const data = await response.json(); 
+
+            if (geoJsonLayer) map.removeLayer(geoJsonLayer);
+
+            // GeoJSON verisini haritada çizme mantığı (Sadece GeoJSON seçiliyse burası çalışır)
+            geoJsonLayer = L.geoJSON(data, {
+                style: function (feature) {
+                    return { color: "#3388ff", weight: 2, fillOpacity: 0.1 };
+                },
+                onEachFeature: function (feature, layer) {
+                    var popupContent = "<div style='max-height:200px; overflow-y:auto;'><table class='table table-sm table-striped'>";
+                    for (var key in feature.properties) {
+                        popupContent += `<tr><td><strong>${key}</strong></td><td>${feature.properties[key]}</td></tr>`;
+                    }
+                    popupContent += "</table></div>";
+                    layer.bindPopup(popupContent);
+                }
+            }).addTo(map);
+
+            // Veri varsa sınırlara odaklan
+            if (data.features && data.features.length > 0) {
+                map.fitBounds(geoJsonLayer.getBounds());
+                document.getElementById('feature-count').innerText = data.features.length + " Obje";
+                document.getElementById('feature-count').className = "badge bg-success";
+            } else {
+                 alert("Veri bulunamadı. TKGM için yakınlaşmayı deneyin.");
+                 document.getElementById('feature-count').innerText = "0 Obje";
+                 document.getElementById('feature-count').className = "badge bg-info text-dark";
+            }
+            
+
+        } catch (error) {
+            alert("Hata: " + error.message);
+            console.error(error);
+            document.getElementById('feature-count').innerText = "Hata";
+            document.getElementById('feature-count').className = "badge bg-danger";
+        } finally {
+            document.getElementById('loading-indicator').style.display = 'none';
+        }
+    }
+
+    // ---------------------------------------------------------
+    // 3. TKGM WFS (BBOX STRATEJİSİ - ALTTAKİ SWITCH İÇİN)
+    // ---------------------------------------------------------
+    var tkgmCheckbox = document.getElementById("tkgm-wfs-toggle");
+
+    tkgmCheckbox.addEventListener("change", function() {
+        if (this.checked) {
+            if (map.getZoom() < 16) {
+                var conf = confirm("WFS veri indirmek için harita çok uzak. Parselleri görmek için yakınlaşmak ister misiniz?");
+                if (conf) {
+                    map.setView([39.925054, 32.836943], 17); 
+                    setTimeout(fetchTkgmWfs, 1000); 
+                } else {
+                    this.checked = false;
+                }
+            } else {
+                fetchTkgmWfs();
+            }
+            map.on('moveend', onMapMoveEnd);
+        } else {
+            if (tkgmVectorLayer) map.removeLayer(tkgmVectorLayer);
+            map.off('moveend', onMapMoveEnd);
+            document.getElementById('requestCode').innerText = "TKGM WFS Kapatıldı.";
+        }
+    });
+
+    function onMapMoveEnd() {
+        if (tkgmCheckbox.checked && map.getZoom() >= 16) {
+            // Eğer genel katman varsa, onu temizle
+            if (geoJsonLayer) map.removeLayer(geoJsonLayer);
+            fetchTkgmWfs();
+        }
+    }
+
+    async function fetchTkgmWfs() {
+        document.getElementById('loading-indicator').style.display = 'block';
+
+        var bounds = map.getBounds();
+        var bbox = bounds.getWest() + "," + bounds.getSouth() + "," + bounds.getEast() + "," + bounds.getNorth();
+
+        var tkgmUrl = "https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs" + 
+                      "?service=WFS&version=1.0.0&request=GetFeature" +
+                      "&typeName=Parsel" + // Burada sadece Parsek kullanıyoruz
+                      "&outputFormat=application/json" +
+                      "&maxFeatures=100" +
+                      "&bbox=" + bbox;
+
+        document.getElementById('requestCode').innerText = "TKGM Özel İstek (Parsel): " + tkgmUrl;
+
+        try {
+            const response = await fetch(tkgmUrl);
+            if (!response.ok) throw new Error("TKGM Sunucu Hatası: " + response.status);
+            
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("json")) {
+                throw new Error("Sunucu JSON formatında veri döndürmedi.");
+            }
+
+            const data = await response.json();
+
+            if (tkgmVectorLayer) map.removeLayer(tkgmVectorLayer);
+
+            tkgmVectorLayer = L.geoJSON(data, {
+                style: { color: 'red', weight: 2, fillOpacity: 0.2 },
+                onEachFeature: function(feature, layer) {
+                    layer.bindPopup("Parsel No: " + (feature.properties.PARSELNO || '?'));
+                }
+            }).addTo(map);
+
+            document.getElementById('feature-count').innerText = data.features.length + " Parsel (BBOX)";
+            document.getElementById('feature-count').className = "badge bg-warning text-dark";
+
+
+        } catch (err) {
+            console.error(err);
+            alert("TKGM WFS verisi çekilemedi. CORS hatası veya Zoom seviyesi sorunu olabilir.");
+        } finally {
+            document.getElementById('loading-indicator').style.display = 'none';
+        }
+    }
+
+    // İlk yüklemede dropdown change olayını tetikleyerek varsayılan ayarları yükle
+    window.onload = function() {
+        document.getElementById('wfsUrlSelect').dispatchEvent(new Event('change'));
+        // LoadWfsLayer, window.onload içinde tetiklenen change event'inde çağrılacaktır.
+    };
+
+</script>
+</body>
+</html>
