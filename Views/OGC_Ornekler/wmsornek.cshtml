@@ -146,9 +146,10 @@ Layout = null;
         .leaflet-draw-toolbar a {
             background-image: url('https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/images/spritesheet.png');
         }
-        /* WKT Butonu Stili */
+        /* WKT Butonu ve BBOX Butonu Stilleri */
         /* WKT butonu için özel arka plan ve yazı rengi */
-        .leaflet-control-wkt-button a {
+        .leaflet-control-wkt-button a, 
+        .leaflet-control-bbox-button a {
              background-image: none !important; 
              background-color: #1e3c72 !important; /* Koyu Mavi */
              color: white !important;
@@ -158,8 +159,16 @@ Layout = null;
              text-decoration: none;
              font-size: 0.9rem;
         }
-        .leaflet-control-wkt-button a:hover {
+        .leaflet-control-wkt-button a:hover,
+        .leaflet-control-bbox-button a:hover {
              background-color: #2a5298 !important; /* Daha açık mavi */
+        }
+        /* Bu iki butonu Draw kontrolünün yanına düzgünce yerleştirmek için */
+        .leaflet-top.leaflet-right .leaflet-control:nth-child(2) {
+            margin-right: 5px; /* Draw kontrolü ile WKT arasında boşluk */
+        }
+        .leaflet-control-wkt-button {
+            margin-right: 5px; /* WKT ile BBOX arasında boşluk */
         }
     </style>
 </head>
@@ -357,6 +366,15 @@ Layout = null;
           </div>
           
           <hr>
+
+          <div id="bboxResultContainer" class="alert alert-warning small" style="display:none;">
+            <h6 class="text-secondary">📐 Çizilen Tüm Geometrileri Kapsayan BBOX (Bounding Box)</h6>
+            <div id="bboxWktOutput"></div>
+            <div id="bboxEpsg3857Output" class="mt-2"></div>
+            <button class="btn btn-sm btn-outline-dark mt-2" onclick="copyBboxToClipboard()">BBOX'u Kopyala (EPSG:3857)</button>
+          </div>
+          
+          <hr id="bboxSeparator" style="display:none;">
           
           <h6 class="text-secondary mb-3">➡️ Dışarıdan WKT Yapıştır ve Haritada Görüntüle</h6>
           <textarea id="wktInput" class="form-control mb-3" rows="5" placeholder="Örn: POLYGON ((32.85 39.93, 32.9 39.9, 32.8 39.9, 32.85 39.93)) veya POINT (32.85 39.93) (Boylam Enlem Sırası)"></textarea>
@@ -383,6 +401,7 @@ Layout = null;
     // WMS Katman Bilgileri ve Sabitler
     // ---------------------------------------------------------
     const WMS_LAYERS_MAP = {
+        // ... (Mevcut katman listesi) ...
         "https://csb.gov.tr/map/rest/services/Planlama/MapServer/WMSServer": [
             "Planlama:Planlar (Mekânsal Planlama)",
             "Planlama:HaliHazirHaritalar (Halihazır)",
@@ -1140,32 +1159,25 @@ Layout = null;
 
 
     // ---------------------------------------------------------
-    // 7. Leaflet.draw & WKT İşlevselliği (YENİ EK)
+    // 7. Leaflet.draw & WKT İşlevselliği
     // ---------------------------------------------------------
 
-    // Çizilen tüm geometrileri tutacak katman grubu
     var drawnItems = new L.FeatureGroup();
     map.addLayer(drawnItems); 
-
-    // YENİ: WKT'den çizilen geometrileri tutacak geçici katman grubu
     var wktTempLayer = new L.FeatureGroup();
     map.addLayer(wktTempLayer);
 
-    // --- WKT Yardımcı Fonksiyonları (Boylam Enlem sırası WKT'ye göre) ---
+    // --- WKT Yardımcı Fonksiyonları ---
 
-    // Leaflet LatLng -> WKT (Boylam Enlem)
     function latLngToWKT(latlng) {
-        // Leaflet: Lat Lng (Enlem Boylam) -> WKT: X Y (Boylam Enlem)
         return `${latlng.lng.toFixed(6)} ${latlng.lat.toFixed(6)}`;
     }
     
-    // GeoJSON objesini WKT formatına dönüştürür (WGS84 Lng Lat sırasıyla)
     function geoJsonToWkt(geojson) {
         if (!geojson || !geojson.geometry) return "GEOMETRYCOLLECTION EMPTY";
         
         const type = geojson.geometry.type.toUpperCase();
         const coords = geojson.geometry.coordinates;
-
         const formatCoordinate = (c) => `${c[0].toFixed(6)} ${c[1].toFixed(6)}`; // [Lng, Lat]
         
         switch (type) {
@@ -1176,38 +1188,32 @@ Layout = null;
                 return `LINESTRING (${coords.map(formatCoordinate).join(', ')})`;
 
             case 'POLYGON':
-                // Poligonlar [ [dış halka], [iç halka1], ...] şeklindedir
                 const rings = coords.map(ring => {
                     return `(${ring.map(formatCoordinate).join(', ')})`;
                 });
-                return `POLYGON ${rings.join(', ')}`; // POLYGON ((...))
+                return `POLYGON ${rings.join(', ')}`; 
             case 'RECTANGLE': 
             case 'CIRCLE': 
                 const bounds = L.polygon(L.GeoJSON.coordsToLatLngs(coords, 1)).getBounds();
                 const sw = bounds.getSouthWest();
                 const ne = bounds.getNorthEast();
-                // Simple BBOX as Polygon for visualization
                 return `POLYGON ((${latLngToWKT(sw)}, ${latLngToWKT(L.latLng(sw.lat, ne.lng))}, ${latLngToWKT(ne)}, ${latLngToWKT(L.latLng(ne.lat, sw.lng))}, ${latLngToWKT(sw)}))`;
             default:
                 return `${type} (Geometri ayrıştırılamadı)`;
         }
     }
     
-    // Basit WKT ayrıştırma simülasyonu (WKT -> GeoJSON)
     function parseWKT(wkt) {
         const wktUpper = wkt.trim().toUpperCase();
-        // POINT, LINESTRING, POLYGON formatlarını yakalar
         const match = wktUpper.match(/^(POINT|LINESTRING|POLYGON)\s*\((.*)\)/i);
         if (!match) return null;
 
         const type = match[1];
         const coordStr = match[2];
 
-        // Boylam Enlem formatında koordinat dizesini ayrıştırır ve Lng, Lat olarak döndürür
         const parseCoords = (str) => {
             return str.trim().split(',').map(c => {
                 const parts = c.trim().split(/\s+/).map(Number);
-                // WKT genellikle X Y (Lng Lat) kullanır
                 return [parts[0], parts[1]]; 
             });
         };
@@ -1222,7 +1228,6 @@ Layout = null;
                     coordinates = parseCoords(coordStr);
                     break;
                 case 'POLYGON':
-                    // POLIGON ((...)) formatı için
                     const rings = coordStr.replace(/[\(\)]/g, "").split('), (').map(ringStr => {
                          return ringStr.split(',').map(c => c.trim().split(/\s+/).map(Number));
                     });
@@ -1248,24 +1253,25 @@ Layout = null;
 
     // --- WKT Butonu (Leaflet Kontrolü) ---
 
-    // Özel CSS sınıfını eklemek için sınıf tanımını değiştiriyoruz
     L.Control.WKTButton = L.Control.extend({
         options: {
             position: 'topright'
         },
         onAdd: function(map) {
-            // Konteyner'a özel sınıf ekle
             var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-wkt-button');
-            var link = L.DomUtil.create('a', '', container); // Sadece link kullan
+            var link = L.DomUtil.create('a', '', container);
             
             link.href = '#';
-            link.title = 'WKT Formatlarını Görüntüle ve WKT Yapıştır/Çiz';
-            link.innerHTML = 'WKT'; // Buton etiketi
+            link.title = 'Çizilen Geometrilerin WKT\'sini Görüntüle ve WKT Yapıştır/Çiz';
+            link.innerHTML = 'WKT';
             
             L.DomEvent.on(link, 'click', L.DomEvent.stop)
                       .on(link, 'click', function() {
+                          // BBOX alanını gizle
+                          document.getElementById('bboxResultContainer').style.display = 'none';
+                          document.getElementById('bboxSeparator').style.display = 'none';
+
                           updateWKTModalContent();
-                          // Bootstrap 5 ile modal aç
                           var wktModal = new bootstrap.Modal(document.getElementById('wktModal'));
                           wktModal.show();
                       });
@@ -1274,8 +1280,90 @@ Layout = null;
         }
     });
 
-    // Haritaya özel WKT butonunu ekle
-    map.addControl(new L.Control.WKTButton()); // Konum 'topright' options'ta tanımlı
+    // --- YENİ BBOX Butonu (Leaflet Kontrolü) ---
+
+    L.Control.BBOXButton = L.Control.extend({
+        options: {
+            position: 'topright'
+        },
+        onAdd: function(map) {
+            var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-bbox-button');
+            var link = L.DomUtil.create('a', '', container);
+            
+            link.href = '#';
+            link.title = 'Tüm Çizimleri Kapsayan BBOX\'u Hesapla';
+            link.innerHTML = 'BBOX';
+            
+            L.DomEvent.on(link, 'click', L.DomEvent.stop)
+                      .on(link, 'click', function() {
+                          calculateAndShowBBOX();
+                          var wktModal = new bootstrap.Modal(document.getElementById('wktModal'));
+                          wktModal.show();
+                      });
+
+            return container;
+        }
+    });
+
+    // BBOX Kopyalama Yardımcısı (Modal içinden çağrılır)
+    function copyBboxToClipboard() {
+        const bboxText = document.getElementById('bboxEpsg3857Output').innerText.replace('EPSG:3857 (minX,minY,maxX,maxY): ', '').trim();
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(bboxText).then(() => {
+                alert("BBOX değeri panoya kopyalandı:\n" + bboxText);
+            });
+        }
+    }
+
+    // Tüm çizimleri kapsayan BBOX'u hesapla ve modalı güncelle
+    function calculateAndShowBBOX() {
+        const container = document.getElementById('bboxResultContainer');
+        const separator = document.getElementById('bboxSeparator');
+        const wktOutput = document.getElementById('bboxWktOutput');
+        const epsgOutput = document.getElementById('bboxEpsg3857Output');
+
+        if (drawnItems.getLayers().length === 0) {
+            alert("Haritada çizili bir geometri bulunmamaktadır.");
+            container.style.display = 'none';
+            separator.style.display = 'none';
+            return;
+        }
+        
+        // 1. Tüm çizimleri kapsayan Boundları al
+        const bounds = drawnItems.getBounds();
+        const sw = bounds.getSouthWest();
+        const ne = bounds.getNorthEast();
+
+        // 2. WKT (WGS84 Lng Lat) olarak BBOX Poligonunu oluştur
+        const bboxWkt = `POLYGON ((${latLngToWKT(sw)}, ${latLngToWKT(L.latLng(sw.lat, ne.lng))}, ${latLngToWKT(ne)}, ${latLngToWKT(L.latLng(ne.lat, sw.lng))}, ${latLngToWKT(sw)}))`;
+        
+        // 3. EPSG:3857 BBOX değerlerini hesapla
+        const sw3857 = L.CRS.EPSG3857.project(sw);
+        const ne3857 = L.CRS.EPSG3857.project(ne);
+        const bbox3857 = `${sw3857.x.toFixed(2)},${sw3857.y.toFixed(2)},${ne3857.x.toFixed(2)},${ne3857.y.toFixed(2)}`;
+
+        // WKT listesini temizle/gizle
+        updateWKTModalContent(true); 
+
+        // Sonuçları modalda göster
+        wktOutput.innerHTML = `
+            <span class="badge bg-danger">WKT (WGS84):</span>
+            <code style="font-size:0.8rem; color:#d9534f; background-color: #f8f9fa; display:block; padding: 5px; border-radius: 4px; overflow-x: auto;">${bboxWkt}</code>
+        `;
+        epsgOutput.innerHTML = `
+            <span class="badge bg-danger">EPSG:3857 (minX,minY,maxX,maxY):</span>
+            <code style="font-size:0.8rem; color:#d9534f; background-color: #f8f9fa; display:block; padding: 5px; border-radius: 4px; overflow-x: auto;">${bbox3857}</code>
+        `;
+
+        container.style.display = 'block';
+        separator.style.display = 'block';
+    }
+
+
+    // Haritaya özel WKT ve BBOX butonlarını ekle
+    map.addControl(new L.Control.WKTButton());
+    map.addControl(new L.Control.BBOXButton());
+
 
     // Çizim kontrolünü tanımla
     var drawControl = new L.Control.Draw({
@@ -1305,10 +1393,8 @@ Layout = null;
         var type = e.layerType,
             layer = e.layer;
 
-        // Çizilen katmanı FeatureGroup'a ekle
         drawnItems.addLayer(layer);
         
-        // WKT'yi hesapla ve Request Code alanını güncelle
         var geojson = layer.toGeoJSON();
         var wkt = geoJsonToWkt(geojson);
         
@@ -1322,17 +1408,20 @@ Layout = null;
         
         ---
         
-        Oluşan BBOX (EPSG:3857) için Haritayı Güncelle Butonuna basınız veya WKT Butonuna tıklayarak tüm çizimlerin WKT'lerini görebilirsiniz.
+        Oluşan BBOX (EPSG:3857) için Haritayı Güncelle Butonuna basınız veya WKT/BBOX Butonlarına tıklayarak detayları görebilirsiniz.
         `;
         
         // Çizim tamamlandığında WKT modal içeriğini güncelle ve modalı aç
+        // Bu, otomatik pop-up isteğini karşılar.
+        document.getElementById('bboxResultContainer').style.display = 'none';
+        document.getElementById('bboxSeparator').style.display = 'none';
         updateWKTModalContent(); 
         var wktModal = new bootstrap.Modal(document.getElementById('wktModal'));
         wktModal.show();
     });
-
+    
     // WKT Modal içeriğini günceller (Mevcut çizimleri listeler)
-    function updateWKTModalContent() {
+    function updateWKTModalContent(hideBboxInfo = false) {
         const wktListElement = document.getElementById('wktList');
         wktListElement.innerHTML = ''; 
         let count = 0;
@@ -1360,7 +1449,6 @@ Layout = null;
                 </div>
             `;
             
-            // Kopyalama işlevini ekle
             listItem.querySelector('.copy-wkt-btn').addEventListener('click', function() {
                 const wktToCopy = this.getAttribute('data-wkt');
                 navigator.clipboard.writeText(wktToCopy).then(() => {
@@ -1378,7 +1466,17 @@ Layout = null;
         if (count === 0) {
             wktListElement.innerHTML = '<div class="list-group-item list-group-item-info small">Haritada henüz bir çizim yapılmamıştır.</div>';
         }
+
+        // BBOX bilgisini gizle/göster
+        document.getElementById('bboxResultContainer').style.display = hideBboxInfo ? 'none' : 'block';
+        document.getElementById('bboxSeparator').style.display = hideBboxInfo ? 'none' : 'block';
+
+        // Eğer WKT butonu ile açıldıysa, sadece WKT listesi gösterilmeli
+        if (!hideBboxInfo) {
+             calculateAndShowBBOX(true); // WKT butonuna basıldığında, varsayılan olarak BBOX'u da hesapla
+        }
     }
+
 
     // WKT Yapıştır butonuna tıklama işlevi
     document.getElementById('goToWktBtn').addEventListener('click', function() {
@@ -1388,15 +1486,12 @@ Layout = null;
             return;
         }
 
-        // Geçici katmanı temizle
         wktTempLayer.clearLayers();
         
         try {
-            // WKT metnini GeoJSON'a dönüştür (Simülasyon)
             const feature = parseWKT(wktText); 
             
             if (feature) {
-                // GeoJSON objesini haritaya ekle. WKT'de Lng Lat olduğu için GeoJSON'da da Lng Lat beklenir.
                 const geoJSONLayer = L.geoJSON(feature, {
                     pointToLayer: function(geoJsonPoint, latlng) {
                         return L.marker(latlng);
@@ -1409,11 +1504,9 @@ Layout = null;
                     }
                 }).addTo(wktTempLayer);
                 
-                // Haritada çizime yakınlaş
                 if (geoJSONLayer.getBounds && geoJSONLayer.getBounds().isValid()) {
                     map.fitBounds(geoJSONLayer.getBounds(), { padding: [20, 20] });
                 } else if (geoJSONLayer.getBounds) {
-                    // Marker veya geçersiz bounds için sadece view ayarla
                     const center = geoJSONLayer.getBounds().getCenter();
                     map.setView(center, 15);
                 }
@@ -1443,10 +1536,9 @@ Layout = null;
 
         listLayersForSelectedWMS(defaultUrl);
 
-        // Başlangıçta GetMap isteğini çalıştır ve haritayı yükle
         processWMSRequest();
         map.setView(defaultView, defaultZoom);
-        updateRequestResultArea(); // Sayfa yüklendiğinde butonu ve alanı kontrol et
+        updateRequestResultArea(); 
     };
 
 </script>
