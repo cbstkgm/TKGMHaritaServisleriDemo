@@ -1,5 +1,5 @@
 @{
-Layout = null;
+    Layout = null;
 }
 
 <!DOCTYPE html>
@@ -7,443 +7,633 @@ Layout = null;
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OGC WFS Eğitim ve Vektör Veri Portalı</title>
+    <title>TKGM WFS Eğitim & İndirme Portalı (Stabil Sürüm)</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
 
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f4f7f6; color: #333; }
-        .navbar { background: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%); }
-        .map-container { height: 600px; width: 100%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border: 2px solid #e0e0e0; z-index: 1; }
-        .card { border: none; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .card-header { background-color: #fff; border-bottom: 1px solid #eee; font-weight: 600; color: #2c3e50; }
-        .code-block { background-color: #2d2d2d; color: #a6e22e; padding: 15px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 0.85rem; overflow-x: auto; white-space: pre-wrap; }
-        .param-badge { background-color: #e0f2f1; color: #00695c; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: bold; }
-        
-        #loading-indicator { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background: rgba(255,255,255,0.9); padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2); text-align: center; }
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; color: #333; }
+        .navbar { background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
-        .basemap-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid #eee; }
-        .basemap-label { font-weight: 500; color: #555; }
-        .switch { position: relative; display: inline-block; width: 50px; height: 24px; margin-bottom: 0; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #4ca1af; }
-        input:checked + .slider:before { transform: translateX(26px); }
+        .map-container { height: 600px; width: 100%; border-radius: 0 0 12px 12px; z-index: 1; border: 2px solid #dee2e6; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card-header { background-color: #fff; border-bottom: 1px solid #eee; font-weight: 600; color: #2c5364; padding: 15px; }
+
+        .code-block { background-color: #282c34; color: #abb2bf; padding: 15px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 0.8rem; overflow: auto; max-height: 300px; white-space: pre-wrap; }
+
+        .list-group-item { font-size: 0.85rem; cursor: pointer; transition: all 0.2s; border-left: 3px solid transparent; }
+        .list-group-item:hover { background-color: #e9ecef; }
+        .list-group-item.active { background-color: #e3f2fd; color: #0d47a1; border-color: #e3f2fd; border-left: 3px solid #0d47a1; }
+
+        /* Scrollbar */
+        .scrollable-list::-webkit-scrollbar { width: 6px; }
+        .scrollable-list::-webkit-scrollbar-track { background: #f1f1f1; }
+        .scrollable-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+        /* Modal İçindeki Kod Bloğu */
+        .modal-body code { background-color: #343a40; color: #e83e8c; padding: 2px 4px; border-radius: 3px; font-size: 0.85rem; }
     </style>
 </head>
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-dark mb-4">
-    <div class="container">
-        <a class="navbar-brand" href="#">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-vector-pen me-2" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M10.646.646a.5.5 0 0 1 .708 0l4 4a.5.5 0 0 1 0 .708l-1.902 1.902-.829 3.313a1.5 1.5 0 0 1-1.024 1.073L1.254 14.746 4.358 4.4A1.5 1.5 0 0 1 5.43 3.377l3.313-.828L10.646.646zm-1.8 2.908-3.173.793a.5.5 0 0 0-.358.342l-2.57 8.565 8.567-2.57a.5.5 0 0 0 .34-.357l.794-3.174-3.6-3.6z"/>
+    <div class="container-fluid px-4">
+        <a class="navbar-brand d-flex align-items-center" href="#">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-hdd-network me-2" viewBox="0 0 16 16">
+                <path d="M4.5 5a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1zM3 4.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0z"/>
+                <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H8.5v3a1.5 1.5 0 0 1 1.5 1.5h5.5a.5.5 0 0 1 0 1H10A1.5 1.5 0 0 1 8.5 14h-1A1.5 1.5 0 0 1 6 12.5H.5a.5.5 0 0 1 0-1H6A1.5 1.5 0 0 1 7.5 11V7H2a2 2 0 0 1-2-2V4zm1 0v1a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1zm6 7.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5z"/>
             </svg>
-            OGC WFS (Vektör) Portalı
+            TKGM WFS | Eğitim & Veri İndirme Portalı
         </a>
+        <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#cheatSheetModal">
+            📖 Operatör Rehberi
+        </button>
     </div>
 </nav>
 
-<div class="container">
+<div class="container-fluid px-4">
     <div class="row">
-        <div class="col-lg-4">
+        <div class="col-lg-3">
 
             <div class="card">
-                <div class="card-header">
-                    📚 WFS Nedir? (Web Feature Service)
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>📚 Katmanlar</span>
+                    <span class="badge bg-secondary rounded-pill" id="layerCount">0</span>
                 </div>
-                <div class="card-body">
-                    <p class="small text-muted">WFS, coğrafi verileri resim olarak değil, **vektör veri (GML, GeoJSON)** olarak sunar. Bu sayede haritadaki objelere tıklayabilir ve verilerini görebilirsiniz.</p>
-                    <hr />
-                    <h6>Temel Parametreler:</h6>
-                    <ul class="list-unstyled small">
-                        <li class="mb-1"><span class="param-badge">SERVICE</span>: WFS</li>
-                        <li class="mb-1"><span class="param-badge">REQUEST</span>: GetFeature (Veriyi getir)</li>
-                        <li class="mb-1"><span class="param-badge">TYPENAME</span>: Katman Adı (WMS'teki Layers yerine)</li>
-                        <li class="mb-1"><span class="param-badge">OUTPUTFORMAT</span>: application/json (Tercihen)</li>
-                        <li class="mb-1"><span class="param-badge">MAXFEATURES</span>: Veri limiti (Tarayıcıyı kasmamak için)</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    📚 WMS Nedir? (Web Map Service)
-                </div>
-                <div class="card-body">
-                    <p class="small text-muted">WMS, coğrafi verileri vektör olarak değil, sunucuda oluşturulmuş **harita resmi (PNG, JPEG)** olarak sunar.</p>
-                </div>
-            </div>
-
-            <div class="card bg-light">
-                <div class="card-header">
-                    ⚙️ WFS Servis Ayarları
-                </div>
-                <div class="card-body">
-                    <form id="wfsForm">
-                        <div class="mb-3">
-                            <label for="wfsUrl" class="form-label fw-bold">WFS URL</label>
-                            <select class="form-select" id="wfsUrlSelect">
-                                <option value="https://ahocevar.com/geoserver/wfs">GeoServer Demo (ABD Eyaletleri)</option>
-                                <option value="https://sedac.ciesin.columbia.edu/geoserver/wfs">NASA SEDAC (Global)</option>
-                                <option value="https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs">TKGM (Parsel - Türkiye)</option>
-                            </select>
-                            <input type="text" class="form-control mt-2" id="wfsUrlInput" value="https://ahocevar.com/geoserver/wfs" readonly>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="typeNameContainer" class="form-label fw-bold">TypeName (Katman)</label>
-                            <div id="typeNameContainer">
-                                <input type="text" class="form-control" id="typeName" value="topp:states">
-                            </div>
-                            <div class="form-text small">WFS'de katman adı 'TypeName' parametresi ile çağrılır.</div>
-                        </div>
-                        
-                        <div class="mb-3">
-                             <label class="form-label fw-bold">Max Features</label>
-                             <input type="number" class="form-control" id="maxFeatures" value="50">
-                             <div class="form-text small">Çok fazla veri tarayıcıyı dondurabilir.</div>
-                        </div>
-
-                        <div class="mb-3">
-                             <label for="outputFormat" class="form-label fw-bold">OUTPUTFORMAT</label>
-                             <select class="form-select" id="outputFormat">
-                                 <option value="application/json" selected>application/json (Leaflet ile Çizilebilir)</option>
-                                 <option value="text/xml; subtype=gml/3.2">GML 3.2 (Vektör XML)</option>
-                                 <option value="text/xml; subtype=gml/3.1.1">GML 3.1.1 (Vektör XML)</option>
-                                 <option value="csv">CSV (Öznitelik Tablosu)</option>
-                             </select>
-                             <div class="form-text small text-danger">⚠️ GeoJSON dışında bir format seçerseniz, veri haritaya çizilemez, sadece URL oluşturulur.</div>
-                        </div>
-                        <div class="d-grid gap-2">
-                            <button type="button" class="btn btn-primary" onclick="loadWfsLayer()">
-                                Vektör Veriyi İndir ve Çiz
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    🇹🇷 TKGM WFS (Otomatik BBOX)
-                </div>
-                <div class="card-body">
-                    <div class="basemap-item">
-                        <span class="basemap-label">Parsel Verisini Getir</span>
-                        <label class="switch">
-                            <input type="checkbox" id="tkgm-wfs-toggle">
-                            <span class="slider"></span>
-                        </label>
+                <div class="card-body p-2">
+                    <input type="text" class="form-control form-control-sm mb-2" id="layerSearch" placeholder="Katman ara..." onkeyup="filterLayers()">
+                    <div class="scrollable-list" style="max-height: 200px; overflow-y: auto;">
+                        <div class="list-group list-group-flush" id="availableLayersList"></div>
                     </div>
-                    <div class="alert alert-warning mt-2 small p-2">
-                        ⚠️ **Dikkat:** TKGM WFS servisi çok yoğundur. Tarayıcıda açmak için "BBOX" (Ekran Sınırı) filtresi uygulanacaktır. Sadece çok yaklaştığınızda (Zoom 16+) çalışır.
+                    <input type="hidden" id="selectedLayer" value="TKGM:parseller">
+                    <input type="hidden" id="wfsUrl" value="https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs">
+                </div>
+            </div>
+
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    🔍 Sorgu Oluşturucu
+                </div>
+                <div class="card-body">
+
+                    <label class="form-label small fw-bold">Mekansal Kısıt (Spatial)</label>
+                    <div class="btn-group w-100 mb-2" role="group">
+                        <input type="radio" class="btn-check" name="spatialMode" id="modeBbox" value="BBOX" checked>
+                        <label class="btn btn-outline-light text-dark btn-sm" for="modeBbox">⬜ BBOX</label>
+
+                        <input type="radio" class="btn-check" name="spatialMode" id="modeIntersects" value="INTERSECTS">
+                        <label class="btn btn-outline-light text-dark btn-sm" for="modeIntersects">🔷 INTERSECTS</label>
                     </div>
+                    <div id="drawStatus" class="badge bg-secondary w-100 mb-3">Çizim Yok</div>
+
+                    <label class="form-label small fw-bold">Öznitelik Filtresi (CQL)</label>
+                    <div class="input-group input-group-sm mb-3">
+                        <input type="text" class="form-control" id="cqlInput" placeholder="Örn: tapumahallead ilike '%ankara%'">
+                        <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('cqlInput').value=''">X</button>
+                    </div>
+
+                    <button class="btn btn-primary w-100 btn-sm mb-2" onclick="previewData()">
+                        👁️ Haritada Önizle
+                    </button>
+                </div>
+            </div>
+
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                    💾 İndirme Seçenekleri
+                </div>
+                <div class="card-body">
+                    <label class="form-label small fw-bold">Format Seçimi</label>
+                    <select class="form-select form-select-sm mb-3" id="downloadFormat">
+                        <option value="application/json">GeoJSON (.json)</option>
+                        <option value="GML2">GML 2.0 (.xml)</option>
+                        <option value="text/xml; subtype=gml/3.1.1">GML 3.1.1 (.xml)</option>
+                        <option value="SHAPE-ZIP">Shapefile (.zip)</option>
+                        <option value="csv">CSV (Sadece Öznitelik)</option>
+                    </select>
+
+                    <label class="form-label small fw-bold">Max Kayıt Sayısı</label>
+                    <input type="number" class="form-control form-control-sm mb-3" id="maxFeatures" value="1000">
+
+                    <div class="alert alert-warning small py-1" style="font-size:0.7rem">
+                        ⚠️ Not: CORS hatası almamak için araya Proxy sunucusu eklenmiştir.
+                    </div>
+
+                    <button class="btn btn-success w-100 fw-bold" onclick="downloadData()">
+                        📥 DOSYAYI İNDİR
+                    </button>
                 </div>
             </div>
 
         </div>
 
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>🗺️ Vektör Harita (Tıklanabilir)</span>
-                    <span class="badge bg-info text-dark" id="feature-count">0 Obje</span>
-                </div>
+        <div class="col-lg-9">
+            <div class="card mb-3">
                 <div class="card-body p-0 position-relative">
-                    <div id="loading-indicator">
+                    <div id="loading-indicator" style="display:none; position:absolute; z-index:999; top:50%; left:50%; transform:translate(-50%, -50%); background:rgba(255,255,255,0.9); padding:20px; border-radius:10px; border:1px solid #ccc; text-align:center">
                         <div class="spinner-border text-primary" role="status"></div>
-                        <div>Veri İndiriliyor...</div>
+                        <div class="fw-bold mt-2">Veri Proxy Üzerinden Çekiliyor...</div>
+                        <div class="small text-muted">Büyük verilerde bu işlem biraz sürebilir.</div>
                     </div>
                     <div id="map" class="map-container"></div>
                 </div>
-                <div class="card-footer text-muted small">
-                    <span style="color:blue">Mavi çizgiler</span> GeoJSON vektör verisidir. Üzerine tıklayarak özniteliklerini görebilirsiniz.
+            </div>
+
+            <div class="card bg-dark text-white">
+                <div class="card-header bg-secondary text-white small py-1">
+                    🔗 Oluşturulan WFS Request URL (Orijinal URL)
+                </div>
+                <div class="card-body p-0">
+                    <pre class="m-0"><code class="language-http" id="urlDisplay" style="max-height:100px; overflow-y:auto;">Henüz istek oluşturulmadı...</code></pre>
                 </div>
             </div>
 
-            <div class="card mt-4">
-                <div class="card-header">
-                    💻 Yapılan Fetch İsteği (GeoJSON URL)
-                </div>
-                <div class="card-body bg-dark p-0">
-                    <div class="code-block" id="requestCode">
-                        Henüz istek yapılmadı...
+            <div class="card bg-dark text-white mt-3 border-secondary">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center py-2">
+                    <div class="d-flex align-items-center">
+                        <span class="fw-bold small me-2">📡 Sunucu Yanıtı (Response)</span>
+                        <span id="responseStatusBadge" class="badge bg-dark border border-secondary text-light">Bekleniyor...</span>
+                        <span id="responseTimeBadge" class="badge bg-dark border border-secondary text-light ms-1" style="display:none">0ms</span>
                     </div>
+
+                    <div>
+                        <div class="btn-group btn-group-sm me-2" role="group">
+                            <button type="button" class="btn btn-outline-light" onclick="toggleWrap()" title="Satır Kaydırmayı Aç/Kapat">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-text-wrap" viewBox="0 0 16 16">
+                                    <path d="M2.5 10a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <button class="btn btn-sm btn-light fw-bold" onclick="copyResponse()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-clipboard me-1" viewBox="0 0 16 16">
+                                <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                                <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                            </svg>
+                            Kopyala
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0 position-relative">
+                    <pre class="m-0" style="position: relative;"><code id="responseOutput" class="language-json" style="max-height: 400px; overflow: auto; display:block; padding:15px; font-size: 0.85rem;">Henüz bir istek gönderilmedi. "Haritada Önizle" veya "İndir" butonuna basınız.</code></pre>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<footer class="text-center py-4 text-muted mt-5 border-top">
-    <div class="container">
-        <p class="mb-0">owsLab - WFS Vektör Veri Entegrasyon Demosu</p>
+<div class="modal fade" id="cheatSheetModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">📚 CQL & WFS Operatör Rehberi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="accordion" id="accordionOps">
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">1. Karşılaştırma Operatörleri (Comparison)</button>
+                        </h2>
+                        <div id="collapse1" class="accordion-collapse collapse show" data-bs-parent="#accordionOps">
+                            <div class="accordion-body">
+                                <p>Sayısal ve metinsel değerlerin eşitlik veya büyüklük durumlarını kontrol eder.</p>
+                                <ul>
+                                    <li>Eşittir: <code>CITY_NAME = 'Ankara'</code></li>
+                                    <li>Eşit Değildir: <code>POPULATION &lt;&gt; 1000</code></li>
+                                    <li>Büyüktür / Küçüktür: <code>AGE &gt; 18</code></li>
+                                    <li>Aralık Belirtme (Dahil): <code>PRICE BETWEEN 10 AND 50</code></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">2. Metin ve Liste Operatörleri (Text & List)</button>
+                        </h2>
+                        <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#accordionOps">
+                            <div class="accordion-body">
+                                <p>Metin içerisindeki desenleri aramak veya bir liste içinde arama yapmak için kullanılır. (Joker karakterler: <code>%</code> çoklu, <code>_</code> tek karakter).</p>
+                                <ul>
+                                    <li>Benzerlik (Duyarlı): <code>NAME LIKE 'Ist%'</code></li>
+                                    <li>Harf Duyarsız Benzerlik: <code>NAME ILIKE 'ankara'</code></li>
+                                    <li>Liste İçinde Arama: <code>CITY_NAME IN ('Izmir', 'Ankara')</code></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">3. Mantıksal Operatörler (Logical)</button>
+                        </h2>
+                        <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#accordionOps">
+                            <div class="accordion-body">
+                                <p>Birden fazla koşulu birleştirmek için kullanılır.</p>
+                                <ul>
+                                    <li>VE: <code>POPULATION &gt; 1000000 AND CITY_NAME = 'Istanbul'</code></li>
+                                    <li>VEYA: <code>TYPE = 'River' OR TYPE = 'Lake'</code></li>
+                                    <li>DEĞİL: <code>NOT (TYPE = 'Forest')</code></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4">4. Boş Değer Kontrolleri (Null Checks)</button>
+                        </h2>
+                        <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#accordionOps">
+                            <div class="accordion-body">
+                                <p>Veri tabanında verinin girilip girilmediğini kontrol eder.</p>
+                                <ul>
+                                    <li>Boş: <code>ADDRESS IS NULL</code></li>
+                                    <li>Dolu: <code>PHONE_NUMBER IS NOT NULL</code></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse5">5. Geometrik ve Uzamsal Operatörler (Spatial)</button>
+                        </h2>
+                        <div id="collapse5" class="accordion-collapse collapse" data-bs-parent="#accordionOps">
+                            <div class="accordion-body">
+                                <p>WFS'in en güçlü yanıdır. Coğrafi ilişkileri sorgular. (Genellikle geometri sütunu <code>geom</code> veya <code>the_geom</code> olarak adlandırılır). </p>
+                                <ul>
+                                    <li>Kesişme: <code>INTERSECTS(geom, POINT(32.8 39.9))</code></li>
+                                    <li>İçinde Olma: <code>WITHIN(geom, POLYGON(...))</code></li>
+                                    <li>Ayrık Olma: <code>DISJOINT(geom, POLYGON(...))</code></li>
+                                    <li>Sınırlayıcı Kutu: <code>BBOX(geom, 26.0, 36.0, 45.0, 42.0)</code></li>
+                                    <li>Mesafe İçinde: <code>DWITHIN(geom, POINT(x y), 500, kilometers)</code></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse6">6. Zaman Operatörleri (Temporal)</button>
+                        </h2>
+                        <div id="collapse6" class="accordion-collapse collapse" data-bs-parent="#accordionOps">
+                            <div class="accordion-body">
+                                <p>Veride zaman damgası (timestamp) varsa kullanılır. Format: YYYY-MM-DDThh:mm:ssZ</p>
+                                <ul>
+                                    <li>Süre İçinde: <code>time_attr DURING 2023-01-01T.../2023-12-31T...</code></li>
+                                    <li>Önce: <code>time_attr BEFORE 2023-01-01T...</code></li>
+                                    <li>Sonra: <code>time_attr AFTER 2023-01-01T...</code></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button></div>
+        </div>
     </div>
-</footer>
+</div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/http.min.js"></script>
+
 <script>
-    // ---------------------------------------------------------
-    // 1. HARİTA BAŞLATMA
-    // ---------------------------------------------------------
-    var map = L.map('map').setView([40.0, -98.0], 4); 
+    // -----------------------------------------------------------
+    // 1. HARİTA KURULUMU & GEOMETRİ HESAPLAMA (Önceki Kod Bloğu)
+    // -----------------------------------------------------------
+    var map = L.map('map').setView([39.92, 32.85], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+    var drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+    var previewLayer = null;
 
-    var geoJsonLayer = null; 
-    var tkgmVectorLayer = null; 
+    var drawControl = new L.Control.Draw({
+        edit: { featureGroup: drawnItems, remove: true },
+        draw: {
+            polygon: { shapeOptions: { color: '#e91e63' }, allowIntersection: false },
+            rectangle: { shapeOptions: { color: '#9c27b0' } },
+            circle: false, marker: false, polyline: false, circlemarker: false
+        }
+    });
+    map.addControl(drawControl);
 
-    // TKGM Katman Listesi
-    const tkgmLayerList = [
-        "TKGM:eklentiler",
-        "TKGM:ilceler",
-        "TKGM:iller",
-        "TKGM:irtifakhaklari",
-        "TKGM:kulturvarliklarialan",
-        "TKGM:mahalleler",
-        "TKGM:muhdesatlar",
-        "TKGM:ozelalanbirlesimview",
-        "TKGM:ozelguvenlikbolgeleri",
-        "TKGM:pafta",
-        "TKGM:parseller",
-        "TKGM:parseller_adalar",
-        "TKGM:pasif_parseller",
-        "TKGM:planyuzbin_hazineparsel_view",
-        "TKGM:planyuzbinview",
-        "TKGM:tescilharicialanlar",
-        "TKGM:yapilar",
-        "TKGM:yerkontrolnoktalari"
+    let currentWkt = null;
+    let currentBbox = null;
+
+    map.on(L.Draw.Event.CREATED, function (e) {
+        drawnItems.clearLayers();
+        var layer = e.layer;
+        drawnItems.addLayer(layer);
+
+        const geojson = layer.toGeoJSON();
+        currentWkt = geoJsonToWkt(geojson);
+        const bounds = layer.getBounds();
+        currentBbox = `${bounds.getSouthWest().lng.toFixed(6)},${bounds.getSouthWest().lat.toFixed(6)},${bounds.getNorthEast().lng.toFixed(6)},${bounds.getNorthEast().lat.toFixed(6)}`;
+
+        document.getElementById('drawStatus').innerText = "✅ Çizim Yapıldı";
+        document.getElementById('drawStatus').className = "badge bg-success w-100 mb-3";
+        updateUrlPreview();
+    });
+
+    map.on(L.Draw.Event.DELETED, function() {
+        currentWkt = null;
+        currentBbox = null;
+        document.getElementById('drawStatus').innerText = "Çizim Yok";
+        document.getElementById('drawStatus').className = "badge bg-secondary w-100 mb-3";
+        updateUrlPreview();
+    });
+
+    function geoJsonToWkt(geojson) {
+        if (!geojson.geometry) return "";
+        const type = geojson.geometry.type.toUpperCase();
+        const coords = geojson.geometry.coordinates;
+        if (type === 'POLYGON') {
+            let ring = coords[0];
+            return `POLYGON ((${ring.map(c => `${c[0].toFixed(7)} ${c[1].toFixed(7)}`).join(', ')}))`;
+        }
+        return "";
+    }
+
+    // -----------------------------------------------------------
+    // 2. KATMANLAR (Önceki Kod Bloğu)
+    // -----------------------------------------------------------
+    const LAYERS = [
+        "TKGM:iller", "TKGM:ilceler", "TKGM:mahalleler", "TKGM:parseller_adalar",
+        "TKGM:parseller", "TKGM:yapilar", "TKGM:pafta", "TKGM:irtifakhaklari",
+        "TKGM:muhdesatlar", "TKGM:eklentiler", "TKGM:kulturvarliklarialan",
+        "TKGM:pasif_parseller", "TKGM:planyuzbin_hazineparsel_view",
+        "TKGM:planyuzbinview", "TKGM:tescilharicialanlar", "TKGM:yerkontrolnoktalari",
+        "TKGM3D:bp_project_2d_v", "TKGM3D:bp_project_administrative_area_parsel_v",
+        "TKGM3D:building_photogrametric_footprint_v", "TKGM3D:building_photogrametric_has_architecturel_v"
     ];
 
-
-    // ---------------------------------------------------------
-    // 2. GENEL WFS FONKSİYONLARI (DROPDOWN LOJİĞİ GÜNCELLENDİ)
-    // ---------------------------------------------------------
-    
-    document.getElementById('wfsUrlSelect').addEventListener('change', function() {
-        var selectedVal = this.value;
-        var inputUrl = document.getElementById('wfsUrlInput');
-        var typeNameContainer = document.getElementById('typeNameContainer');
-        var defaultTypeName = "";
-
-        inputUrl.value = selectedVal;
-        typeNameContainer.innerHTML = ''; // İçeriği temizle
-
-        if (selectedVal.includes('ahocevar')) {
-            defaultTypeName = 'topp:states';
-            map.setView([40, -98], 4); // ABD'ye odaklanma
-            
-            // Standart Input oluştur
-            typeNameContainer.innerHTML = `<input type="text" class="form-control" id="typeName" value="${defaultTypeName}">`;
-        
-        } else if (selectedVal.includes('sedac')) {
-            defaultTypeName = 'gpw-v3:gpw-v3-population-density_2000';
-            map.setView([0, 0], 2); // Global'e odaklanma
-
-            // Standart Input oluştur
-            typeNameContainer.innerHTML = `<input type="text" class="form-control" id="typeName" value="${defaultTypeName}">`;
-
-        } 
-        // --- TKGM MANTIĞI: DİNAMİK SELECT OLUŞTURMA ---
-        else if (selectedVal.includes('tkgm')) {
-            defaultTypeName = 'TKGM:parseller1'; // Varsayılanı parsel yap
-            map.setView([39.92, 32.85], 6); // Türkiye'ye odaklanma
-            
-            // SELECT elementini oluştur
-            let selectHtml = '<select class="form-select" id="typeName">';
-            tkgmLayerList.forEach(layer => {
-                const isSelected = (layer === defaultTypeName) ? 'selected' : '';
-                selectHtml += `<option value="${layer}" ${isSelected}>${layer}</option>`;
-            });
-            selectHtml += '</select>';
-            
-            // Oluşturulan Select'i konteynere yerleştir
-            typeNameContainer.innerHTML = selectHtml;
-            
-            // Uyarı
-            alert("TKGM Servisi seçildi. Bu servisten veri çekmek için BBOX filtresi gerekebilir (otomatik BBOX için aşağıdaki switch'i kullanın).");
-        }
-    });
-
-    async function loadWfsLayer() {
-        // Dinamik olarak oluşturulmuş input veya select'ten güncel typeName değerini al
-        var typeName = document.getElementById('typeName').value; 
-        var baseUrl = document.getElementById('wfsUrlInput').value;
-        var maxFeatures = document.getElementById('maxFeatures').value;
-        // YENİ: Output format değerini al
-        var outputFormat = document.getElementById('outputFormat').value;
-
-        document.getElementById('loading-indicator').style.display = 'block';
-
-        var wfsUrl = new URL(baseUrl);
-        wfsUrl.searchParams.append("service", "WFS");
-        wfsUrl.searchParams.append("version", "1.1.0"); // GeoServer 1.1.0 yaygındır
-        wfsUrl.searchParams.append("request", "GetFeature");
-        wfsUrl.searchParams.append("typeName", typeName);
-        // GÜNCELLENDİ: Output format
-        wfsUrl.searchParams.append("outputFormat", outputFormat); 
-        wfsUrl.searchParams.append("maxFeatures", maxFeatures);
-        wfsUrl.searchParams.append("srsName", "EPSG:4326");
-
-        // Haritadaki TKGM katmanını temizle (çakışmaması için)
-        if (tkgmVectorLayer) map.removeLayer(tkgmVectorLayer);
-
-        document.getElementById('requestCode').innerText = decodeURIComponent(wfsUrl.toString());
-
-        // Eğer GeoJSON istenmiyorsa, sadece URL'i göster ve fonksiyondan çık.
-        if (!outputFormat.includes("json")) {
-            alert(`GeoJSON dışındaki (${outputFormat.split(';')[0]}) formatları Leaflet haritasında gösterilemez. İstek URL'i oluşturuldu.`);
-            document.getElementById('loading-indicator').style.display = 'none';
-            // Eski GeoJSON katmanını da temizleyelim
-            if (geoJsonLayer) map.removeLayer(geoJsonLayer);
-            document.getElementById('feature-count').innerText = "Format: " + outputFormat.split(';')[0];
-            document.getElementById('feature-count').className = "badge bg-secondary";
-            return;
-        }
-
-        try {
-            const response = await fetch(wfsUrl);
-            if (!response.ok) throw new Error("Veri indirilemedi: " + response.statusText);
-            
-            const contentType = response.headers.get("content-type");
-            // GeoJSON kontrolü (response.json() kullanmak için)
-            if (!contentType || !contentType.includes("json")) {
-                throw new Error("Sunucu GeoJSON formatı döndürmedi (Muhtemelen XML geldi veya CORS hatası). Format: " + contentType);
-            }
-
-            const data = await response.json(); 
-
-            if (geoJsonLayer) map.removeLayer(geoJsonLayer);
-
-            // GeoJSON verisini haritada çizme mantığı (Sadece GeoJSON seçiliyse burası çalışır)
-            geoJsonLayer = L.geoJSON(data, {
-                style: function (feature) {
-                    return { color: "#3388ff", weight: 2, fillOpacity: 0.1 };
-                },
-                onEachFeature: function (feature, layer) {
-                    var popupContent = "<div style='max-height:200px; overflow-y:auto;'><table class='table table-sm table-striped'>";
-                    for (var key in feature.properties) {
-                        popupContent += `<tr><td><strong>${key}</strong></td><td>${feature.properties[key]}</td></tr>`;
-                    }
-                    popupContent += "</table></div>";
-                    layer.bindPopup(popupContent);
-                }
-            }).addTo(map);
-
-            // Veri varsa sınırlara odaklan
-            if (data.features && data.features.length > 0) {
-                map.fitBounds(geoJsonLayer.getBounds());
-                document.getElementById('feature-count').innerText = data.features.length + " Obje";
-                document.getElementById('feature-count').className = "badge bg-success";
-            } else {
-                 alert("Veri bulunamadı. TKGM için yakınlaşmayı deneyin.");
-                 document.getElementById('feature-count').innerText = "0 Obje";
-                 document.getElementById('feature-count').className = "badge bg-info text-dark";
-            }
-            
-
-        } catch (error) {
-            alert("Hata: " + error.message);
-            console.error(error);
-            document.getElementById('feature-count').innerText = "Hata";
-            document.getElementById('feature-count').className = "badge bg-danger";
-        } finally {
-            document.getElementById('loading-indicator').style.display = 'none';
-        }
+    function initLayers() {
+        const list = document.getElementById('availableLayersList');
+        document.getElementById('layerCount').innerText = LAYERS.length;
+        LAYERS.forEach(l => {
+            const item = document.createElement('a');
+            item.className = 'list-group-item list-group-item-action py-1 text-truncate';
+            item.innerText = l;
+            item.onclick = () => {
+                document.getElementById('selectedLayer').value = l;
+                document.querySelectorAll('.list-group-item').forEach(x => x.classList.remove('active'));
+                item.classList.add('active');
+                updateUrlPreview();
+            };
+            list.appendChild(item);
+        });
+        if(list.firstChild) list.firstChild.click();
     }
 
-    // ---------------------------------------------------------
-    // 3. TKGM WFS (BBOX STRATEJİSİ - ALTTAKİ SWITCH İÇİN)
-    // ---------------------------------------------------------
-    var tkgmCheckbox = document.getElementById("tkgm-wfs-toggle");
+    function filterLayers() {
+        const term = document.getElementById('layerSearch').value.toLowerCase();
+        document.querySelectorAll('#availableLayersList a').forEach(item => {
+            const text = item.innerText.toLowerCase();
+            item.style.display = text.includes(term) ? '' : 'none';
+        });
+    }
 
-    tkgmCheckbox.addEventListener("change", function() {
-        if (this.checked) {
-            if (map.getZoom() < 16) {
-                var conf = confirm("WFS veri indirmek için harita çok uzak. Parselleri görmek için yakınlaşmak ister misiniz?");
-                if (conf) {
-                    map.setView([39.925054, 32.836943], 17); 
-                    setTimeout(fetchTkgmWfs, 1000); 
-                } else {
-                    this.checked = false;
-                }
+    // -----------------------------------------------------------
+    // 3. URL VE PROXY MANTIĞI (Önceki Kod Bloğu)
+    // -----------------------------------------------------------
+
+    function buildRequestUrl(formatOverride) {
+        const baseUrl = document.getElementById('wfsUrl').value;
+        const typeName = document.getElementById('selectedLayer').value;
+        const maxFeatures = document.getElementById('maxFeatures').value;
+        const format = formatOverride || 'application/json';
+        const cqlInput = document.getElementById('cqlInput').value;
+        const spatialMode = document.querySelector('input[name="spatialMode"]:checked').value;
+
+        let url = `${baseUrl}?service=WFS&version=1.1.0&request=GetFeature`;
+        url += `&typeName=${typeName}&maxFeatures=${maxFeatures}&srsName=EPSG:4326`;
+        url += `&outputFormat=${encodeURIComponent(format)}`;
+
+        let cqlFilters = [];
+        if (cqlInput.trim() !== "") cqlFilters.push(`(${cqlInput})`);
+
+        if (spatialMode === 'INTERSECTS' && currentWkt) {
+            cqlFilters.push(`INTERSECTS(geom, ${currentWkt})`);
+        } else if (spatialMode === 'BBOX' && currentBbox) {
+            url += `&bbox=${currentBbox},EPSG:4326`;
+        }
+
+        if (cqlFilters.length > 0) {
+            url += `&cql_filter=${encodeURIComponent(cqlFilters.join(" AND "))}`;
+        }
+        return url;
+    }
+
+    function buildProxyUrl(targetUrl) {
+        return 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+    }
+
+    function updateUrlPreview() {
+        const url = buildRequestUrl(document.getElementById('downloadFormat').value);
+        document.getElementById('urlDisplay').innerText = decodeURIComponent(url);
+        hljs.highlightAll();
+    }
+
+    // -----------------------------------------------------------
+    // 4. RESPONSE YÖNETİMİ (Önceki Kod Bloğu)
+    // -----------------------------------------------------------
+
+    function formatXml(xml) {
+        // XML Pretty Print Yardımcısı
+        if (!xml) return '';
+        var formatted = '';
+        var reg = /(>)(<)(\/*)/g;
+        xml = xml.replace(reg, '$1\r\n$2$3');
+        var pad = 0;
+        xml.split('\r\n').forEach(function(node) {
+            var indent = 0;
+            if (node.match(/.+<\/\w[^>]*>$/)) {
+                indent = 0;
+            } else if (node.match(/^<\/\w/)) {
+                if (pad != 0) pad -= 1;
+            } else if (node.match(/^<\w[^>]*[^\/]>.*$/)) {
+                indent = 1;
             } else {
-                fetchTkgmWfs();
+                indent = 0;
             }
-            map.on('moveend', onMapMoveEnd);
+            var padding = '';
+            for (var i = 0; i < pad; i++) padding += '  ';
+            formatted += padding + node + '\r\n';
+            pad += indent;
+        });
+        return formatted;
+    }
+
+    function displayResponse(data, status, contentType, duration) {
+        const output = document.getElementById('responseOutput');
+        const badge = document.getElementById('responseStatusBadge');
+        const timeBadge = document.getElementById('responseTimeBadge');
+
+        badge.innerText = `HTTP ${status}`;
+        badge.className = status >= 200 && status < 300 ? "badge bg-success" : "badge bg-danger";
+
+        timeBadge.innerText = `${duration}ms`;
+        timeBadge.style.display = 'inline-block';
+
+        let formattedContent = "";
+        let languageClass = "language-json";
+
+        if (typeof data === 'object') {
+            formattedContent = JSON.stringify(data, null, 2);
+        } else if (contentType && contentType.includes('xml')) {
+            formattedContent = formatXml(data);
+            languageClass = "language-xml";
         } else {
-            if (tkgmVectorLayer) map.removeLayer(tkgmVectorLayer);
-            map.off('moveend', onMapMoveEnd);
-            document.getElementById('requestCode').innerText = "TKGM WFS Kapatıldı.";
+            formattedContent = data || 'Yanıt içeriği boş.';
+            languageClass = "language-plaintext";
         }
-    });
 
-    function onMapMoveEnd() {
-        if (tkgmCheckbox.checked && map.getZoom() >= 16) {
-            // Eğer genel katman varsa, onu temizle
-            if (geoJsonLayer) map.removeLayer(geoJsonLayer);
-            fetchTkgmWfs();
+        output.className = languageClass;
+        output.textContent = formattedContent;
+
+        if (window.hljs) {
+            hljs.highlightElement(output);
         }
     }
 
-    async function fetchTkgmWfs() {
+    function copyResponse() {
+        const text = document.getElementById('responseOutput').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Yanıt panoya kopyalandı!");
+        });
+    }
+
+    function toggleWrap() {
+        const codeBlock = document.getElementById('responseOutput');
+        if (codeBlock.style.whiteSpace === 'pre-wrap') {
+            codeBlock.style.whiteSpace = 'pre'; // Sarma kapalı
+        } else {
+            codeBlock.style.whiteSpace = 'pre-wrap'; // Sarma açık
+        }
+    }
+
+
+    // -----------------------------------------------------------
+    // 5. İŞLEMLER (ÖNİZLEME VE İNDİRME) (Önceki Kod Bloğu)
+    // -----------------------------------------------------------
+
+    async function previewData() {
+        const targetUrl = buildRequestUrl('application/json');
+        const proxyUrl = buildProxyUrl(targetUrl);
+
         document.getElementById('loading-indicator').style.display = 'block';
-
-        var bounds = map.getBounds();
-        var bbox = bounds.getWest() + "," + bounds.getSouth() + "," + bounds.getEast() + "," + bounds.getNorth();
-
-        var tkgmUrl = "https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs" + 
-                      "?service=WFS&version=1.0.0&request=GetFeature" +
-                      "&typeName=Parsel" + // Burada sadece Parsek kullanıyoruz
-                      "&outputFormat=application/json" +
-                      "&maxFeatures=100" +
-                      "&bbox=" + bbox;
-
-        document.getElementById('requestCode').innerText = "TKGM Özel İstek (Parsel): " + tkgmUrl;
+        const startTime = performance.now();
+        if (previewLayer) map.removeLayer(previewLayer);
 
         try {
-            const response = await fetch(tkgmUrl);
-            if (!response.ok) throw new Error("TKGM Sunucu Hatası: " + response.status);
-            
-            const contentType = response.headers.get("content-type");
-            if (!contentType || !contentType.includes("json")) {
-                throw new Error("Sunucu JSON formatında veri döndürmedi.");
+            const res = await fetch(proxyUrl);
+            const clone = res.clone();
+
+            let dataToDisplay;
+            let mapData = null;
+            let contentType = res.headers.get("content-type");
+
+            try {
+                dataToDisplay = await res.json();
+                mapData = dataToDisplay;
+            } catch (e) {
+                dataToDisplay = await clone.text();
+                contentType = res.headers.get("content-type") || 'text/plain';
             }
 
-            const data = await response.json();
+            const endTime = performance.now();
+            const duration = (endTime - startTime).toFixed(0);
 
-            if (tkgmVectorLayer) map.removeLayer(tkgmVectorLayer);
+            displayResponse(dataToDisplay, res.status, contentType, duration);
 
-            tkgmVectorLayer = L.geoJSON(data, {
-                style: { color: 'red', weight: 2, fillOpacity: 0.2 },
-                onEachFeature: function(feature, layer) {
-                    layer.bindPopup("Parsel No: " + (feature.properties.PARSELNO || '?'));
+            if (!res.ok) {
+                throw new Error(`WFS Sunucu Hatası (HTTP: ${res.status}): Yanıt içeriğini kontrol edin.`);
+            }
+
+            if (mapData && mapData.type === 'FeatureCollection') {
+                previewLayer = L.geoJSON(mapData, {
+                    style: { color: "#3388ff", weight: 2 },
+                    onEachFeature: (f, l) => {
+                        let popup = "<div style='max-height:200px; overflow:auto'><table class='table table-xs'>";
+                        for (let key in f.properties) {
+                            popup += `<tr><td><strong>${key}</strong></td><td>${f.properties[key]}</td></tr>`;
+                        }
+                        popup += "</table></div>";
+                        l.bindPopup(popup);
+                    }
+                }).addTo(map);
+
+                if (mapData.features && mapData.features.length > 0) {
+                    map.fitBounds(previewLayer.getBounds());
+                } else {
+                    alert("Kriterlere uygun veri bulunamadı.");
                 }
-            }).addTo(map);
+            } else if (mapData && (typeof mapData === 'object' && mapData.type === 'ServiceExceptionReport' || typeof dataToDisplay === 'string' && dataToDisplay.includes('ExceptionReport'))) {
+                alert("WFS Sorgu Hatası: Sunucudan beklenen GeoJSON yerine hata raporu geldi. Yanıt sekmesini inceleyin.");
+            }
 
-            document.getElementById('feature-count').innerText = data.features.length + " Parsel (BBOX)";
-            document.getElementById('feature-count').className = "badge bg-warning text-dark";
-
-
-        } catch (err) {
-            console.error(err);
-            alert("TKGM WFS verisi çekilemedi. CORS hatası veya Zoom seviyesi sorunu olabilir.");
+        } catch (e) {
+            console.error(e);
+            document.getElementById('responseOutput').textContent = "FETCH ERROR: " + e.message;
+            alert("İşlem sırasında beklenmedik hata oluştu. Detaylar için konsolu kontrol edin.");
         } finally {
             document.getElementById('loading-indicator').style.display = 'none';
         }
     }
 
-    // İlk yüklemede dropdown change olayını tetikleyerek varsayılan ayarları yükle
-    window.onload = function() {
-        document.getElementById('wfsUrlSelect').dispatchEvent(new Event('change'));
-        // LoadWfsLayer, window.onload içinde tetiklenen change event'inde çağrılacaktır.
-    };
+    async function downloadData() {
+        const format = document.getElementById('downloadFormat').value;
+        const targetUrl = buildRequestUrl(format);
+        const proxyUrl = buildProxyUrl(targetUrl);
+
+        const layerName = document.getElementById('selectedLayer').value.split(':')[1];
+        let extension = "dat";
+        if (format.includes("json")) extension = "json";
+        else if (format.includes("xml") || format.includes("gml")) extension = "xml";
+        else if (format.includes("zip")) extension = "zip";
+        else if (format.includes("csv")) extension = "csv";
+
+        const filename = `${layerName}_export.${extension}`;
+
+        document.getElementById('loading-indicator').style.display = 'block';
+
+        try {
+            const response = await fetch(proxyUrl);
+            if (!response.ok) throw new Error("İndirme Hatası: " + response.status);
+
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = downloadUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(downloadUrl);
+            document.body.removeChild(a);
+
+        } catch (e) {
+            alert("İndirme sırasında hata oluştu: " + e.message);
+        } finally {
+            document.getElementById('loading-indicator').style.display = 'none';
+        }
+    }
+
+    document.getElementById('cqlInput').addEventListener('input', updateUrlPreview);
+    document.getElementById('downloadFormat').addEventListener('change', updateUrlPreview);
+    document.getElementById('maxFeatures').addEventListener('change', updateUrlPreview);
+    document.querySelectorAll('input[name="spatialMode"]').forEach(r => r.addEventListener('change', updateUrlPreview));
+
+    window.onload = initLayers;
 
 </script>
 </body>
