@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "Htvxgv7cWxyohvzQ8Dn2rOmB65JrBfhQev6boXAlVjQ=",
+  "Hash": "syYyfHvPxgJdhlsFo9zYxKODgyCa3MvGgTSBtZun5qs=",
   "Source": "owsLab",
   "BasePath": "_content/owsLab",
   "Mode": "Default",
@@ -167,6 +167,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/js/map.js"
+    },
+    {
+      "Identity": "/Users/erdem/MyPage/owsLab/owsLab/wwwroot/js/ogcserivler/wfs-portal.js",
+      "SourceId": "owsLab",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/erdem/MyPage/owsLab/owsLab/wwwroot/",
+      "BasePath": "_content/owsLab",
+      "RelativePath": "js/ogcserivler/wfs-portal.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/js/ogcserivler/wfs-portal.js"
     },
     {
       "Identity": "/Users/erdem/MyPage/owsLab/owsLab/wwwroot/js/toolbar/deleteGeometry.js",

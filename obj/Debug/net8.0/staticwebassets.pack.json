@@ -29,6 +29,10 @@
       "PackagePath": "staticwebassets/js/map.js"
     },
     {
+      "Id": "/Users/erdem/MyPage/owsLab/owsLab/wwwroot/js/ogcserivler/wfs-portal.js",
+      "PackagePath": "staticwebassets/js/ogcserivler/wfs-portal.js"
+    },
+    {
       "Id": "/Users/erdem/MyPage/owsLab/owsLab/wwwroot/js/toolbar/deleteGeometry.js",
       "PackagePath": "staticwebassets/js/toolbar/deleteGeometry.js"
     },
