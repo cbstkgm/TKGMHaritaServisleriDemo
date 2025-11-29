@@ -77,6 +77,10 @@
       "PackagePath": "staticwebassets/js/toolbar/ogcButton.js"
     },
     {
+      "Id": "/Users/erdem/MyPage/owsLab/owsLab/wwwroot/js/toolbar/showWKT.js",
+      "PackagePath": "staticwebassets/js/toolbar/showWKT.js"
+    },
+    {
       "Id": "/Users/erdem/MyPage/owsLab/owsLab/wwwroot/js/toolbar/splitLayer.js",
       "PackagePath": "staticwebassets/js/toolbar/splitLayer.js"
     },

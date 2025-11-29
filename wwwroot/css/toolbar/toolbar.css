@@ -10,6 +10,7 @@
     background: #222;
     color: white;
     display: flex;
+    justify-content: center;  /* Yatay Ortalama */
     align-items: flex-end; /* Sekmeleri alta hizalar */
     gap: 4px; /* Sekmeler arasında boşluk bırakılır */
     padding: 0 10px;
@@ -23,7 +24,7 @@
     color: #ecf0f1; /* Açık yazı */
     border: none;
     padding: 12px 20px; /* Daha fazla dolgu */
-    font-size: 16px;
+    font-size: 12px;
     cursor: pointer;
     border-radius: 10px 10px 0 0; /* KENAR YUVARLAŞTIRMA: Üst köşeler 10px */
     display: flex;
@@ -34,6 +35,10 @@
     height: 50px; /* Sekmenin kendi yüksekliği (topbar'dan biraz kısa) */
     position: relative;
     bottom: 0;
+    /* EŞİT GENİŞLİK İÇİN EKLENDİ */
+    flex-grow: 1;
+    /* Başlangıçta minimum genişliği korur, ardından eşit olarak büyür */
+    flex-shrink: 1;
 }
 
 .tool-btn:hover {
@@ -270,4 +275,80 @@ input:checked + .slider {
 
 input:checked + .slider:before {
     transform: translateX(26px);
+}
+
+
+/* Örnek CSS: OwsLab.css dosyanıza ekleyebilirsiniz */
+.leaflet-vertex-marker {
+    background-color: #3498db; /* Mavi arka plan */
+    color: white;
+    border: 1px solid #2980b9;
+    border-radius: 50%; /* Daire şekli */
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 10px; /* Metni ortala */
+}
+
+
+/* Segment Uzunluğu Label'ı */
+.leaflet-segment-label {
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Taşıma Modu için Merkez Marker'ı (Sürükleme Tutamağı) */
+.leaflet-drag-handle {
+    background-color: #f1c40f; /* Belirgin sarı */
+    color: #2c3e50;
+    border: 2px solid #e67e22;
+    border-radius: 5px;
+    font-size: 16px;
+    text-align: center;
+    line-height: 28px; /* Yüksekliği ortalar */
+    cursor: grab; /* Sürükleme imleci */
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+
+/* Metin Çizimi için Gerekli CSS */
+
+/* Tıklama sırasında görünen geçici imleç */
+.leaflet-text-marker-temp {
+    text-align: center;
+    line-height: 25px;
+    font-size: 1.2em;
+    color: #007bff;
+    border: 2px solid #007bff;
+    border-radius: 50%;
+    background-color: white;
+}
+
+
+/* leaflet-text-marker sınıfının haritada görünür olmasını sağlayan temel stiller */
+.leaflet-text-marker {
+    background: none;
+    border: none;
+    box-shadow: none;
+    color: #333;
+    font-weight: bold;
+    text-shadow: 1px 1px 1px #fff, -1px -1px 1px #fff, 1px -1px 1px #fff, -1px 1px 1px #fff;
+    pointer-events: auto !important;
+    white-space: nowrap;
+    font-size: 16px;
+    text-align: center;
+
+    /* İYİLEŞTİRME: Metni tıklanan noktaya göre tam ortalar */
+    transform: translate(-50%, -50%);
+}
+
+.leaflet-text-marker span {
+    padding: 3px 6px;
+    border-radius: 3px;
+    background-color: rgba(255, 255, 255, 0.7);
 }

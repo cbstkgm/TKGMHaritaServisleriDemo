@@ -18,30 +18,66 @@
     <link rel="stylesheet" href="~/css/owslab.css" />
     <link rel="stylesheet" href="~/css/toolbar/toolbar.css" />
     <link rel="stylesheet" href="~/css/sil1.css" />
+    
+    <!-- toolbar buton icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
 </head>
 
 <body>
 
     <!-- TOP TOOLBAR (Header yok, bunun yerine) -->
     <div id="top-toolbar">
-        <button class="tool-btn" id="btnLayers">🗂️ Katmanlar</button>
+        <button class="tool-btn" id="btnLayers" title="Katmanlar">
+            <i class="fa-solid fa-layer-group"></i> 
+        </button>
         
-        <button class="tool-btn" id="btnDrawPolygon">📐 Alan Çiz</button>
-        <button class="tool-btn" id="btnDrawLine">📏 Çizgi Çiz</button>
-        <button class="tool-btn" id="btnDrawPoint">📍 Nokta At</button>
-        <button class="tool-btn" id="btnDrawCircle">⭕ Daire Çiz</button>
-        <button class="tool-btn" id="btnDragGeometry">🧲 Taşı (Drag)</button>
-        <button class="tool-btn" id="btnDeleteOne">❌ Sil</button>
-        <button class="tool-btn" id="btnClearAll">🧹 Temizle</button>
-        <button class="tool-btn" id="btnDrawText">🔤 Yazı</button>
-        <button class="tool-btn" id="btnEditGeometry">✏️ Edit</button>
-        <button class="tool-btn" id="btnSplitLayer">✂️ Split</button>
-        <button class="tool-btn" id="btnUnionLayer">🔗 Union</button>
-        <button class="tool-btn" id="btnScaleLayer">📐 Scala</button>
-        <button class="tool-btn" id="btnCutLayer">🔪 Cut</button>
-        <button class="tool-btn" id="btnShowWKT">📄 WKT Göster</button>
+        <button class="tool-btn" id="btnDrawPolygon" title="Alan Çiz">
+            <i class="fa-solid fa-draw-polygon"></i>
+        </button>
+        <button class="tool-btn" id="btnDrawLine" title="Çizgi Çiz">
+            <i class="fa-solid fa-grip-lines"></i>
+        </button>
+        <button class="tool-btn" id="btnDrawPoint" title="Nokta At">
+            <i class="fa-solid fa-location-dot"></i>
+        </button>
+        <button class="tool-btn" id="btnDrawCircle" title="Daire Çiz">
+            <i class="fa-regular fa-circle"></i>
+        </button>
+        <button class="tool-btn" id="btnDragGeometry" title="Taşı (Drag)">
+            <i class="fa-solid fa-hand-pointer"></i>
+        </button>
+        <button class="tool-btn" id="btnDeleteOne" title="Sil">
+            <i class="fa-solid fa-trash-can"></i>
+        </button>
+        <button class="tool-btn" id="btnClearAll" title="Temizle">
+            <i class="fa-solid fa-broom"></i>
+        </button>
+        <button class="tool-btn" id="btnDrawText" title="Yazı">
+            <i class="fa-solid fa-font"></i>
+        </button>
+        <button class="tool-btn" id="btnEditGeometry" title="Düzenle (Edit)">
+            <i class="fa-solid fa-pencil"></i>
+        </button>
+        <button class="tool-btn" id="btnSplitLayer" title="Böl (Split)">
+            <i class="fa-solid fa-arrows-split-up-and-left"></i>
+        </button>
+        <button class="tool-btn" id="btnUnionLayer" title="Birleştir (Union)">
+            <i class="fa-solid fa-link"></i>
+        </button>
+        <button class="tool-btn" id="btnScaleLayer" title="Ölçekle (Scale)">
+            <i class="fa-solid fa-maximize"></i>
+        </button>
+        <button class="tool-btn" id="btnCutLayer" title="Kes (Cut)">
+            <i class="fa-solid fa-scissors"></i>
+        </button>
+        <button class="tool-btn" id="btnShowWKT" title="WKT Göster">
+            <i class="fa-solid fa-file-code"></i>
+        </button>
 
-        <button class="tool-btn" id="btnOGC">🌐 OGC Servisleri</button>
+        <button class="tool-btn" id="btnOGC" title="OGC Servisleri">
+            <i class="fa-solid fa-globe"></i>
+        </button>
     </div>
 
     <!-- SOLDA LAYER PANEL -->
@@ -286,15 +322,19 @@
 
  
     <!-- Leaflet ve Draw CSS/JS zaten ekli -->
+    
     <script src="https://unpkg.com/terraformer@1.0.12/terraformer.min.js"></script>
     <script src="https://unpkg.com/terraformer-wkt-parser@1.2.1/terraformer-wkt-parser.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-geometryutil@0.9.3/src/L.GeometryUtil.js"></script>
+    
     
 
     <!-- Kendi JS dosyalarım ~  -->
     
     <script src="~/js/map.js"></script>
-    <script src="~/js/toolbar/toolbar.js"></script>
+    <script src="~/js/toolbar/toolbar.js" asp-append-version="true"></script>
+    <script src="~/js/toolbar/editGeometry.js" asp-append-version="true"></script>
+    <script src="~/js/toolbar/showWKT.js" asp-append-version="true"></script>
     <script src="~/js/toolbar/haritaaltligi.js"></script>
     <script src="~/js/toolbar/konumagit.js"></script>
     <!-- <script src="~/js/toolbar/ogcButtons.js"></script> -->

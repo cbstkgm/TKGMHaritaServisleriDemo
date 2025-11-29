@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "syYyfHvPxgJdhlsFo9zYxKODgyCa3MvGgTSBtZun5qs=",
+  "Hash": "UeyQeiU8YrXos98XWrwWxRvOTiQFLdyjMBqhJrZqDSI=",
   "Source": "owsLab",
   "BasePath": "_content/owsLab",
   "Mode": "Default",
@@ -395,6 +395,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/js/toolbar/ogcButton.js"
+    },
+    {
+      "Identity": "/Users/erdem/MyPage/owsLab/owsLab/wwwroot/js/toolbar/showWKT.js",
+      "SourceId": "owsLab",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/erdem/MyPage/owsLab/owsLab/wwwroot/",
+      "BasePath": "_content/owsLab",
+      "RelativePath": "js/toolbar/showWKT.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/js/toolbar/showWKT.js"
     },
     {
       "Identity": "/Users/erdem/MyPage/owsLab/owsLab/wwwroot/js/toolbar/splitLayer.js",
