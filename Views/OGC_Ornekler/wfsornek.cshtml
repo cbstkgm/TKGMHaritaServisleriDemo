@@ -378,7 +378,7 @@ Layout = null;
 
                         <hr class="my-3">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold small me-2 text-warning">2. WMS URL'si (GetMap - Her Zaman Açık)</span>
+                            <span class="fw-bold small me-2 text-warning">2. WMS URL'si (GetMap - Harita Görünümüne Göre)</span>
                         </div>
                         <pre class="m-0" style="background: none; padding: 0;"><code class="language-http" id="wmsUrlDisplay" style="max-height:100%; height:100%; overflow-y:auto; white-space: pre-wrap; display: block;">WMS URL'si hazırlanıyor...</code></pre>
                     </div>
@@ -637,6 +637,7 @@ Layout = null;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/http.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-wkt/1.0.1/leaflet-wkt.min.js"></script>
+<script src="https://unpkg.com/leaflet.tilelayer.wms/leaflet-tilelayer-wms.js"></script>
 
 <script>
     // -----------------------------------------------------------
@@ -648,15 +649,21 @@ Layout = null;
     let currentWfsVersion = '1.1.0';
     let previewLayer = null;
 
+    // YENİ EKLENEN/GÜNCELLENEN HARİTA DEĞİŞKENLERİ
+    let dynamicWmsBaseLayer = null;
+    let osmBaseLayer = null;
+    let satelliteBaseLayer = null; // Yeni Uydu Katmanı
+    let baseLayers = {}; // Layer Control için altlık listesi
+
     // CREDENTIALS CONFIGURATION - GÜNCELLENDİ (Session Storage Mantığı)
     // Sabit şifreler kaldırıldı. Yerine geçici hafıza kullanılıyor.
     const SESSION_CREDENTIALS = {};
 
     const LAYERS_TKGM = [
         "TKGM:iller", "TKGM:ilceler", "TKGM:mahalleler", "TKGM:parseller_adalar",
-        "TKGM:parseller", "TKGM:yapilar", "TKGM:pafta", "TKGM:irtifakhaklari",
+        "TKGM:parseller", "TKGM:pasif_parseller", "TKGM:yapilar", "TKGM:pafta", "TKGM:irtifakhaklari",
         "TKGM:muhdesatlar", "TKGM:eklentiler", "TKGM:kulturvarliklarialan",
-        "TKGM:pasif_parseller", "TKGM:planyuzbin_hazineparsel_view",
+        "TKGM:planyuzbin_hazineparsel_view",
         "TKGM:planyuzbinview", "TKGM:tescilharicialanlar", "TKGM:yerkontrolnoktalari",
         "TKGM:bina_yapi_kati_irtifak_v", "TKGM:bina_yapi_zemin_kat_v",
         "TKGM3D:bp_project_2d_v", "TKGM3D:bp_project_administrative_area_parsel_v",
@@ -752,10 +759,42 @@ Layout = null;
 
 
     // -----------------------------------------------------------
-    // 1. HARİTA KURULUMU & GEOMETRİ HESAPLAMA
+    // 1. HARİTA KURULUMU & GEOMETRİ HESAPLAMA (GÜNCELLENDİ)
     // -----------------------------------------------------------
     var map = L.map('map').setView([40.653, 35.815], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+
+    // --- 1. HARİTA ALTLIKLARININ TANIMLANMASI ---
+
+    // 1. OSM Standart
+    osmBaseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap',
+        id: 'osmBase'
+    });
+
+    // 2. Uydu Görüntüsü (Esri World Imagery)
+    satelliteBaseLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+        maxZoom: 18
+    });
+
+    // 3. Topo Haritası (OpenTopoMap)
+    const topoBaseLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        maxZoom: 17,
+        attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+    });
+
+    // Altlık Katmanları Listesi
+    baseLayers = {
+        "🗺️ OSM Standart": osmBaseLayer,
+        "🛰️ Uydu Görüntüsü (ESRI)": satelliteBaseLayer,
+        "⛰️ Topo Harita": topoBaseLayer
+    };
+
+    // Başlangıçta OSM'yi haritaya ekle
+    osmBaseLayer.addTo(map);
+
+    // Harita katman kontrolünü ekle
+    L.control.layers(baseLayers).addTo(map);
 
     var drawnItems = new L.FeatureGroup();
     map.addLayer(drawnItems);
@@ -870,7 +909,7 @@ Layout = null;
         let targetCenter = [39.92, 32.85, 6, "Türkiye Genel (Varsayılan)"]; // Global varsayılan
 
         const centers = {
-            "https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs": [40.655, 35.836, 15, "Amasya Merkez (TKGM)"],
+            "https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs": [40.653, 35.808, 17, "Amasya Merkez (TKGM)"],
             "https://ahocevar.com/geoserver/wfs": [40.7128, -74.0060, 10, "New York City, ABD"],
             "https://demo.deegree.org/deegree-webservices/services/wfs110": [50.7374, 7.0877, 8, "Bonn, Almanya (deegree)"],
             "https://demo.deegree.org/deegree-webservices/services/wfs200": [50.7374, 7.0877, 8, "Bonn, Almanya (deegree)"],
@@ -955,6 +994,7 @@ Layout = null;
                 document.querySelectorAll('#availableLayersList .list-group-item').forEach(x => x.classList.remove('active'));
                 e.currentTarget.classList.add('active');
                 updateUrlPreview();
+                updateDynamicWmsBaseLayer(); // ⬅️ DİNAMİK WMS Altlığını Güncelle
                 logToConsole('INFO', `Katman seçildi: ${selectedLayerName}`);
             };
             item.setAttribute('data-typename', l);
@@ -974,6 +1014,7 @@ Layout = null;
             defaultItem.classList.add('active');
             document.getElementById('selectedLayer').value = defaultLayerName;
             document.getElementById('typeNameInput').value = defaultLayerName;
+            updateDynamicWmsBaseLayer(); // ⬅️ Varsayılanı seçince de güncelle
         }
     }
 
@@ -1078,7 +1119,7 @@ Layout = null;
 
         if (selectedUrlOption.includes('tkgm')) {
             setDefaultFormat(selectedUrlOption);
-            populateLayerList(LAYERS_TKGM, "TKGM:mahalleler");
+            populateLayerList(LAYERS_TKGM, "TKGM:parseller");
 
         } else if (selectedUrlOption === 'custom_url') {
             // 2. Özel URL
@@ -1093,6 +1134,8 @@ Layout = null;
             const cleanedUrl = selectedUrlOption.split('?')[0];
             fetchLayersFromWFS(cleanedUrl, false);
         }
+
+        updateDynamicWmsBaseLayer(); // ⬅️ YENİ EKLENDİ
 
         updateOperationParams(true);
         if (isUrlChange) centerMapToTKGMDefault();
@@ -1154,6 +1197,55 @@ Layout = null;
 
 
     // -----------------------------------------------------------
+    // 2.1. DİNAMİK WMS ALTLIĞI YÖNETİCİSİ (YENİ EKLENDİ)
+    // -----------------------------------------------------------
+
+    /**
+     * Seçilen WFS Katmanını WMS TileLayer olarak harita altlığına ekler/günceller.
+     * Bu katman, harita altlığı katmanlarının üzerine dinamik olarak eklenir.
+     */
+    function updateDynamicWmsBaseLayer() {
+        const wfsUrl = document.getElementById('wfsUrlSelect').value;
+        const typeName = document.getElementById('selectedLayer').value;
+        const isTkgm = wfsUrl.includes('tkgm.ows');
+
+        // 1. Önceki dinamik katmanı kaldır (Bu katman, çekilen WFS verisi DEĞİL, WMS altlığıdır)
+        if (dynamicWmsBaseLayer) {
+            map.removeLayer(dynamicWmsBaseLayer);
+        }
+
+        // Geçerli katman ve URL kontrolü
+        if (!typeName || typeName === 'YÜKLENİYOR...' || typeName === 'Katman Yok' || wfsUrl.includes('custom_url')) {
+            dynamicWmsBaseLayer = null; // WMS altlığı yok
+            return;
+        }
+
+        // WFS URL'sini WMS Endpoint'ine çevir
+        let wmsEndpointUrl = wfsUrl.split('?')[0];
+        if (wmsEndpointUrl.includes('/wfs')) {
+            wmsEndpointUrl = wmsEndpointUrl.replace('/wfs', '/wms');
+        }
+
+        // WMS katmanını oluştur (Bu bir Base Layer DEĞİL, üst katmandır)
+        dynamicWmsBaseLayer = L.tileLayer.wms(wmsEndpointUrl, {
+            layers: typeName,
+            format: 'image/png',
+            transparent: true, // WMS'i diğer altlıkların üzerine şeffaf olarak ekle
+            version: '1.1.1',
+            crs: L.CRS.EPSG4326,
+            attribution: isTkgm ? '© TKGM | WMS Üst Katman' : '© Harici WMS Üst Katman',
+            maxNativeZoom: 22,
+            maxZoom: 22,
+        });
+
+        // Yeni WMS katmanını haritaya Base Layer olarak DEĞİL, Overlay Layer olarak ekle.
+        // Base Layer'ı Layer Control yönetiyor.
+        dynamicWmsBaseLayer.addTo(map);
+
+        logToConsole('SUCCESS', `Harita üzerine **${typeName}** katmanının WMS görüntüsü (Overlay) eklendi.`);
+    }
+
+    // -----------------------------------------------------------
     // 3.0. WMS GETMAP URL OLUŞTURUCU (Her zaman açık olması istenen özellik)
     // -----------------------------------------------------------
 
@@ -1161,21 +1253,31 @@ Layout = null;
         const wfsUrl = document.getElementById('wfsUrlSelect').value;
         const typeName = document.getElementById('selectedLayer').value;
 
+        // WFS URL'sini WMS Endpoint'ine çeviriyoruz (genellikle aynı path'tir, sadece path sonu değişebilir)
+        // TKGM'de ikisi de 'tkgm.ows/' altında toplanıyor. Sadece 'wfs' yerine 'wms' gelebilir.
+        let cleanedUrl = wfsUrl.split('?')[0];
+        if (cleanedUrl.includes('/wfs')) {
+            cleanedUrl = cleanedUrl.replace('/wfs', '/wms');
+        }
+
+
         // Eğer katman seçilmemişse veya özel URL girilmemişse uyarı döndür.
         if (!typeName || wfsUrl.includes('custom_url')) return 'WMS isteği için Katman seçimi gerekli veya Özel URL algılanamadı.';
 
-        const cleanedUrl = wfsUrl.split('?')[0];
 
         // Harita BBOX'unu al (kullanıcı çizim yapmasa bile haritanın görünüm alanını kullanmak için)
         let mapBounds;
+        let mapSize;
         try {
             mapBounds = map.getBounds();
+            mapSize = map.getSize();
         } catch (e) {
             // Harita initialize olmamışsa varsayılan BBOX kullan
             return 'Harita henüz yüklenmedi veya geçersiz BBOX.';
         }
 
         // Leaflet bounds'u Lng, Lat olarak verir, WMS BBOX Lng, Lat, Lng, Lat ister.
+        // GetMap için haritanın mevcut BBOX'u WGS84 (EPSG:4326) formatında hesaplanır.
         const currentMapBbox = `${mapBounds.getSouthWest().lng.toFixed(7)},${mapBounds.getSouthWest().lat.toFixed(7)},${mapBounds.getNorthEast().lng.toFixed(7)},${mapBounds.getNorthEast().lat.toFixed(7)}`;
 
         let wmsParams = [];
@@ -1184,11 +1286,12 @@ Layout = null;
         wmsParams.push('request=GetMap');
         wmsParams.push(`layers=${typeName}`);
         wmsParams.push('styles='); // Stil boş bırakılabilir
-        wmsParams.push('width=800'); // Görüntü genişliği
-        wmsParams.push('height=600'); // Görüntü yüksekliği
-        wmsParams.push('srs=EPSG:4326');
+        wmsParams.push(`width=${Math.round(mapSize.x)}`); // Mevcut harita genişliği
+        wmsParams.push(`height=${Math.round(mapSize.y)}`); // Mevcut harita yüksekliği
+        wmsParams.push('srs=EPSG:4326'); // Koordinat sistemi
         wmsParams.push('format=image/png');
-        wmsParams.push(`bbox=${currentMapBbox}`); // Haritanın mevcut görünüm alanı
+        wmsParams.push('transparent=TRUE');
+        wmsParams.push(`bbox=${currentMapBbox}`); // Haritanın mevcut görünüm alanı (4326)
 
         const queryString = wmsParams.join('&');
         return `${cleanedUrl}?${queryString}`;

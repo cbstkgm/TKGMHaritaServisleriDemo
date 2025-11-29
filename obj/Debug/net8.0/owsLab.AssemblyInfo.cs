@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("owsLab")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+67472f22b94b1b7155bbb4c8644c88bc0a54f00a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+18f17d2e55a868d6f41237f4f1eb5b80fdda45d3")]
 [assembly: System.Reflection.AssemblyProductAttribute("owsLab")]
 [assembly: System.Reflection.AssemblyTitleAttribute("owsLab")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
