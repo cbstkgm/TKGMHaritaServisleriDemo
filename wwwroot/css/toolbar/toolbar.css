@@ -98,7 +98,8 @@
     top: 50px;
     width: 300px;
     height: calc(100% - 90px);
-    background: white;
+    background: rgba(248, 249, 250, 0.7);
+    /* Temanın rengi (Diğer panellerle uyumlu) */
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
     z-index: 9998;
     transition: left .3s;
@@ -471,4 +472,32 @@ input:checked+.slider:before {
 
 .scale-label-tooltip::before {
     display: none !important;
+}
+
+/* Instruction Card for Tools */
+.instruction-card {
+    position: absolute;
+    top: 70px;
+    /* Below the toolbar */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(33, 37, 41, 0.9);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    pointer-events: none;
+    /* Let clicks pass through */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    min-width: 250px;
+    transition: opacity 0.3s ease;
+}
+
+.instruction-card i {
+    color: #f1c40f;
+    margin-right: 8px;
 }

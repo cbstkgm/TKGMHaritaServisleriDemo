@@ -7,6 +7,7 @@ let selectedCutLayer = null; // Kesilecek geometri
 let cutLinePoints = []; // Kesme çizgisi noktaları
 let cutLineLayer = null; // Geçici kesme çizgisi
 let cutLineMarkers = []; // Kesme çizgisi noktalarının marker'ları
+let activeInstructionCard = null; // Bilgi kartı referansı
 
 document.getElementById("btnCutLayer").addEventListener("click", function () {
     console.log("=== CUT BUTONU TIKLANDI ===");
@@ -56,6 +57,9 @@ document.getElementById("btnCutLayer").addEventListener("click", function () {
 
     // 3. Polygon'lara click handler ekle
     enableCutClickHandlers();
+
+    // BİLGİ KARTI GÖSTER (ADIM 1)
+    showInstructionCard('<i class="fa-solid fa-square-check"></i> <b>1. ADIM:</b> Lütfen kesmek istediğiniz poligonu seçin.');
 });
 
 /**
@@ -117,6 +121,9 @@ function handleCutLayerSelection(e, layer) {
     map.on('contextmenu', finalizeCutLine);
 
     console.log("Kesme çizgisi çizmek için haritaya tıklayın. Sağ tıklama ile bitirin.");
+
+    // BİLGİ KARTI GÜNCELLE (ADIM 2)
+    showInstructionCard('<i class="fa-solid fa-pen-nib"></i> <b>2. ADIM:</b> Kesme çizgisini çizin. <br><small>(Nokta koymak için sol tık, bitirmek için sağ tık)</small>');
 }
 
 /**
@@ -401,5 +408,35 @@ function disableCutMode() {
     // Butonu deaktif et
     document.getElementById("btnCutLayer").classList.remove("active");
 
+    // Bilgi kartını kaldır
+    removeInstructionCard();
+
     console.log("Cut modu kapatıldı.");
+}
+
+/**
+ * Kullanıcıya işlem adımlarını gösteren kart oluşturur
+ */
+function showInstructionCard(htmlContent) {
+    // Varsa eskisini kaldır
+    removeInstructionCard();
+
+    const card = document.createElement("div");
+    card.className = "instruction-card";
+    card.innerHTML = htmlContent;
+
+    document.body.appendChild(card);
+    activeInstructionCard = card;
+}
+
+/**
+ * Bilgi kartını dom'dan siler
+ */
+function removeInstructionCard() {
+    if (activeInstructionCard) {
+        if (activeInstructionCard.parentNode) {
+            activeInstructionCard.parentNode.removeChild(activeInstructionCard);
+        }
+        activeInstructionCard = null;
+    }
 }

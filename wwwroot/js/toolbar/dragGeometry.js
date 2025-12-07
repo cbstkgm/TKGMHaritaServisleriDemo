@@ -6,6 +6,8 @@ let dragModeActive = false;
 let dragHandles = []; // Taşıma tutamakları (merkez noktalar)
 let currentDragLayer = null; // Şu anda taşınan katman
 let dragHandle = null; // Aktif drag handle
+let startHandleLatLng = null; // Drag başlangıcındaki handle konumu
+let startGeometryCoords = null; // Drag başlangıcındaki geometri koordinatları
 
 document.getElementById("btnDragGeometry").addEventListener("click", function () {
     console.log("=== DRAG BUTONU TIKLANDI ===");
@@ -69,9 +71,11 @@ function createDragHandles() {
             // Drag handle marker'ı oluştur
             const handle = L.marker(center, {
                 icon: L.divIcon({
-                    className: 'drag-handle-icon',
+                    className: 'drag-handle-wrapper', // Wrapper class (Conflict prevention)
                     iconSize: [30, 30],
-                    html: '<i class="fa-solid fa-arrows-up-down-left-right" style="font-size: 20px; color: #f1c40f;"></i>'
+                    iconAnchor: [15, 15],
+                    // CSS transform conflict fix: Move the styled class INSIDE the wrapper
+                    html: '<div class="drag-handle-icon" style="width: 100%; height: 100%;"><i class="fa-solid fa-arrows-up-down-left-right" style="font-size: 20px; color: #f1c40f;"></i></div>'
                 }),
                 draggable: true,
                 zIndexOffset: 1000
@@ -129,10 +133,23 @@ function getGeometryCenter(layer) {
 /**
  * Drag başlangıcı
  */
+/**
+ * Drag başlangıcı
+ */
 function handleDragStart(e, layer) {
     console.log("Drag başladı");
     currentDragLayer = layer;
     dragHandle = e.target;
+
+    // Başlangıç konumlarını kaydet
+    startHandleLatLng = e.target.getLatLng();
+
+    // Geometri koordinatlarını kopyala
+    if (layer instanceof L.Polygon || layer instanceof L.Polyline) {
+        startGeometryCoords = cloneLatLngs(layer.getLatLngs());
+    } else if (layer instanceof L.Circle || layer instanceof L.Marker) {
+        startGeometryCoords = layer.getLatLng();
+    }
 
     // Geometriyi vurgula
     if (layer instanceof L.Polygon) {
@@ -153,17 +170,14 @@ function handleDragStart(e, layer) {
  * Drag sırasında
  */
 function handleDrag(e, layer) {
-    const newCenter = e.target.getLatLng();
-    const oldCenter = getGeometryCenter(layer);
+    const currentHandleLatLng = e.target.getLatLng();
 
-    if (!oldCenter) return;
+    // Offset hesapla (Başlangıça göre)
+    const latOffset = currentHandleLatLng.lat - startHandleLatLng.lat;
+    const lngOffset = currentHandleLatLng.lng - startHandleLatLng.lng;
 
-    // Offset hesapla
-    const latOffset = newCenter.lat - oldCenter.lat;
-    const lngOffset = newCenter.lng - oldCenter.lng;
-
-    // Geometriyi taşı
-    moveGeometry(layer, latOffset, lngOffset);
+    // Geometriyi taşı (Başlangıç koordinatlarına offset ekleyerek)
+    updateGeometryPosition(layer, startGeometryCoords, latOffset, lngOffset);
 }
 
 /**
@@ -188,31 +202,40 @@ function handleDragEnd(e, layer) {
 }
 
 /**
- * Geometriyi belirtilen offset kadar taşı
+ * Geometriyi güncelle (Base coords + offset)
  */
-function moveGeometry(layer, latOffset, lngOffset) {
-    if (layer instanceof L.Polygon) {
-        const latlngs = layer.getLatLngs()[0];
-        const newLatLngs = latlngs.map(latlng =>
-            L.latLng(latlng.lat + latOffset, latlng.lng + lngOffset)
-        );
-        layer.setLatLngs([newLatLngs]);
-
-    } else if (layer instanceof L.Polyline && !(layer instanceof L.Polygon)) {
-        const latlngs = layer.getLatLngs();
-        const newLatLngs = latlngs.map(latlng =>
-            L.latLng(latlng.lat + latOffset, latlng.lng + lngOffset)
-        );
+function updateGeometryPosition(layer, baseCoords, latOffset, lngOffset) {
+    if (layer instanceof L.Polygon || layer instanceof L.Polyline) {
+        const newLatLngs = shiftLatLngs(baseCoords, latOffset, lngOffset);
         layer.setLatLngs(newLatLngs);
-
     } else if (layer instanceof L.Circle) {
-        const center = layer.getLatLng();
-        layer.setLatLng(L.latLng(center.lat + latOffset, center.lng + lngOffset));
-
+        const newCenter = L.latLng(baseCoords.lat + latOffset, baseCoords.lng + lngOffset);
+        layer.setLatLng(newCenter);
     } else if (layer instanceof L.Marker) {
-        const pos = layer.getLatLng();
-        layer.setLatLng(L.latLng(pos.lat + latOffset, pos.lng + lngOffset));
+        const newPos = L.latLng(baseCoords.lat + latOffset, baseCoords.lng + lngOffset);
+        layer.setLatLng(newPos);
     }
+}
+
+/**
+ * Yardımcı: LatLngs dizisini derin kopyala
+ */
+function cloneLatLngs(latlngs) {
+    if (Array.isArray(latlngs)) {
+        return latlngs.map(item => cloneLatLngs(item));
+    } else {
+        return L.latLng(latlngs.lat, latlngs.lng);
+    }
+}
+
+/**
+ * Yardımcı: LatLngs dizisini ötele
+ */
+function shiftLatLngs(coords, latOffset, lngOffset) {
+    if (Array.isArray(coords)) {
+        return coords.map(c => shiftLatLngs(c, latOffset, lngOffset));
+    }
+    return L.latLng(coords.lat + latOffset, coords.lng + lngOffset);
 }
 
 /**
