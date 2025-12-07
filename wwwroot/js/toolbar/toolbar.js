@@ -6,6 +6,24 @@
 // Aktif çizim nesnesini (L.Draw.Polygon, L.Draw.Polyline vb.) tutacak global değişken.
 let activeDrawHandler = null;
 
+// Sayaçlar (Otomatik isimlendirme için)
+let polygonCounter = 1;
+let lineCounter = 1;
+let pointCounter = 1;
+let circleCounter = 1;
+
+/**
+ * Rastgele Hex Renk Üretir
+ */
+function getRandomColor() {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+
 
 /**
  * Tüm çizim araçlarını devre dışı bırakan genel bir fonksiyon.
@@ -232,7 +250,7 @@ document.getElementById("btnDrawPolygon").addEventListener("click", function () 
     document.getElementById("btnOGC").classList.remove("active");
 
     activeDrawHandler = new L.Draw.Polygon(map, {
-        shapeOptions: { color: 'red', fillOpacity: 0.5 }
+        shapeOptions: { color: getRandomColor(), fillOpacity: 0.5 }
     });
 
     activeDrawHandler.enable();
@@ -242,7 +260,10 @@ document.getElementById("btnDrawPolygon").addEventListener("click", function () 
         const layer = e.layer;
 
         const measurements = calculateMeasurements(layer);
-        const geometryName = prompt("Lütfen çizilen alana bir ad verin:", "Poligon 1");
+        const geometryName = prompt("Lütfen çizilen alana bir ad verin:", "Poligon " + polygonCounter);
+
+        // Eğer kullanıcı isim girerse sayacı arttır
+        if (geometryName) polygonCounter++;
 
         if (!geometryName) {
             map.removeLayer(layer);
@@ -291,7 +312,7 @@ document.getElementById("btnDrawLine").addEventListener("click", function () {
     document.getElementById("btnOGC").classList.remove("active");
 
     activeDrawHandler = new L.Draw.Polyline(map, {
-        shapeOptions: { color: 'blue', weight: 3 }
+        shapeOptions: { color: getRandomColor(), weight: 3 }
     });
 
     activeDrawHandler.enable();
@@ -301,7 +322,9 @@ document.getElementById("btnDrawLine").addEventListener("click", function () {
         const layer = e.layer;
 
         const measurements = calculateMeasurements(layer);
-        const geometryName = prompt("Lütfen çizilen çizgiye bir ad verin:", "Çizgi 1");
+        const geometryName = prompt("Lütfen çizilen çizgiye bir ad verin:", "Çizgi " + lineCounter);
+
+        if (geometryName) lineCounter++;
 
         if (!geometryName) {
             map.removeLayer(layer);
@@ -354,19 +377,14 @@ document.getElementById("btnDrawPoint").addEventListener("click", function () {
     document.getElementById("btnOGC").classList.remove("active");
 
 
-    // 2. Marker (Nokta) çizim aracını başlat ve global değişkene ata
-    // NOT: Nokta çiziminde ölçüme gerek yoktur.
-    activeDrawHandler = new L.Draw.Marker(map, {
-        icon: L.icon({ // Noktanın stilini burada özelleştirebilirsiniz
-            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-            iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            tooltipAnchor: [16, -28],
-            shadowSize: [41, 41]
-        })
+    // 2. Nokta çizim aracını başlat (Renk desteği için CircleMarker kullanıyoruz)
+    const randomColor = getRandomColor();
+    activeDrawHandler = new L.Draw.CircleMarker(map, {
+        color: randomColor,
+        fillColor: randomColor,
+        fillOpacity: 1,
+        radius: 6,
+        weight: 2
     });
 
     activeDrawHandler.enable();
@@ -378,7 +396,9 @@ document.getElementById("btnDrawPoint").addEventListener("click", function () {
         const layer = e.layer;
 
         // Kullanıcıdan Ad İste
-        const geometryName = prompt("Lütfen noktaya bir ad verin:", "Yeni Nokta");
+        const geometryName = prompt("Lütfen noktaya bir ad verin:", "Nokta " + pointCounter);
+
+        if (geometryName) pointCounter++;
 
         if (!geometryName) {
             map.removeLayer(layer);
@@ -447,7 +467,7 @@ document.getElementById("btnDrawCircle").addEventListener("click", function () {
     // 2. Circle (Daire) çizim aracını başlat ve global değişkene ata
     activeDrawHandler = new L.Draw.Circle(map, {
         shapeOptions: {
-            color: '#f39c12', // Turuncu renk
+            color: getRandomColor(),
             fillOpacity: 0.5
         },
         showRadius: true // Çizim sırasında yarıçapı göster
@@ -462,7 +482,9 @@ document.getElementById("btnDrawCircle").addEventListener("click", function () {
         const layer = e.layer;
 
         // Kullanıcıdan Ad İste
-        const geometryName = prompt("Lütfen daireye bir ad verin:", "Yeni Daire");
+        const geometryName = prompt("Lütfen daireye bir ad verin:", "Daire " + circleCounter);
+
+        if (geometryName) circleCounter++;
 
         if (!geometryName) {
             map.removeLayer(layer);

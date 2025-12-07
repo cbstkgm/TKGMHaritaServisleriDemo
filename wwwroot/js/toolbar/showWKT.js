@@ -133,7 +133,7 @@ function showWKTModal(wktText, count) {
                         <span class="w-2 h-2 bg-cyber-blue rounded-full animate-pulse"></span> RAW DATA OUTPUT
                     </label>
                     
-                    <textarea id="wktTextArea" readonly class="flex-1 w-full bg-cyber-dark/80 border border-cyber-blue/20 text-green-400 font-mono text-sm p-4 rounded focus:outline-none focus:border-cyber-blue/50 focus:shadow-neon-blue transition-all resize-none shadow-inner overflow-y-auto" spellcheck="false" style="min-height: 200px;">${wktText}</textarea>
+                    <textarea id="wktTextArea" readonly class="flex-1 w-full bg-white border border-cyber-blue/20 font-mono text-sm p-4 rounded focus:outline-none focus:border-cyber-blue/50 focus:shadow-neon-blue transition-all resize-none shadow-inner overflow-y-auto text-black" spellcheck="false" style="min-height: 200px;">${wktText}</textarea>
                 </div>
 
                 <!-- Footer / Actions -->

@@ -1,6 +1,6 @@
 // --- MAP INIT ---
 // Haritayı başlatır ve başlangıç koordinatlarını/zoom seviyesini ayarlar
-var map = L.map('map').setView([39.0, 35.0], 6);
+var map = L.map('map', { zoomControl: false }).setView([39.0, 35.0], 6);
 
 // Base Layer (OpenStreetMap)
 var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
@@ -17,22 +17,18 @@ map.addLayer(drawnItems);
 var vertexMarkers = new L.LayerGroup();
 map.addLayer(vertexMarkers);
 
-// Draw Control (Çizim Kontrol Paneli)
-// Draw Control (Çizim Kontrol Paneli)
+// Draw Control (Çizim Kontrol Paneli) - Varsayılan paneli GİZLİYORUZ (Kendi toolbar'ımızı kullanıyoruz)
+// drawControl değişkeni global scope'ta kalsın diye tanımlıyoruz ama haritaya eklemiyoruz.
+// Eğer haritaya eklersek (map.addControl), sol üstte varsayılan kutucuklar çıkar.
 var drawControl = new L.Control.Draw({
     edit: { featureGroup: drawnItems },
-    // !!! Varsayılan Draw paneli butonlarını gizle !!!
     draw: {
-        polygon: false, // Manuel başlattığımız için gizle
-        polyline: false, // Manuel başlattığımız için gizle
+        polygon: false,
+        polyline: false,
         marker: false,
         rectangle: false,
         circle: false,
         circlemarker: false
     }
 });
-
-map.addControl(drawControl);
-
-// !!! ÖNEMLİ: Draw Kontrolcüsünü Haritaya Ekleyin !!!
-map.addControl(drawControl);
+// map.addControl(drawControl); // BU SATIR İPTAL - Haritaya eklemiyoruz.

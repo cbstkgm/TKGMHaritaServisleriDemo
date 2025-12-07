@@ -346,90 +346,150 @@
                 <!-- WMS Tab -->
                 <div class="tab-pane fade show active" id="wms">
                     <p>WMS (Web Map Service), harita servislerini görselleştirmenizi sağlar.</p>
-                    <div class="d-flex justify-content-between mt-2 mb-2">
-                        <button class="btn btn-primary btn-sm">WMS Sorgula</button>
-                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("WmsOrnek","OGC_Ornekler")">WMS Örnekleri Sayfasına Git</button>
+                    <div class="mt-3 mb-2">
+                        <button class="btn w-100 py-2 d-flex align-items-center justify-content-center gap-2" 
+                                data-target="@Url.Action("WmsOrnek", "OGC_Ornekler")"
+                                style="background-color: var(--color-primary); color: var(--color-bg); font-weight: bold; border: none; box-shadow: var(--shadow-primary); transition: all 0.3s;"
+                                onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='translateY(-2px)'"
+                                onmouseout="this.style.filter='brightness(1)'; this.style.transform='translateY(0)'">
+                            <i class="fa-solid fa-layer-group"></i>
+                            WMS Örnekleri Sayfasına Git
+                        </button>
                     </div>
                 </div>
 
                 <!-- WFS Tab -->
                 <div class="tab-pane fade" id="wfs">
                     <p>WFS (Web Feature Service), coğrafi verileri sorgulayıp çekmenizi sağlar.</p>
-                    <div class="d-flex justify-content-between mt-2 mb-2">
-                        <button class="btn btn-primary btn-sm">WFS Sorgula</button>
-                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("WfsOrnek","OGC_Ornekler")">WFS Örnekleri Sayfasına Git</button>
+                    <div class="mt-3 mb-2">
+                        <button class="btn w-100 py-2 d-flex align-items-center justify-content-center gap-2" 
+                                data-target="@Url.Action("WfsOrnek", "OGC_Ornekler")"
+                                style="background-color: var(--color-primary); color: var(--color-bg); font-weight: bold; border: none; box-shadow: var(--shadow-primary); transition: all 0.3s;"
+                                onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='translateY(-2px)'"
+                                onmouseout="this.style.filter='brightness(1)'; this.style.transform='translateY(0)'">
+                            <i class="fa-solid fa-share-nodes"></i>
+                            WFS Örnekleri Sayfasına Git
+                        </button>
                     </div>
                 </div>
 
                 <!-- WMTS Tab -->
                 <div class="tab-pane fade" id="wmts">
                     <p>WMTS (Web Map Tile Service), harita servislerini tile (kare) bazlı sağlar.</p>
-                    <div class="d-flex justify-content-between mt-2 mb-2">
-                        <button class="btn btn-primary btn-sm">WMTS Sorgula</button>
-                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("WmtsOrnek","OGC_Ornekler")">WMTS Örnekleri Sayfasına Git</button>
+                    <div class="mt-3 mb-2">
+                        <button class="btn w-100 py-2 d-flex align-items-center justify-content-center gap-2" 
+                                data-target="@Url.Action("WmtsOrnek", "OGC_Ornekler")"
+                                style="background-color: var(--color-primary); color: var(--color-bg); font-weight: bold; border: none; box-shadow: var(--shadow-primary); transition: all 0.3s;"
+                                onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='translateY(-2px)'"
+                                onmouseout="this.style.filter='brightness(1)'; this.style.transform='translateY(0)'">
+                            <i class="fa-solid fa-map"></i>
+                            WMTS Örnekleri Sayfasına Git
+                        </button>
                     </div>
                 </div>
 
                 <!-- WCS Tab -->
                 <div class="tab-pane fade" id="wcs">
                     <p>WCS (Web Coverage Service), raster verileri almanızı sağlar.</p>
-                    <div class="d-flex justify-content-between mt-2 mb-2">
-                        <button class="btn btn-primary btn-sm">WCS Sorgula</button>
-                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("WcsOrnek","OGC_Ornekler")">WCS Örnekleri Sayfasına Git</button>
+                    <div class="mt-3 mb-2">
+                        <button class="btn w-100 py-2 d-flex align-items-center justify-content-center gap-2" 
+                                data-target="@Url.Action("WcsOrnek", "OGC_Ornekler")"
+                                style="background-color: var(--color-primary); color: var(--color-bg); font-weight: bold; border: none; box-shadow: var(--shadow-primary); transition: all 0.3s;"
+                                onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='translateY(-2px)'"
+                                onmouseout="this.style.filter='brightness(1)'; this.style.transform='translateY(0)'">
+                            <i class="fa-solid fa-image"></i>
+                            WCS Örnekleri Sayfasına Git
+                        </button>
                     </div>
                 </div>
 
                 <!-- CSW Tab -->
                 <div class="tab-pane fade" id="csw">
                     <p>CSW (Catalog Service for the Web), veri kataloglarını sorgulamanızı sağlar.</p>
-                    <div class="d-flex justify-content-between mt-2 mb-2">
-                        <button class="btn btn-primary btn-sm">CSW Sorgula</button>
-                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("CswOrnek","OGC_Ornekler")">CSW Örnekleri Sayfasına Git</button>
+                    <div class="mt-3 mb-2">
+                        <button class="btn w-100 py-2 d-flex align-items-center justify-content-center gap-2" 
+                                data-target="@Url.Action("CswOrnek", "OGC_Ornekler")"
+                                style="background-color: var(--color-primary); color: var(--color-bg); font-weight: bold; border: none; box-shadow: var(--shadow-primary); transition: all 0.3s;"
+                                onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='translateY(-2px)'"
+                                onmouseout="this.style.filter='brightness(1)'; this.style.transform='translateY(0)'">
+                            <i class="fa-solid fa-book-open"></i>
+                            CSW Örnekleri Sayfasına Git
+                        </button>
                     </div>
                 </div>
 
                 <!-- WPS Tab -->
                 <div class="tab-pane fade" id="wps">
                     <p>WPS (Web Processing Service), uzaktan coğrafi analiz ve işlem yapmanıza olanak verir.</p>
-                    <div class="d-flex justify-content-between mt-2 mb-2">
-                        <button class="btn btn-primary btn-sm">WPS Sorgula</button>
-                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("WpsOrnek","OGC_Ornekler")">WPS Örnekleri Sayfasına Git</button>
+                    <div class="mt-3 mb-2">
+                        <button class="btn w-100 py-2 d-flex align-items-center justify-content-center gap-2" 
+                                data-target="@Url.Action("WpsOrnek", "OGC_Ornekler")"
+                                style="background-color: var(--color-primary); color: var(--color-bg); font-weight: bold; border: none; box-shadow: var(--shadow-primary); transition: all 0.3s;"
+                                onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='translateY(-2px)'"
+                                onmouseout="this.style.filter='brightness(1)'; this.style.transform='translateY(0)'">
+                            <i class="fa-solid fa-gears"></i>
+                            WPS Örnekleri Sayfasına Git
+                        </button>
                     </div>
                 </div>
 
                 <!-- SOS Tab -->
                 <div class="tab-pane fade" id="sos">
                     <p>SOS (Sensor Observation Service), sensör verilerini sorgulamanızı sağlar.</p>
-                    <div class="d-flex justify-content-between mt-2 mb-2">
-                        <button class="btn btn-primary btn-sm">SOS Sorgula</button>
-                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("SosOrnek","OGC_Ornekler")">SOS Örnekleri Sayfasına Git</button>
+                    <div class="mt-3 mb-2">
+                        <button class="btn w-100 py-2 d-flex align-items-center justify-content-center gap-2" 
+                                data-target="@Url.Action("SosOrnek", "OGC_Ornekler")"
+                                style="background-color: var(--color-primary); color: var(--color-bg); font-weight: bold; border: none; box-shadow: var(--shadow-primary); transition: all 0.3s;"
+                                onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='translateY(-2px)'"
+                                onmouseout="this.style.filter='brightness(1)'; this.style.transform='translateY(0)'">
+                            <i class="fa-solid fa-satellite-dish"></i>
+                            SOS Örnekleri Sayfasına Git
+                        </button>
                     </div>
                 </div>
 
                 <!-- SLD Tab -->
                 <div class="tab-pane fade" id="sld">
                     <p>SLD (Styled Layer Descriptor), harita katmanlarını özelleştirmenizi sağlar.</p>
-                    <div class="d-flex justify-content-between mt-2 mb-2">
-                        <button class="btn btn-primary btn-sm">SLD Sorgula</button>
-                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("SldOrnek","OGC_Ornekler")">SLD Örnekleri Sayfasına Git</button>
+                    <div class="mt-3 mb-2">
+                        <button class="btn w-100 py-2 d-flex align-items-center justify-content-center gap-2" 
+                                data-target="@Url.Action("SldOrnek", "OGC_Ornekler")"
+                                style="background-color: var(--color-primary); color: var(--color-bg); font-weight: bold; border: none; box-shadow: var(--shadow-primary); transition: all 0.3s;"
+                                onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='translateY(-2px)'"
+                                onmouseout="this.style.filter='brightness(1)'; this.style.transform='translateY(0)'">
+                            <i class="fa-solid fa-palette"></i>
+                            SLD Örnekleri Sayfasına Git
+                        </button>
                     </div>
                 </div>
 
                 <!-- Filter Encoding Tab -->
                 <div class="tab-pane fade" id="filter">
                     <p>Filter Encoding, sorgular için filtreleme kurallarını tanımlar.</p>
-                    <div class="d-flex justify-content-between mt-2 mb-2">
-                        <button class="btn btn-primary btn-sm">Filter Sorgula</button>
-                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("FilterOrnek","OGC_Ornekler")">Filter Örnekleri Sayfasına Git</button>
+                    <div class="mt-3 mb-2">
+                        <button class="btn w-100 py-2 d-flex align-items-center justify-content-center gap-2" 
+                                data-target="@Url.Action("FilterOrnek", "OGC_Ornekler")"
+                                style="background-color: var(--color-primary); color: var(--color-bg); font-weight: bold; border: none; box-shadow: var(--shadow-primary); transition: all 0.3s;"
+                                onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='translateY(-2px)'"
+                                onmouseout="this.style.filter='brightness(1)'; this.style.transform='translateY(0)'">
+                            <i class="fa-solid fa-filter"></i>
+                            Filter Örnekleri Sayfasına Git
+                        </button>
                     </div>
                 </div>
 
                 <!-- GML Tab -->
                 <div class="tab-pane fade" id="gml">
                     <p>GML (Geography Markup Language), coğrafi verileri XML formatında gösterir.</p>
-                    <div class="d-flex justify-content-between mt-2 mb-2">
-                        <button class="btn btn-primary btn-sm">GML Sorgula</button>
-                        <button class="btn btn-secondary btn-sm" data-target="@Url.Action("GmlOrnek","OGC_Ornekler")">GML Örnekleri Sayfasına Git</button>
+                    <div class="mt-3 mb-2">
+                        <button class="btn w-100 py-2 d-flex align-items-center justify-content-center gap-2" 
+                                data-target="@Url.Action("GmlOrnek", "OGC_Ornekler")"
+                                style="background-color: var(--color-primary); color: var(--color-bg); font-weight: bold; border: none; box-shadow: var(--shadow-primary); transition: all 0.3s;"
+                                onmouseover="this.style.filter='brightness(1.1)'; this.style.transform='translateY(-2px)'"
+                                onmouseout="this.style.filter='brightness(1)'; this.style.transform='translateY(0)'">
+                            <i class="fa-solid fa-file-code"></i>
+                            GML Örnekleri Sayfasına Git
+                        </button>
                     </div>
                 </div>
 
