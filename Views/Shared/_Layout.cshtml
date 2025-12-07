@@ -19,6 +19,33 @@
     <link rel="stylesheet" href="~/css/toolbar/toolbar.css" />
     <link rel="stylesheet" href="~/css/sil1.css" />
     
+    <!-- Tailwind CSS (Kullanıcı İsteği - Cyberpunk Tema İçin) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            black: '#0a0b10',
+                            dark: '#13151a',
+                            panel: '#1a1d24',
+                            neon: '#0ff',
+                            pink: '#f0f',
+                            yellow: '#fce300',
+                            blue: '#00f0ff',
+                            purple: '#bd00ff',
+                        }
+                    },
+                    boxShadow: {
+                        'neon-blue': '0 0 10px #00f0ff, 0 0 20px #00f0ff',
+                        'neon-pink': '0 0 10px #f0f, 0 0 20px #f0f',
+                    }
+                }
+            }
+        }
+    </script>
+    
     <!-- toolbar buton icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
@@ -339,6 +366,8 @@
     <script src="~/js/toolbar/splitLayer.js" asp-append-version="true"></script>
     <script src="~/js/toolbar/unionLayer.js" asp-append-version="true"></script>
     <script src="~/js/toolbar/dragGeometry.js" asp-append-version="true"></script>
+    <script src="~/js/toolbar/scaleLayer.js" asp-append-version="true"></script>
+    <script src="~/js/toolbar/cutLayer.js" asp-append-version="true"></script>
     <script src="~/js/toolbar/haritaaltligi.js"></script>
     <script src="~/js/toolbar/konumagit.js"></script>
     <!-- <script src="~/js/toolbar/ogcButtons.js"></script> -->

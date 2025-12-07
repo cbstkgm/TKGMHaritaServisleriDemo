@@ -432,3 +432,43 @@ input:checked+.slider:before {
         opacity: 0.6;
     }
 }
+
+/* Scale Handle Icon */
+.scale-handle-icon {
+    background: rgba(231, 76, 60, 0.9) !important;
+    border: 3px solid #c0392b !important;
+    border-radius: 50% !important;
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.6) !important;
+    cursor: move !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+}
+
+.scale-handle-icon:hover {
+    background: rgba(192, 57, 43, 1) !important;
+    transform: scale(1.3) rotate(45deg) !important;
+    box-shadow: 0 0 20px rgba(231, 76, 60, 1) !important;
+}
+
+.scale-handle-icon i {
+    animation: pulse 1.5s infinite;
+}
+
+/* Scale Label Tooltip */
+.scale-label-tooltip {
+    background: rgba(44, 62, 80, 0.95) !important;
+    border: 2px solid #3498db !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    color: #ecf0f1 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+    white-space: nowrap !important;
+}
+
+.scale-label-tooltip::before {
+    display: none !important;
+}

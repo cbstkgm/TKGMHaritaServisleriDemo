@@ -25,6 +25,8 @@ function disableAllDrawTools() {
     document.getElementById("btnShowWKT").classList.remove("active");
     document.getElementById("btnSplitLayer").classList.remove("active");
     document.getElementById("btnUnionLayer").classList.remove("active");
+    document.getElementById("btnScaleLayer").classList.remove("active");
+    document.getElementById("btnCutLayer").classList.remove("active");
 
     // YENİ: İmleci normale döndür (Taşıma/Silme modu sonrası)
     if (map && map._container) {
@@ -53,6 +55,16 @@ function disableAllDrawTools() {
     // Drag modunu kapat (eğer aktifse)
     if (typeof disableDragMode === 'function') {
         disableDragMode();
+    }
+
+    // Scale modunu kapat (eğer aktifse)
+    if (typeof disableScaleMode === 'function') {
+        disableScaleMode();
+    }
+
+    // Cut modunu kapat (eğer aktifse)
+    if (typeof disableCutMode === 'function') {
+        disableCutMode();
     }
 
     // YENİ: Silme modu kapatıldığında, tüm katmanlardaki geçici 'click' dinleyicilerini kaldır.

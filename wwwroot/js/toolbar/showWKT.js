@@ -87,129 +87,74 @@ document.getElementById("btnShowWKT").addEventListener("click", function () {
 });
 
 /**
- * WKT metnini modal pencerede gösterir
+ * WKT metnini modal pencerede gösterir (Cyberpunk Style)
  */
 function showWKTModal(wktText, count) {
     // Modal HTML'i oluştur
     const modalHTML = `
-        <div id="wktModal" style="
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-        ">
-            <div style="
-                background: white;
-                border-radius: 12px;
-                padding: 24px;
-                max-width: 800px;
-                width: 90%;
-                max-height: 80vh;
-                overflow: hidden;
-                display: flex;
-                flex-direction: column;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            ">
-                <div style="
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 16px;
-                    padding-bottom: 12px;
-                    border-bottom: 2px solid #e0e0e0;
-                ">
-                    <h2 style="margin: 0; color: #333; font-size: 24px;">
-                        <i class="fa-solid fa-file-code" style="color: #4CAF50; margin-right: 8px;"></i>
-                        WKT Formatı (WGS84)
-                    </h2>
-                    <button id="closeWKTModal" style="
-                        background: none;
-                        border: none;
-                        font-size: 28px;
-                        cursor: pointer;
-                        color: #999;
-                        padding: 0;
-                        width: 32px;
-                        height: 32px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        border-radius: 50%;
-                        transition: all 0.2s;
-                    " onmouseover="this.style.background='#f0f0f0'; this.style.color='#333';" 
-                       onmouseout="this.style.background='none'; this.style.color='#999';">
-                        ×
+        <div id="wktModal" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <!-- Modal Container (Resizable) -->
+            <div id="wktModalContainer" class="relative flex flex-col bg-cyber-dark border border-cyber-blue shadow-neon-blue rounded-lg overflow-hidden transition-all transform scale-100 resize-both overflow-auto min-w-[600px] min-h-[400px]" 
+                 style="width: 80vw; height: 80vh; max-width: 95vw; max-height: 95vh;">
+                
+                <!-- Header -->
+                <div class="flex justify-between items-center px-6 py-4 border-b border-cyber-blue/30 bg-cyber-panel/50">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 rounded bg-cyber-blue/10 border border-cyber-blue/50 shadow-[0_0_10px_rgba(0,240,255,0.3)]">
+                            <i class="fa-solid fa-code text-cyber-blue text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-white tracking-wider font-mono">
+                                WKT DATA <span class="text-cyber-pink block text-xs tracking-[0.2em]">GEOMETRY VISUALIZER_V1.0</span>
+                            </h2>
+                        </div>
+                    </div>
+                    
+                    <button id="closeWKTModal" class="group relative w-10 h-10 flex items-center justify-center rounded-full border border-gray-600 hover:border-cyber-pink hover:shadow-neon-pink transition-all duration-300">
+                        <span class="text-gray-400 text-2xl group-hover:text-cyber-pink transition-colors">×</span>
                     </button>
                 </div>
                 
-                <div style="margin-bottom: 12px; color: #666; font-size: 14px;">
-                    <i class="fa-solid fa-info-circle" style="color: #2196F3; margin-right: 6px;"></i>
-                    Toplam <strong>${count}</strong> geometri bulundu. Koordinatlar WGS84 (EPSG:4326) formatındadır.
+                <!-- Info Bar -->
+                <div class="px-6 py-2 bg-cyber-blue/5 border-b border-cyber-blue/10 flex items-center gap-2">
+                    <i class="fa-solid fa-database text-cyber-yellow text-sm"></i>
+                    <span class="text-gray-300 font-mono text-sm">DETECTED OBJECTS: <span class="text-cyber-yellow font-bold">${count}</span></span>
+                    <span class="text-gray-500 text-xs ml-auto font-mono">SYSTEM: WGS84 (EPSG:4326)</span>
                 </div>
 
-                <textarea id="wktTextArea" readonly style="
-                    flex: 1;
-                    width: 100%;
-                    padding: 16px;
-                    border: 1px solid #ddd;
-                    border-radius: 8px;
-                    font-family: 'Courier New', monospace;
-                    font-size: 13px;
-                    resize: none;
-                    background-color: #f8f9fa;
-                    color: #333;
-                    line-height: 1.6;
-                    overflow-y: auto;
-                ">${wktText}</textarea>
+                <!-- Content Area -->
+                <div class="flex-1 p-6 bg-cyber-black/50 overflow-hidden flex flex-col relative min-h-0">
+                    <!-- Grid Background Effect -->
+                    <div class="absolute inset-0 opacity-[0.03] pointer-events-none" 
+                         style="background-image: linear-gradient(#00f0ff 1px, transparent 1px), linear-gradient(90deg, #00f0ff 1px, transparent 1px); background-size: 20px 20px;">
+                    </div>
 
-                <div style="
-                    display: flex;
-                    gap: 12px;
-                    margin-top: 16px;
-                    justify-content: flex-end;
-                ">
-                    <button id="copyWKTBtn" style="
-                        background: #4CAF50;
-                        color: white;
-                        border: none;
-                        padding: 10px 20px;
-                        border-radius: 6px;
-                        cursor: pointer;
-                        font-size: 14px;
-                        font-weight: 500;
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                        transition: background 0.2s;
-                    " onmouseover="this.style.background='#45a049';" 
-                       onmouseout="this.style.background='#4CAF50';">
-                        <i class="fa-solid fa-copy"></i>
-                        Kopyala
-                    </button>
-                    <button id="downloadWKTBtn" style="
-                        background: #2196F3;
-                        color: white;
-                        border: none;
-                        padding: 10px 20px;
-                        border-radius: 6px;
-                        cursor: pointer;
-                        font-size: 14px;
-                        font-weight: 500;
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                        transition: background 0.2s;
-                    " onmouseover="this.style.background='#1976D2';" 
-                       onmouseout="this.style.background='#2196F3';">
-                        <i class="fa-solid fa-download"></i>
-                        İndir (.wkt)
-                    </button>
+                    <label class="text-cyber-blue text-xs font-bold mb-2 font-mono tracking-widest flex items-center gap-2 flex-shrink-0">
+                        <span class="w-2 h-2 bg-cyber-blue rounded-full animate-pulse"></span> RAW DATA OUTPUT
+                    </label>
+                    
+                    <textarea id="wktTextArea" readonly class="flex-1 w-full bg-cyber-dark/80 border border-cyber-blue/20 text-green-400 font-mono text-sm p-4 rounded focus:outline-none focus:border-cyber-blue/50 focus:shadow-neon-blue transition-all resize-none shadow-inner overflow-y-auto" spellcheck="false" style="min-height: 200px;">${wktText}</textarea>
+                </div>
+
+                <!-- Footer / Actions -->
+                <div class="px-6 py-5 bg-cyber-panel border-t border-cyber-blue/30 flex justify-between items-center z-10">
+                    <div class="text-gray-500 text-xs font-mono">
+                        <span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-2"></span>READY
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button id="copyWKTBtn" class="group relative px-6 py-2.5 bg-transparent border border-cyber-blue text-cyber-blue font-bold font-mono text-sm tracking-wider hover:bg-cyber-blue hover:text-black transition-all duration-300 shadow-[0_0_10px_rgba(0,240,255,0.2)] hover:shadow-neon-blue rounded overflow-hidden">
+                            <span class="relative z-10 flex items-center gap-2">
+                                <i class="fa-solid fa-copy group-hover:animate-bounce"></i> COPY DATA
+                            </span>
+                        </button>
+
+                        <button id="downloadWKTBtn" class="group relative px-6 py-2.5 bg-cyber-purple/10 border border-cyber-purple text-cyber-purple font-bold font-mono text-sm tracking-wider hover:bg-cyber-purple hover:text-white transition-all duration-300 shadow-[0_0_10px_rgba(189,0,255,0.2)] hover:shadow-neon-pink rounded overflow-hidden">
+                            <span class="relative z-10 flex items-center gap-2">
+                                <i class="fa-solid fa-download group-hover:animate-bounce"></i> EXPORT .WKT
+                            </span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -231,7 +176,7 @@ function showWKTModal(wktText, count) {
         const textarea = document.getElementById('wktTextArea');
         const fullText = textarea.value;
 
-        // Sadece WKT verilerini al (-- ile başlayan satırları ve boş satırları çıkar)
+        // Sadece WKT verilerini al
         const wktOnly = fullText
             .split('\n')
             .filter(line => {
@@ -242,14 +187,17 @@ function showWKTModal(wktText, count) {
 
         // Panoya kopyala
         navigator.clipboard.writeText(wktOnly).then(() => {
-            // Başarı mesajı
-            const btn = this;
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-check"></i> Kopyalandı!';
-            btn.style.background = '#4CAF50';
+            const btn = document.getElementById('copyWKTBtn');
+            const originalContent = btn.innerHTML;
+
+            btn.innerHTML = '<span class="relative z-10 flex items-center gap-2"><i class="fa-solid fa-check"></i> COPIED!</span>';
+            btn.classList.add('bg-green-500', 'text-white', 'border-green-500', 'shadow-[0_0_15px_rgba(34,197,94,0.6)]');
+            btn.classList.remove('text-cyber-blue', 'border-cyber-blue', 'bg-transparent');
 
             setTimeout(() => {
-                btn.innerHTML = originalHTML;
+                btn.innerHTML = originalContent;
+                btn.classList.remove('bg-green-500', 'text-white', 'border-green-500', 'shadow-[0_0_15px_rgba(34,197,94,0.6)]');
+                btn.classList.add('text-cyber-blue', 'border-cyber-blue', 'bg-transparent');
             }, 2000);
 
             console.log('Sadece WKT metni panoya kopyalandı:', wktOnly);
