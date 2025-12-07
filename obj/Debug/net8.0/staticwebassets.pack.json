@@ -89,6 +89,10 @@
       "PackagePath": "staticwebassets/js/toolbar/toolbar.js"
     },
     {
+      "Id": "/Users/erdem/MyPage/owsLab/owsLab/wwwroot/js/toolbar/unionLayer.js",
+      "PackagePath": "staticwebassets/js/toolbar/unionLayer.js"
+    },
+    {
       "Id": "/Users/erdem/MyPage/owsLab/owsLab/wwwroot/lib/bootstrap/LICENSE",
       "PackagePath": "staticwebassets/lib/bootstrap"
     },

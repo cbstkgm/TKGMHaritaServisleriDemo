@@ -229,20 +229,34 @@ function showWKTModal(wktText, count) {
     // Kopyala butonu
     document.getElementById('copyWKTBtn').addEventListener('click', function () {
         const textarea = document.getElementById('wktTextArea');
-        textarea.select();
-        document.execCommand('copy');
+        const fullText = textarea.value;
 
-        // Başarı mesajı
-        const btn = this;
-        const originalHTML = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-check"></i> Kopyalandı!';
-        btn.style.background = '#4CAF50';
+        // Sadece WKT verilerini al (-- ile başlayan satırları ve boş satırları çıkar)
+        const wktOnly = fullText
+            .split('\n')
+            .filter(line => {
+                const trimmed = line.trim();
+                return trimmed && !trimmed.startsWith('--');
+            })
+            .join('\n');
 
-        setTimeout(() => {
-            btn.innerHTML = originalHTML;
-        }, 2000);
+        // Panoya kopyala
+        navigator.clipboard.writeText(wktOnly).then(() => {
+            // Başarı mesajı
+            const btn = this;
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Kopyalandı!';
+            btn.style.background = '#4CAF50';
 
-        console.log('WKT metni panoya kopyalandı.');
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+            }, 2000);
+
+            console.log('Sadece WKT metni panoya kopyalandı:', wktOnly);
+        }).catch(err => {
+            console.error('Kopyalama hatası:', err);
+            alert('Kopyalama başarısız oldu.');
+        });
     });
 
     // İndir butonu

@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "UeyQeiU8YrXos98XWrwWxRvOTiQFLdyjMBqhJrZqDSI=",
+  "Hash": "zwMAJq5nfviOm81Y6WRQzpr2mlJ5jraQbOFz12Yw6iI=",
   "Source": "owsLab",
   "BasePath": "_content/owsLab",
   "Mode": "Default",
@@ -452,6 +452,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/js/toolbar/toolbar.js"
+    },
+    {
+      "Identity": "/Users/erdem/MyPage/owsLab/owsLab/wwwroot/js/toolbar/unionLayer.js",
+      "SourceId": "owsLab",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Users/erdem/MyPage/owsLab/owsLab/wwwroot/",
+      "BasePath": "_content/owsLab",
+      "RelativePath": "js/toolbar/unionLayer.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/js/toolbar/unionLayer.js"
     },
     {
       "Identity": "/Users/erdem/MyPage/owsLab/owsLab/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.css",

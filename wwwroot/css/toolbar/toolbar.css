@@ -6,33 +6,43 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 60px; /* YÜKSEKLİK ARTTIRILDI: 50px yerine 60px */
+    height: 60px;
+    /* YÜKSEKLİK ARTTIRILDI: 50px yerine 60px */
     background: #222;
     color: white;
     display: flex;
-    justify-content: center;  /* Yatay Ortalama */
-    align-items: flex-end; /* Sekmeleri alta hizalar */
-    gap: 4px; /* Sekmeler arasında boşluk bırakılır */
+    justify-content: center;
+    /* Yatay Ortalama */
+    align-items: flex-end;
+    /* Sekmeleri alta hizalar */
+    gap: 4px;
+    /* Sekmeler arasında boşluk bırakılır */
     padding: 0 10px;
     z-index: 9999;
-    border-bottom: none; /* Sekme çizgisi direkt butonlarda verilecektir */
+    border-bottom: none;
+    /* Sekme çizgisi direkt butonlarda verilecektir */
 }
 
 .tool-btn {
     /* Sekme Temel Stili */
-    background: #34495e; /* Koyu arka plan */
-    color: #ecf0f1; /* Açık yazı */
+    background: #34495e;
+    /* Koyu arka plan */
+    color: #ecf0f1;
+    /* Açık yazı */
     border: none;
-    padding: 12px 20px; /* Daha fazla dolgu */
+    padding: 12px 20px;
+    /* Daha fazla dolgu */
     font-size: 12px;
     cursor: pointer;
-    border-radius: 10px 10px 0 0; /* KENAR YUVARLAŞTIRMA: Üst köşeler 10px */
+    border-radius: 10px 10px 0 0;
+    /* KENAR YUVARLAŞTIRMA: Üst köşeler 10px */
     display: flex;
     align-items: center;
     justify-content: center;
     transform: none;
     transition: background 0.3s, color 0.3s, transform 0.2s;
-    height: 50px; /* Sekmenin kendi yüksekliği (topbar'dan biraz kısa) */
+    height: 50px;
+    /* Sekmenin kendi yüksekliği (topbar'dan biraz kısa) */
     position: relative;
     bottom: 0;
     /* EŞİT GENİŞLİK İÇİN EKLENDİ */
@@ -43,25 +53,34 @@
 
 .tool-btn:hover {
     /* Fare Üzerindeyken Stili */
-    background: #4a6682; /* Hafif koyu ton */
+    background: #4a6682;
+    /* Hafif koyu ton */
     color: #efd606;
-    transform: translateY(-3px); /* Daha belirgin yukarı kayma efekti */
+    transform: translateY(-3px);
+    /* Daha belirgin yukarı kayma efekti */
 }
 
 .tool-btn.active {
     /* Aktif Sekme Stili */
-    background: white; /* Beyaz veya ana renk */
-    color: #ea082a; /* Mavi yazı rengi */
+    background: white;
+    /* Beyaz veya ana renk */
+    color: #ea082a;
+    /* Mavi yazı rengi */
     font-weight: bold;
-    transform: translateY(0); /* Aktifken kayma yok */
-    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2); /* Üstte belirgin gölge */
+    transform: translateY(0);
+    /* Aktifken kayma yok */
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
+    /* Üstte belirgin gölge */
     z-index: 10000;
-    height: 55px; /* Aktif sekme biraz daha uzun olur */
+    height: 55px;
+    /* Aktif sekme biraz daha uzun olur */
     margin-bottom: 0;
-    border-top: 3px solid #ea0d27; /* Mavi vurgu üst çizgi */
+    border-top: 3px solid #ea0d27;
+    /* Mavi vurgu üst çizgi */
     border-left: 1px solid #ddd;
     border-right: 1px solid #ddd;
-    border-bottom: 0px solid white; /* Sekmenin alta oturması için beyaz çizgi */
+    border-bottom: 0px solid white;
+    /* Sekmenin alta oturması için beyaz çizgi */
 }
 
 .tool-btn.active:hover {
@@ -80,7 +99,7 @@
     width: 300px;
     height: calc(100% - 90px);
     background: white;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
     z-index: 9998;
     transition: left .3s;
 }
@@ -95,8 +114,11 @@
     top: 50px;
     width: 400px;
     height: calc(100% - 90px);
-    background: rgba(248, 249, 250, 0.7) !important; /* Tam şeffaf */
-    box-shadow: none !important;; /* Gölgeyi kaldır */
+    background: rgba(248, 249, 250, 0.7) !important;
+    /* Tam şeffaf */
+    box-shadow: none !important;
+    ;
+    /* Gölgeyi kaldır */
     z-index: 9998;
     transition: right .3s;
 }
@@ -127,8 +149,11 @@
     top: 50px;
     width: 300px;
     height: calc(100% - 90px);
-    background: rgba(248, 249, 250, 0.7) !important; /* Tam şeffaf */
-    box-shadow: none !important;; /* Gölgeyi kaldır */
+    background: rgba(248, 249, 250, 0.7) !important;
+    /* Tam şeffaf */
+    box-shadow: none !important;
+    ;
+    /* Gölgeyi kaldır */
     z-index: 9998;
     transition: left 0.3s ease-in-out;
     border-radius: 0 8px 8px 0;
@@ -166,7 +191,7 @@
 #left-layer-panel .nav-tabs .nav-link {
     font-size: 14px;
     font-weight: 500;
-    color: #495057 ;
+    color: #495057;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -251,7 +276,10 @@
 .slider {
     position: absolute;
     cursor: pointer;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background-color: #ccc;
     transition: 0.4s;
     border-radius: 24px;
@@ -269,25 +297,28 @@
     border-radius: 50%;
 }
 
-input:checked + .slider {
+input:checked+.slider {
     background-color: #0078ff;
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
     transform: translateX(26px);
 }
 
 
 /* Örnek CSS: OwsLab.css dosyanıza ekleyebilirsiniz */
 .leaflet-vertex-marker {
-    background-color: #3498db; /* Mavi arka plan */
+    background-color: #3498db;
+    /* Mavi arka plan */
     color: white;
     border: 1px solid #2980b9;
-    border-radius: 50%; /* Daire şekli */
+    border-radius: 50%;
+    /* Daire şekli */
     font-size: 10px;
     font-weight: bold;
     text-align: center;
-    line-height: 10px; /* Metni ortala */
+    line-height: 10px;
+    /* Metni ortala */
 }
 
 
@@ -304,14 +335,17 @@ input:checked + .slider:before {
 
 /* Taşıma Modu için Merkez Marker'ı (Sürükleme Tutamağı) */
 .leaflet-drag-handle {
-    background-color: #f1c40f; /* Belirgin sarı */
+    background-color: #f1c40f;
+    /* Belirgin sarı */
     color: #2c3e50;
     border: 2px solid #e67e22;
     border-radius: 5px;
     font-size: 16px;
     text-align: center;
-    line-height: 28px; /* Yüksekliği ortalar */
-    cursor: grab; /* Sürükleme imleci */
+    line-height: 28px;
+    /* Yüksekliği ortalar */
+    cursor: grab;
+    /* Sürükleme imleci */
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
@@ -351,4 +385,50 @@ input:checked + .slider:before {
     padding: 3px 6px;
     border-radius: 3px;
     background-color: rgba(255, 255, 255, 0.7);
+}
+
+/* Union Seçim Numarası Tooltip */
+.union-number-tooltip {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    color: white !important;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Drag Handle Icon */
+.drag-handle-icon {
+    background: rgba(241, 196, 15, 0.9) !important;
+    border: 3px solid #f39c12 !important;
+    border-radius: 50% !important;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) !important;
+    cursor: move !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+}
+
+.drag-handle-icon:hover {
+    background: rgba(243, 156, 18, 1) !important;
+    transform: scale(1.2) !important;
+    box-shadow: 0 0 15px rgba(243, 156, 18, 0.8) !important;
+}
+
+.drag-handle-icon i {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
 }
