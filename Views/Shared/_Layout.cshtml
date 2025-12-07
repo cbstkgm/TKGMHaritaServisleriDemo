@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="~/css/sil1.css" />
     
     <!-- Tailwind CSS (Kullanıcı İsteği - Cyberpunk Tema İçin) -->
+    <!-- Tailwind CSS ve Tema Sistemi -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -27,24 +28,142 @@
                 extend: {
                     colors: {
                         cyber: {
-                            black: '#0a0b10',
-                            dark: '#13151a',
-                            panel: '#1a1d24',
-                            neon: '#0ff',
-                            pink: '#f0f',
-                            yellow: '#fce300',
-                            blue: '#00f0ff',
-                            purple: '#bd00ff',
+                            black: 'var(--color-bg)',        // Ana Arka Plan
+                            dark: 'var(--color-bg-dark)',    // Koyu Panel Arka Planı
+                            panel: 'var(--color-panel)',     // Panel/Modal Arka Planı
+                            neon: 'var(--color-primary)',    // Ana Vurgu Rengi (Eskiden Neon Mavi)
+                            pink: 'var(--color-secondary)',  // İkincil Vurgu (Eskiden Pembe)
+                            yellow: 'var(--color-warning)',  // Uyarı/Sarı
+                            blue: 'var(--color-accent)',     // Ekstra Vurgu
+                            purple: 'var(--color-purple)',
                         }
                     },
                     boxShadow: {
-                        'neon-blue': '0 0 10px #00f0ff, 0 0 20px #00f0ff',
-                        'neon-pink': '0 0 10px #f0f, 0 0 20px #f0f',
+                        'neon-blue': 'var(--shadow-primary)',
+                        'neon-pink': 'var(--shadow-secondary)',
+                    },
+                    fontFamily: {
+                        mono: ['Courier New', 'monospace', 'ui-monospace', 'SFMono-Regular']
                     }
                 }
             }
         }
     </script>
+    
+    <!-- Varsayılan Tema (Cyberpunk) Değişkenleri ve Global Override -->
+    <style id="theme-style">
+        :root {
+            /* Varsayılan: Cyberpunk */
+            --color-bg: #0a0b10;
+            --color-bg-dark: #13151a;
+            --color-panel: #1a1d24;
+            --color-text: #e2e8f0;       /* Metin Rengi */
+            --color-text-muted: #94a3b8; /* Silik Metin */
+            --color-primary: #00f0ff;    
+            --color-secondary: #f0f;     
+            --color-warning: #fce300;
+            --color-accent: #00f0ff;
+            --color-purple: #bd00ff;
+            
+            --shadow-primary: 0 0 10px #00f0ff, 0 0 20px rgba(0, 240, 255, 0.4);
+            --shadow-secondary: 0 0 10px #f0f, 0 0 20px rgba(255, 0, 255, 0.4);
+        }
+        
+        /* Geçiş Efektleri */
+        body, div, button, input, textarea, .side-panel, .tool-btn, .navbar, .tab-content {
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* --- GLOBAL OVERRIDES --- */
+        
+        /* Body & Layout */
+        body {
+            background-color: var(--color-bg) !important;
+            color: var(--color-text) !important;
+        }
+
+        /* Navbar / Üst Bar */
+        .navbar, nav {
+            background-color: var(--color-bg-dark) !important;
+            border-bottom: 1px solid var(--color-primary);
+        }
+        .navbar-brand, .nav-link {
+            color: var(--color-text) !important;
+        }
+
+        /* Yan Paneller (Layers, OGC vb.) */
+        .side-panel-left, .side-panel-right, .tab-pane, .tab-content {
+            background-color: var(--color-panel) !important;
+            color: var(--color-text) !important;
+            border-color: var(--color-primary) !important;
+        }
+        .panel-header {
+            background-color: var(--color-bg-dark) !important;
+            color: var(--color-primary) !important;
+            border-bottom: 1px solid var(--color-primary) !important;
+        }
+
+        /* Toolbar Butonları */
+        .tool-btn {
+            background-color: var(--color-panel) !important;
+            color: var(--color-text) !important;
+            border: 1px solid var(--color-text-muted) !important;
+        }
+        .tool-btn:hover {
+            background-color: var(--color-bg-dark) !important;
+            color: var(--color-primary) !important;
+            border-color: var(--color-primary) !important;
+            box-shadow: var(--shadow-primary) !important;
+        }
+        .tool-btn.active {
+            background-color: var(--color-primary) !important;
+            color: var(--color-bg) !important;
+            box-shadow: var(--shadow-primary) !important;
+        }
+
+        /* Tab Kontrolleri */
+        .nav-tabs .nav-link {
+            background-color: transparent !important;
+            color: var(--color-text-muted) !important;
+            border: none !important;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: var(--color-panel) !important;
+            color: var(--color-primary) !important;
+            border-color: var(--color-primary) !important;
+            border-bottom: 2px solid var(--color-primary) !important;
+        }
+
+        /* Inputlar ve Form Elemanları */
+        .form-control, .form-select {
+            background-color: var(--color-bg-dark) !important;
+            color: var(--color-text) !important;
+            border: 1px solid var(--color-text-muted) !important;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--color-primary) !important;
+            box-shadow: 0 0 0 0.25rem rgba(0, 240, 255, 0.25) !important;
+        }
+
+        /* Genel Butonlar (Bootstrap Primary) */
+        .btn-primary {
+            background-color: var(--color-primary) !important;
+            border-color: var(--color-primary) !important;
+            color: var(--color-bg) !important; /* Koyu tema için siyah yazı */
+            font-weight: bold;
+        }
+        .btn-primary:hover {
+            filter: brightness(1.1);
+            box-shadow: var(--shadow-primary);
+        }
+
+        /* Footer */
+        #main-footer {
+            background-color: var(--color-bg-dark) !important;
+            color: var(--color-text-muted) !important;
+            border-top: 1px solid var(--color-primary) !important;
+        }
+    </style>
     
     <!-- toolbar buton icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
