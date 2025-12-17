@@ -1,9 +1,39 @@
+<div align="center">
+
 # 🌍 owsLab - OGC Web Servisleri Laboratuvarı
 
 **owsLab**, OGC (Open Geospatial Consortium) web servisleri ve CBS (Coğrafi Bilgi Sistemleri) teknolojilerini öğrenmek ve uygulamak için geliştirilmiş interaktif bir web uygulamasıdır.
 
+---
+
+### 🚀 Demo & Linkler
+
+[![🌐 Canlı Demo](https://img.shields.io/badge/🌐_Canlı_Demo-Görüntüle-success?style=for-the-badge&logo=googlechrome&logoColor=white)](https://owslab.azurewebsites.net)
+[![📦 GitHub Repo](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github)](https://github.com/erdemalpar/owsLab)
+[![🦊 GitLab Repo](https://img.shields.io/badge/GitLab-Repository-FCA121?style=for-the-badge&logo=gitlab)](https://gitlab.com/erdemalpar/owclab)
+
+---
+
+### 🏆 Teknolojiler & İstatistikler
+
+![.NET](https://img.shields.io/badge/.NET_8.0-512BD4?style=flat-square&logo=dotnet&logoColor=white)
+![C#](https://img.shields.io/badge/C%23-239120?style=flat-square&logo=c-sharp&logoColor=white)
+![Leaflet](https://img.shields.io/badge/Leaflet.js-199900?style=flat-square&logo=leaflet&logoColor=white)
+![OpenStreetMap](https://img.shields.io/badge/OpenStreetMap-7EBC6F?style=flat-square&logo=openstreetmap&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)
+
+![GitHub Stars](https://img.shields.io/github/stars/erdemalpar/owsLab?style=social)
+![GitHub Forks](https://img.shields.io/github/forks/erdemalpar/owsLab?style=social)
+![GitHub Issues](https://img.shields.io/github/issues/erdemalpar/owsLab?style=flat-square)
+![GitHub Last Commit](https://img.shields.io/github/last-commit/erdemalpar/owsLab?style=flat-square)
+
+</div>
+
+---
+
 ## 📋 İçindekiler
 
+- [Demo & Linkler](#-demo--linkler)
 - [Özellikler](#-özellikler)
 - [Teknolojiler](#-teknolojiler)
 - [Kurulum](#-kurulum)
