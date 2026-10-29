@@ -1,6 +1,9 @@
 @inject Microsoft.Extensions.Options.IOptions<TkgmOwsAyarlari> OwsAyarlari
 @{
-    var proxyKoku = string.IsNullOrWhiteSpace(OwsAyarlari.Value.ProxyAdresi) ? Url.Content("~/OwsProxy") : OwsAyarlari.Value.ProxyAdresi.TrimEnd('/');
+    var proxyAyari = OwsAyarlari.Value.ProxyAdresi;
+    // "yok": proxy'siz statik yayın (GitHub Pages); canlı TKGM istekleri kapalıdır
+    var canliKapali = string.Equals(proxyAyari, "yok", StringComparison.OrdinalIgnoreCase);
+    string? proxyKoku = canliKapali ? null : string.IsNullOrWhiteSpace(proxyAyari) ? Url.Content("~/OwsProxy") : proxyAyari.TrimEnd('/');
 }
 <!DOCTYPE html>
 <html lang="tr">
@@ -85,6 +88,15 @@
         </nav>
     </header>
 
+    @if (canliKapali)
+    {
+        <div class="canli-kapali-bandi">
+            <i class="fa-solid fa-circle-info"></i>
+            Bu yayında canlı TKGM istekleri kapalı: dersleri ve rehberi okuyabilir, istek adreslerini kurup kopyalayabilirsiniz;
+            ancak laboratuvar ve parsel uygulaması TKGM'ye istek gönderemez. Tarayıcılar, TKGM'nin kimlik isteyen servisine
+            başka bir siteden erişime izin vermez; canlı sürüm Türkiye'deki bir sunucuda çalışır.
+        </div>
+    }
     <main>
         @RenderBody()
     </main>

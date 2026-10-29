@@ -72,7 +72,7 @@ const Laboratuvar = (() => {
             this.referansKatman = L.tileLayer.wms(OwsLab.proxyKoku("wms"), {
                 layers: "TKGM:parseller", styles: "", format: "image/png", transparent: true, version: "1.1.1", opacity: 0.45, maxZoom: 20
             });
-            if (this.kok.dataset.referans !== "false") this.referansKatman.addTo(this.harita);
+            if (this.kok.dataset.referans !== "false" && OwsLab.canliAcik) this.referansKatman.addTo(this.harita);
 
             this.sonucKatmani = L.featureGroup().addTo(this.harita);
             this.cizimKatmani = L.featureGroup().addTo(this.harita);
@@ -724,7 +724,7 @@ const Laboratuvar = (() => {
                 <div class="not-kutusu basari small"><b>Nasıl düzeltilir?</b> ${htmlKacis(h.cozum)}</div>
                 ${h.tkgmMesaji ? `<div class="small mt-2"><span class="text-muted">TKGM'nin mesajı:</span> <code>${htmlKacis(h.tkgmMesaji)}</code></div>` : ""}
                 ${h.hataKodu ? `<div class="small"><span class="text-muted">TKGM hata kodu:</span> <code>${htmlKacis(h.hataKodu)}</code> <span class="text-muted">— TKGM'ye bildirirken bu kodu verin.</span></div>` : ""}
-                <div class="small text-muted mt-2">Not: TKGM hatayı HTTP ${s.durum} ve <code>ows:ExceptionReport</code> XML belgesiyle bildirir. İstemci kodunuz yalnızca durum koduna değil, gövdedeki ExceptionReport'a da bakmalıdır.</div>
+                ${s.durum ? `<div class="small text-muted mt-2">Not: TKGM hatayı HTTP ${s.durum} ve <code>ows:ExceptionReport</code> XML belgesiyle bildirir. İstemci kodunuz yalnızca durum koduna değil, gövdedeki ExceptionReport'a da bakmalıdır.</div>` : ""}
             </div>`;
         }
 

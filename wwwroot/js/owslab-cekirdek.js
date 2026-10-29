@@ -11,7 +11,9 @@ const OwsLab = (() => {
 
     // Sayfa düzeni (_Layout) tarafından yazılır. GitHub Pages sürümünde site bir alt dizinde (ör. /owsLab/) durur
     // ve istekler TKGM kimliğini ekleyen Türkiye'deki kurum sunucusunun /OwsProxy adresine gider.
+    // proxy null ise (proxy'siz statik yayın) canlı istekler kapalıdır.
     const AYAR = Object.assign({ kok: "/", proxy: "/OwsProxy" }, window.OwsLabAyar);
+    const canliAcik = Boolean(AYAR.proxy);
 
     /** Site köküne göre adres üretir: siteAdresi("data/x.gml") → "/owsLab/data/x.gml". */
     function siteAdresi(yol) {
@@ -242,6 +244,16 @@ const OwsLab = (() => {
             geojson: null,
             hata: null
         };
+
+        if (ayrisan.servis && !canliAcik) {
+            sonuc.hata = {
+                baslik: "Bu yayında canlı istek kapalı",
+                aciklama: "Bu kopya proxy'siz yayınlandı. TKGM, kimlik isteyen servisine başka bir siteden tarayıcıyla erişime izin vermediği için istek gönderilemiyor.",
+                cozum: "\"TKGM'de aç\" düğmesiyle isteği yeni sekmede açıp demo hesapla (cbsdemouser) giriş yapın; ya da Kopyala ile alıp QGIS, curl, Python gibi araçlarda çalıştırın.",
+                ham: ""
+            };
+            return sonuc;
+        }
 
         if (!proxy) {
             sonuc.hata = {
@@ -744,7 +756,7 @@ Not: Birden fazla katmanı tek seferde seçmeyin; her katmanı ayrı ekleyin.`;
 
     return {
         TKGM, KATMANLAR, WMS_STILLERI, PARAMETRELER, SUTUNLAR, KOD_DILLERI,
-        istekAyristir, istekOlustur, parametreAl, parametreSozlugu, proxyAdresi, proxyKoku, siteAdresi, degerKodla,
+        istekAyristir, istekOlustur, parametreAl, parametreSozlugu, proxyAdresi, proxyKoku, siteAdresi, canliAcik, degerKodla,
         istekGonder, gmlGeoJson, kmlGeoJson,
         xmlGirintile, xmlVurgula, htmlKacis,
         kodUret,

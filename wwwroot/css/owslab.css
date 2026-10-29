@@ -85,6 +85,9 @@ h1, h2, h3, h4 { letter-spacing: -.015em; }
 .alt-bilgi { background: #fff; border-top: 1px solid var(--cizgi); padding: 1rem 0; font-size: .8rem; color: var(--metin-soluk); margin-top: 3rem; }
 .alt-bilgi-link { font-size: .8rem; color: var(--metin-soluk); }
 
+.canli-kapali-bandi { background: var(--sari-acik); border-bottom: 1px solid #ffe066; color: #7a4a00; font-size: .85rem; padding: .55rem 1.25rem; }
+.canli-kapali-bandi i { margin-right: .35rem; }
+
 /* --- Bildirimler ------------------------------------------------------------ */
 
 .bildirim-kabi { position: fixed; right: 1rem; bottom: 1rem; z-index: 2000; display: flex; flex-direction: column; gap: .5rem; max-width: min(380px, calc(100vw - 2rem)); }

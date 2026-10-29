@@ -5,13 +5,14 @@
 # çıktı klasörüne yazılır. Canlı TKGM istekleri tarayıcıdan PROXY_ADRESI'ndeki proxy'ye (Türkiye'deki
 # kurum sunucusunda çalışan bu uygulamanın /OwsProxy adresi) gider.
 #
-# Kullanım:  PROXY_ADRESI=https://sunucu.kurum.gov.tr/OwsProxy YOL_TABANI=/owsLab scripts/statik-yayin.sh [cikti]
+# Kullanım:  [PROXY_ADRESI=https://sunucu.kurum.gov.tr/OwsProxy] YOL_TABANI=/owsLab scripts/statik-yayin.sh [cikti]
 set -euo pipefail
 
 CIKTI="${1:-_site}"
 YOL_TABANI="${YOL_TABANI:-/owsLab}"
 PORT="${PORT:-5299}"
-: "${PROXY_ADRESI:?PROXY_ADRESI tanımlı değil - kurum sunucusundaki /OwsProxy adresini verin}"
+# Boş bırakılırsa site canlı istekler kapalı olarak üretilir (dersler ve rehber çalışır, laboratuvar istek gönderemez)
+PROXY_ADRESI="${PROXY_ADRESI:-yok}"
 
 KOK="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$KOK"

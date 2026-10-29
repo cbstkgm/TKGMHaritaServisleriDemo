@@ -105,6 +105,8 @@ GitHub Pages yalnızca statik dosya sunduğu için site iki parçaya ayrılır:
 **2. GitHub ayarları** (depo → Settings):
 
 - *Secrets and variables → Actions → Variables*: `OWSLAB_PROXY_ADRESI` = `https://<sunucu>/OwsProxy`
+  (tanımlanmazsa site **canlı istekler kapalı** yayınlanır: dersler ve rehber çalışır, laboratuvar TKGM'ye istek
+  gönderemez ve sayfanın üstünde bunu açıklayan bir uyarı görünür)
 - *Pages → Source*: **GitHub Actions**
 
 **3. Yayın:** `main` dalına her push'ta site `https://<kullanici>.github.io/<depo>/` adresine yeniden yayınlanır
