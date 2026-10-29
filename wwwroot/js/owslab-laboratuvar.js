@@ -235,7 +235,7 @@ const Laboratuvar = (() => {
                 if (eylem === "gonder") { this.urlOku(); this.gonder(); }
                 else if (eylem === "kopyala") this.urlKopyala();
                 else if (eylem === "haritadan") this.haritadanDoldur();
-                else if (eylem === "parametreEkle") this.parametreEkle();
+                else if (eylem === "eksikleriEkle") this.eksikleriEkle();
                 else if (eylem === "parametreSil") this.parametreSil(parseInt(dugme.dataset.indeks, 10));
                 else if (eylem === "sekme") this.sekmeSec(dugme.dataset.sekme);
                 else if (eylem === "kodDili") { this.secilenKodDili = dugme.dataset.dil; this.kodPaneliniCiz(); }
@@ -252,16 +252,31 @@ const Laboratuvar = (() => {
                 });
             }
 
-            this.sec("parametreTablosu").addEventListener("input", e => {
+            // Serbest metin değerleri yazılırken adres anında güncellenir (odak kaybolmasın diye tablo yeniden çizilmez)
+            const tablo = this.sec("parametreTablosu");
+            tablo.addEventListener("input", e => {
+                if (e.target.tagName === "SELECT" || e.target.dataset.alan !== "deger") return;
+                const i = parseInt(e.target.closest("tr[data-indeks]").dataset.indeks, 10);
+                this.parametreler[i] = [this.parametreler[i][0], e.target.value];
+                this.urlYaz(false);
+            });
+            tablo.addEventListener("change", e => {
                 const satir = e.target.closest("tr[data-indeks]");
                 if (!satir) return;
                 const i = parseInt(satir.dataset.indeks, 10);
-                const ad = satir.querySelector("[data-alan='ad']").value;
-                const deger = satir.querySelector("[data-alan='deger']").value;
-                this.parametreler[i] = [ad, deger];
-                const aciklama = satir.querySelector(".param-aciklama");
-                if (aciklama) aciklama.textContent = this.parametreAciklamasi(ad);
-                this.urlYaz(false);
+                if (e.target.dataset.alan === "ad") {
+                    this.parametreler[i] = [e.target.value.trim(), this.parametreler[i][1]];
+                    this.urlYaz();
+                } else if (e.target.tagName === "SELECT") {
+                    this.degerDegisti(i, e.target.value);
+                } else {
+                    this.urlYaz();
+                }
+            });
+            this.sec("parametreEkleSecimi").addEventListener("change", e => {
+                const ad = e.target.value;
+                e.target.value = "";
+                if (ad) this.parametreEkle(ad);
             });
         }
 
@@ -321,11 +336,21 @@ const Laboratuvar = (() => {
             else this.parametreler.push([ad, deger]);
         }
 
-        parametreEkle() {
-            this.parametreler.push(["", ""]);
-            this.parametreTablosunuCiz();
-            const satirlar = this.sec("parametreTablosu").querySelectorAll("tr[data-indeks] [data-alan='ad']");
-            satirlar[satirlar.length - 1]?.focus();
+        /** Bir parametreyi, bu istek için mantıklı bir varsayılan değerle ekler. Var olan parametre menüde listelenmez. */
+        parametreEkle(ad) {
+            if (ad === "__ozel") {
+                this.parametreler.push(["", ""]);
+                this.urlYaz();
+                const adlar = this.sec("parametreTablosu").querySelectorAll("[data-alan='ad']");
+                adlar[adlar.length - 1]?.focus();
+                return;
+            }
+            if (this.parametreler.some(([a]) => a.toUpperCase() === ad)) {
+                OwsLab.bildir(`${ad} zaten ekli. Bir parametre istekte yalnızca bir kez yazılabilir.`, "uyari");
+                return;
+            }
+            this.parametreler.push([ad, this.varsayilanDeger(ad)]);
+            this.urlYaz();
         }
 
         parametreSil(i) {
@@ -335,7 +360,113 @@ const Laboratuvar = (() => {
 
         parametreAciklamasi(ad) {
             const tanim = PARAMETRELER[(ad || "").toUpperCase()];
-            return tanim ? tanim.aciklama : (ad ? "Bu parametre OGC standardında tanımlı değil ya da TKGM için anlamsız; sunucu yok sayabilir." : "");
+            return tanim ? tanim.aciklama : "";
+        }
+
+        eksikleriEkle() {
+            const eklenen = this.eksikleriTamamla();
+            this.urlYaz();
+            if (eklenen.length) OwsLab.bildir(`Eklendi: <b>${eklenen.join(", ")}</b>. Değerleri harita görünümünden ve önerilen varsayılanlardan dolduruldu.`);
+        }
+
+        eksikleriTamamla() {
+            const b = OwsKurallar.baglam(this.parametreler, this.servis);
+            const eksikler = OwsKurallar.denetle(this.parametreler, this.servis).eksikler;
+            eksikler.forEach(ad => this.parametreler.push([ad, this.varsayilanDeger(ad, b)]));
+            return eksikler;
+        }
+
+        uygulanamayanlariKaldir() {
+            const b = OwsKurallar.baglam(this.parametreler, this.servis);
+            const kaldirilan = [];
+            this.parametreler = this.parametreler.filter(([a]) => {
+                const ad = a.toUpperCase();
+                const kalsin = !OwsKurallar.TANIMLAR[ad] || OwsKurallar.uygulanabilirMi(ad, b);
+                if (!kalsin) kaldirilan.push(ad);
+                return kalsin;
+            });
+            return kaldirilan;
+        }
+
+        varsayilanDeger(ad, b = OwsKurallar.baglam(this.parametreler, this.servis)) {
+            const boyut = this.harita.getSize();
+            const s = this.harita.getBounds();
+            switch (ad) {
+                case "SERVICE": return this.servis.toUpperCase();
+                case "VERSION": return OwsKurallar.varsayilanSurum(b.servis);
+                case "REQUEST": return "GetCapabilities";
+                case "LAYERS": case "QUERY_LAYERS": case "LAYER": case "TYPENAME": return "TKGM:parseller";
+                case "STYLES": return "";
+                case "STYLE": return "parseller";
+                case "SRS": case "CRS": case "SRSNAME": return "EPSG:4326";
+                case "BBOX": return b.servis === "wfs"
+                    ? [s.getWest(), s.getSouth(), s.getEast(), s.getNorth()].map(v => v.toFixed(6)).join(",")
+                    : this.gorunumBbox(b.surum || "1.1.1", "EPSG:4326");
+                case "WIDTH": return String(boyut.x);
+                case "HEIGHT": return String(boyut.y);
+                case "X": case "I": return String(Math.round(boyut.x / 2));
+                case "Y": case "J": return String(Math.round(boyut.y / 2));
+                case "FORMAT": return "image/png";
+                case "TRANSPARENT": return "true";
+                case "INFO_FORMAT": return "application/json";
+                case "FEATURE_COUNT": return "1";
+                case "MAXFEATURES": return "10";
+                case "OUTPUTFORMAT": return "GML2";
+                case "PROPERTYNAME": return "adano,parselno,tapualan,geom";
+                case "CQL_FILTER": return "durum=3";
+                default: return "";
+            }
+        }
+
+        /** Seçim listesinden bir değer seçildiğinde, isteği tutarlı tutmak için gereken düzeltmeleri yapar. */
+        degerDegisti(i, yeni) {
+            const ad = this.parametreler[i][0].toUpperCase();
+            const eski = this.parametreler[i][1];
+            this.parametreler[i] = [this.parametreler[i][0], yeni];
+            const notlar = [];
+
+            if (ad === "SERVICE" && eski.toLowerCase() !== yeni.toLowerCase()) {
+                this.servis = yeni.toLowerCase();
+                this.parametreAyarla("VERSION", OwsKurallar.varsayilanSurum(this.servis));
+                this.parametreAyarla("REQUEST", "GetCapabilities");
+                const kaldirilan = this.uygulanamayanlariKaldir();
+                this.servisRozetiniGuncelle(this.servis);
+                notlar.push(`Servis ${yeni} oldu; adres <code>…/${this.servis}</code>, VERSION ve REQUEST buna göre ayarlandı.`);
+                if (kaldirilan.length) notlar.push(`${this.servis.toUpperCase()} için anlamsız olan <b>${kaldirilan.join(", ")}</b> kaldırıldı.`);
+            } else if (ad === "REQUEST" && eski.toLowerCase() !== yeni.toLowerCase()) {
+                const kaldirilan = this.uygulanamayanlariKaldir();
+                const eklenen = this.eksikleriTamamla();
+                if (kaldirilan.length) notlar.push(`${yeni} için kullanılmayan <b>${kaldirilan.join(", ")}</b> kaldırıldı.`);
+                if (eklenen.length) notlar.push(`Zorunlu <b>${eklenen.join(", ")}</b> varsayılan değerlerle eklendi.`);
+            } else if (ad === "VERSION" && this.servis === "wms" && eski.slice(0, 3) !== yeni.slice(0, 3)) {
+                notlar.push(...this.wmsSurumDonustur(yeni.startsWith("1.3")));
+            }
+
+            this.urlYaz();
+            if (notlar.length) OwsLab.bildir(notlar.join("<br>"));
+        }
+
+        /** WMS 1.1.1 ↔ 1.3.0: SRS/CRS, X/I, Y/J adlarını ve EPSG:4326 BBOX eksen sırasını çevirir. */
+        wmsSurumDonustur(yeniyeMi) {
+            const notlar = [];
+            Object.entries(OwsKurallar.SURUM_KARSILIKLARI).forEach(([eskiAd, yeniAd]) => {
+                const [kaynak, hedef] = yeniyeMi ? [eskiAd, yeniAd] : [yeniAd, eskiAd];
+                const i = this.parametreler.findIndex(([a]) => a.toUpperCase() === kaynak);
+                if (i >= 0) {
+                    this.parametreler[i] = [hedef, this.parametreler[i][1]];
+                    notlar.push(`${kaynak} → ${hedef}`);
+                }
+            });
+            const crs = (OwsLab.parametreAl(this.parametreler, "CRS") || OwsLab.parametreAl(this.parametreler, "SRS") || "").toUpperCase();
+            const bbox = OwsLab.parametreAl(this.parametreler, "BBOX");
+            if (bbox && crs === "EPSG:4326") {
+                const d = bbox.split(",");
+                if (d.length === 4) {
+                    this.parametreAyarla("BBOX", [d[1], d[0], d[3], d[2]].join(","));
+                    notlar.push(`BBOX eksen sırası ${yeniyeMi ? "enlem,boylam" : "boylam,enlem"} olarak çevrildi`);
+                }
+            }
+            return notlar.length ? [`WMS ${yeniyeMi ? "1.3.0" : "1.1.1"}: ${notlar.join(", ")}.`] : [];
         }
 
         servisRozetiniGuncelle(servis) {
@@ -348,25 +479,67 @@ const Laboratuvar = (() => {
         }
 
         parametreTablosunuCiz() {
-            const govde = this.sec("parametreTablosu");
+            const denetim = OwsKurallar.denetle(this.parametreler, this.servis);
             const sayac = this.sec("parametreSayisi");
             if (sayac) sayac.textContent = this.parametreler.length;
-                        govde.innerHTML = this.parametreler.map(([ad, deger], i) => {
-                const tanim = PARAMETRELER[(ad || "").toUpperCase()];
-                const listeKimligi = `oneri-${i}-${Math.random().toString(36).slice(2, 7)}`;
-                const oneriler = tanim && tanim.oneriler.length
-                    ? `<datalist id="${listeKimligi}">${tanim.oneriler.map(o => `<option value="${htmlKacis(o)}">`).join("")}</datalist>`
-                    : "";
-                const uzunMu = (deger || "").length > 60;
-                const degerAlani = uzunMu
-                    ? `<textarea class="form-control form-control-sm font-monospace" data-alan="deger" rows="3" spellcheck="false">${htmlKacis(deger)}</textarea>`
-                    : `<input class="form-control form-control-sm font-monospace" data-alan="deger" value="${htmlKacis(deger)}" ${oneriler ? `list="${listeKimligi}"` : ""} spellcheck="false">`;
-                return `<tr data-indeks="${i}">
-                    <td class="param-ad"><input class="form-control form-control-sm font-monospace fw-semibold" data-alan="ad" value="${htmlKacis(ad)}" list="owslabParametreAdlari" spellcheck="false"></td>
-                    <td>${degerAlani}${oneriler}<div class="param-aciklama">${htmlKacis(this.parametreAciklamasi(ad))}</div></td>
+
+            this.sec("parametreTablosu").innerHTML = this.parametreler.map(([ad, deger], i) => {
+                const satir = denetim.satirlar[i];
+                const tanimli = !!OwsKurallar.TANIMLAR[satir.ad];
+                const hataVar = satir.uyarilar.some(u => u.tur === "hata");
+                const adHucresi = tanimli
+                    ? `<span class="param-ad-etiket" title="${htmlKacis(satir.ad)}">${htmlKacis(satir.ad)}</span>`
+                    : `<input class="form-control form-control-sm font-monospace fw-semibold" data-alan="ad" value="${htmlKacis(ad)}" list="owslabParametreAdlari" placeholder="AD" spellcheck="false">`;
+                const degerAlani = satir.secenekler
+                    ? this.secimHtml(satir.secenekler, deger)
+                    : (deger || "").length > 60
+                        ? `<textarea class="form-control form-control-sm font-monospace" data-alan="deger" rows="3" spellcheck="false">${htmlKacis(deger)}</textarea>`
+                        : `<input class="form-control form-control-sm font-monospace" data-alan="deger" value="${htmlKacis(deger)}" spellcheck="false">`;
+                const uyarilar = satir.uyarilar.map(u => `<div class="param-uyari ${u.tur}"><i class="fa-solid ${u.tur === "hata" ? "fa-circle-xmark" : "fa-triangle-exclamation"}"></i> ${htmlKacis(u.metin)}</div>`).join("");
+                return `<tr data-indeks="${i}" class="${hataVar ? "param-hatali" : ""}">
+                    <td class="param-ad">${adHucresi}</td>
+                    <td>${degerAlani}<div class="param-aciklama">${htmlKacis(this.parametreAciklamasi(ad))}</div>${uyarilar}</td>
                     <td class="param-sil"><button type="button" class="btn btn-sm btn-link text-danger p-0" data-eylem="parametreSil" data-indeks="${i}" title="Parametreyi kaldır"><i class="fa-solid fa-xmark"></i></button></td>
                 </tr>`;
             }).join("") || `<tr><td colspan="3" class="text-muted small p-2">Bu adreste hiç parametre yok. Sunucu ne istediğinizi bilemez.</td></tr>`;
+
+            const b = denetim.baglam;
+            const ozet = this.sec("parametreOzet");
+            const parcalar = [];
+            if (denetim.tekrarVar) {
+                parcalar.push(`<div class="param-uyari hata"><i class="fa-solid fa-circle-xmark"></i> Aynı parametre birden fazla kez yazılmış. Tekrarlananları silmeden istek gönderilemez.</div>`);
+            }
+            if (denetim.eksikler.length) {
+                parcalar.push(`<div class="param-eksik"><span><i class="fa-solid fa-circle-info"></i> ${b.istek ? `${b.servis.toUpperCase()} ${OwsKurallar.istekAdi(b.istek)} için` : "Her istek için"} zorunlu ama eksik: ${denetim.eksikler.map(a => `<code>${a}</code>`).join(" ")}</span>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-eylem="eksikleriEkle"><i class="fa-solid fa-plus"></i> Eksikleri ekle</button></div>`);
+            }
+            ozet.innerHTML = parcalar.join("");
+
+            const ekle = OwsKurallar.eklenebilirler(this.parametreler, this.servis);
+            const secenek = ad => `<option value="${ad}">${ad}</option>`;
+            this.sec("parametreEkleSecimi").innerHTML = `<option value="">+ Parametre ekle…</option>
+                ${ekle.zorunlu.length ? `<optgroup label="Bu istek için zorunlu">${ekle.zorunlu.map(secenek).join("")}</optgroup>` : ""}
+                ${ekle.istegeBagli.length ? `<optgroup label="${b.istek ? `${b.servis.toUpperCase()} ${OwsKurallar.istekAdi(b.istek)} için isteğe bağlı` : "İsteğe bağlı"}">${ekle.istegeBagli.map(secenek).join("")}</optgroup>` : ""}
+                <optgroup label="Diğer"><option value="__ozel">Özel parametre (adını siz yazın)</option></optgroup>`;
+        }
+
+        /** Sabit değerli parametreler için seçim listesi. Seçilemeyen değerler gösterilir ama devre dışıdır. */
+        secimHtml(secenekler, deger) {
+            const etiket = s => `${s.deger === "" ? "(boş)" : s.deger}${s.not ? ` — ${s.not}` : ""}`;
+            const secili = s => s.deger.toLowerCase() === (deger || "").toLowerCase() ? " selected" : "";
+            const listedeMi = secenekler.some(s => secili(s));
+            const grup = (durum, baslik, ek = "") => {
+                const liste = secenekler.filter(s => s.durum === durum);
+                if (!liste.length) return "";
+                const ogeler = liste.map(s => `<option value="${htmlKacis(s.deger)}"${secili(s)}${ek}>${htmlKacis(etiket(s))}</option>`).join("");
+                return baslik ? `<optgroup label="${baslik}">${ogeler}</optgroup>` : ogeler;
+            };
+            return `<select class="form-select form-select-sm font-monospace" data-alan="deger">
+                ${listedeMi ? "" : `<option value="${htmlKacis(deger)}" selected>⚠ ${htmlKacis(deger || "(boş)")} — listede yok</option>`}
+                ${grup("gecerli", "")}
+                ${grup("kapali", "TKGM'de hata verir (denemek için seçebilirsiniz)")}
+                ${grup("gecersiz", "Bu servis/istekle seçilemez", " disabled")}
+            </select>`;
         }
 
         /** Kutudaki okunur adresi, sunucuya gidecek doğru kodlanmış adrese çevirir (ör. # → %23, boşluk → %20). */
@@ -383,6 +556,12 @@ const Laboratuvar = (() => {
         // --- İstek gönderme ------------------------------------------------------------
 
         async gonder() {
+            const parametreler = OwsLab.istekAyristir(this.urlAlani.value).parametreler;
+            if (OwsKurallar.denetle(parametreler, this.servis).tekrarVar) {
+                this.sekmeSec("parametre");
+                OwsLab.bildir("Aynı parametre birden fazla kez yazılmış. URL anatomisi sekmesinde işaretli satırları silip tekrar gönderin.", "uyari");
+                return;
+            }
             const adres = this.kodlanmisAdres();
             this.yukleniyor(true);
             const sonuc = await OwsLab.istekGonder(adres);

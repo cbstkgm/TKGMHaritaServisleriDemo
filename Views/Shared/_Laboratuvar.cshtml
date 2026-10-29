@@ -57,9 +57,10 @@
             <button type="button" class="lab-sekme" data-eylem="sekme" data-sekme="kod">Kod</button>
         </div>
         <div class="lab-panel d-none" data-rol="panel-parametre">
-            <p class="small text-muted mb-1">İstek adresindeki her parametre ve anlamı. Değerleri burada değiştirdiğinizde adres de güncellenir.</p>
+            <p class="small text-muted mb-1">İstek adresindeki her parametre ve anlamı. Değerleri burada değiştirdiğinizde adres de güncellenir; seçim listeleri yalnızca bu servis ve işlemle kullanılabilecek değerleri seçtirir.</p>
+            <div data-rol="parametreOzet"></div>
             <table class="table table-sm param-tablosu mb-1"><tbody data-rol="parametreTablosu"></tbody></table>
-            <button type="button" class="btn btn-sm btn-link px-0" data-eylem="parametreEkle"><i class="fa-solid fa-plus"></i> Parametre ekle</button>
+            <select class="form-select form-select-sm param-ekle" data-rol="parametreEkleSecimi" aria-label="Parametre ekle"></select>
         </div>
         <div class="lab-panel" data-rol="panel-ozet">
             <p class="small text-muted mb-0">Bir istek gönderdiğinizde TKGM'nin yanıtı burada çözümlenip açıklanır.</p>

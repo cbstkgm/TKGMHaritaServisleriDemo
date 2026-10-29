@@ -25,7 +25,7 @@ const OwsLab = (() => {
 
     /** Servislerin GetCapabilities belgelerinde ilan edilen katmanlar ve demo hesapta gerçekte ne döndükleri. */
     const KATMANLAR = {
-        "TKGM:parseller": { ad: "Parseller", wms: true, wfs: true, veriVar: true, not: "Hızırpaşa parselleri. Eski (durum=2) ve güncel (durum=3) kayıtlar birlikte gelir." },
+        "TKGM:parseller": { ad: "Parseller", wms: true, wfs: true, veriVar: true, not: "Hızırpaşa ve çevresindeki mahallelerin parselleri; mahalleye göre tapumahalleref ile süzün. Eski (durum=2) ve güncel (durum=3) kayıtlar birlikte gelir." },
         "TKGM:mahalleler": { ad: "Mahalleler", wms: true, wfs: true, veriVar: true, not: "Demo hesap yalnızca Hızırpaşa mahallesini görür." },
         "TKGM:ilceler": { ad: "İlçeler", wms: true, wfs: true, veriVar: false, not: "Demo hesabın yetkisi dışında: boş sonuç döner." },
         "TKGM:iller": { ad: "İller", wms: true, wfs: true, veriVar: false, not: "Demo hesabın yetkisi dışında: boş sonuç döner." },
@@ -67,6 +67,8 @@ const OwsLab = (() => {
         OUTPUTFORMAT: { aciklama: "WFS yanıt formatı. TKGM'de GML2, GML3 ve KML açık; JSON, CSV ve SHAPE-ZIP kapalıdır.", oneriler: ["GML2", "GML3", "KML"] },
         SRSNAME: { aciklama: "WFS'in geometriyi hangi koordinat sisteminde döndüreceği.", oneriler: ["EPSG:4326"] },
         SORTBY: { aciklama: "Sıralama (WFS 1.1.0): 'sütun A' artan, 'sütun D' azalan.", oneriler: ["tapualan D"] },
+        TYPENAMES: { aciklama: "WFS 2.0'da TYPENAME'in yeni adı. TKGM 2.0'ı desteklemediği için çalışmaz.", oneriler: [] },
+        COUNT: { aciklama: "WFS 2.0'da MAXFEATURES'ın yeni adı. TKGM 2.0'ı desteklemediği için çalışmaz.", oneriler: [] },
         EXCEPTIONS: { aciklama: "Hata durumunda yanıt biçimi.", oneriler: ["application/vnd.ogc.se_xml"] }
     };
 

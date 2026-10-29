@@ -2,7 +2,7 @@ namespace owsLab.Models;
 
 /// <summary>
 /// appsettings.json içindeki "TkgmOws" bölümü. Eğitim amaçlı demo hesabının bilgilerini tutar.
-/// Demo hesabı yalnızca Amasya / Merkez / Hızırpaşa mahallesi verisini görebilir.
+/// Demo hesabı mahalle katmanında yalnızca Amasya / Merkez / Hızırpaşa'yı, parsel katmanında bu mahalle ve çevresini görür.
 /// </summary>
 public class TkgmOwsAyarlari
 {

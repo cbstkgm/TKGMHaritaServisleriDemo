@@ -289,6 +289,15 @@ h1, h2, h3, h4 { letter-spacing: -.015em; }
 .param-tablosu .form-control { font-size: .76rem; padding: .2rem .4rem; }
 .param-aciklama { font-size: .72rem; color: var(--metin-soluk); line-height: 1.35; margin-top: .15rem; }
 .param-sil { width: 24px; text-align: center; }
+.param-ad-etiket { display: block; font-family: var(--yazi-kod); font-size: .76rem; font-weight: 600; color: var(--lacivert-3); padding: .28rem .4rem; background: #f1f3f5; border-radius: 6px; overflow: hidden; text-overflow: ellipsis; }
+.param-tablosu select.form-select { font-size: .76rem; padding: .2rem 2rem .2rem .4rem; }
+.param-uyari { font-size: .72rem; line-height: 1.35; margin-top: .25rem; padding: .25rem .45rem; border-radius: 5px; }
+.param-uyari.uyari { background: var(--sari-acik); color: #8a5300; }
+.param-uyari.hata { background: var(--kirmizi-acik); color: var(--kirmizi); font-weight: 500; }
+.param-hatali .param-ad-etiket, .param-hatali [data-alan] { border-color: #ffa8a8; background: var(--kirmizi-acik); }
+.param-eksik { display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; background: var(--mavi-acik); border: 1px solid #a5d8ff; border-radius: 8px; padding: .4rem .6rem; font-size: .76rem; margin-bottom: .4rem; }
+.param-eksik .btn { font-size: .72rem; padding: .1rem .5rem; }
+.param-ekle { width: auto; max-width: 100%; margin-top: .4rem; font-size: .8rem; color: var(--lacivert-3); font-weight: 500; }
 
 .lab-harita-kabi { position: relative; border-bottom: 1px solid var(--cizgi); }
 .lab-harita { height: 340px; background: #e9ecef; }
@@ -359,7 +368,7 @@ h1, h2, h3, h4 { letter-spacing: -.015em; }
 
 /* --- Uygulama dersi ------------------------------------------------------------ */
 
-.uygulama { display: grid; grid-template-columns: 300px minmax(0, 1fr) 360px; height: 600px; background: #fff; border: 1px solid var(--cizgi); border-radius: 14px; overflow: hidden; margin: 1rem 0 2.5rem; box-shadow: var(--golge); }
+.uygulama { display: grid; grid-template-columns: 300px minmax(0, 1fr) 360px; height: 680px; background: #fff; border: 1px solid var(--cizgi); border-radius: 14px; overflow: hidden; margin: 1rem 0 2.5rem; box-shadow: var(--golge); }
 .uygulama-panel { overflow-y: auto; padding: 1rem; border-right: 1px solid var(--cizgi); }
 .uygulama-harita { min-height: 300px; }
 .uygulama-gunluk { border-left: 1px solid var(--cizgi); display: flex; flex-direction: column; background: #fbfcfd; min-height: 0; }
@@ -368,6 +377,8 @@ h1, h2, h3, h4 { letter-spacing: -.015em; }
 .uygulama-adimlari li::before { content: counter(adim); position: absolute; left: 0; top: 0; width: 26px; height: 26px; border-radius: 50%; background: #e9ecef; color: var(--metin-soluk); display: grid; place-items: center; font-weight: 700; font-size: .8rem; }
 .uygulama-adimlari li[data-durum="calisiyor"]::before { background: var(--sari); color: #fff; }
 .uygulama-adimlari li[data-durum="tamam"]::before { content: "✓"; background: var(--yesil); color: #fff; }
+.uygulama-adimlari li[data-durum="ornek"]::before { content: "✓"; background: #fff; color: var(--yesil); border: 2px dashed var(--yesil); }
+.gunluk-satir.ornek { border-left: 3px dashed var(--sari); background: #fffdf5; }
 .uygulama-adimlari li[data-durum="hata"]::before { content: "!"; background: var(--kirmizi); color: #fff; }
 .uygulama-adimlari p { color: var(--metin-soluk); font-size: .8rem; margin: .2rem 0 .5rem; line-height: 1.45; }
 .adim-baslik { font-weight: 600; }

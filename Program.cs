@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.StaticFiles;
 using owsLab.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,7 +20,10 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+// wwwroot/data altındaki örnek GML kayıtları için içerik tipi
+var icerikTipleri = new FileExtensionContentTypeProvider();
+icerikTipleri.Mappings[".gml"] = "application/gml+xml";
+app.UseStaticFiles(new StaticFileOptions { ContentTypeProvider = icerikTipleri });
 
 app.UseRouting();
 

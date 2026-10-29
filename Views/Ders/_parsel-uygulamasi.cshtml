@@ -1,7 +1,7 @@
 <section class="ders-bolum">
     <h2>Ne kuracağız?</h2>
     <p>
-        Bir belediye ya da kurum uygulamasındaki tipik "parsel sorgulama" ekranını, yalnızca bu derslerde öğrendiğiniz OGC istekleriyle kuracağız.
+        Bir belediye ya da kurum uygulamasındaki tipik "parsel sorgulama" ekranını (il → ilçe → mahalle → ada → parsel), yalnızca bu derslerde öğrendiğiniz OGC istekleriyle kuracağız.
         Ekranı kullanın, sonra sağdaki <b>istek günlüğünde</b> her tıklamanın arkasında hangi isteğin gittiğini inceleyin.
         Her satırın "Laboratuvarda aç" bağlantısı o isteği laboratuvara taşır.
     </p>
@@ -11,19 +11,32 @@
     <div class="uygulama-panel">
         <ol class="uygulama-adimlari">
             <li data-adim="1" data-durum="bekliyor">
-                <div class="adim-baslik">Mahalleyi yükle</div>
-                <p>WFS ile mahalle sınırı ve kimliği alınır.</p>
-                <button type="button" class="btn btn-sm btn-gonder" data-rol="baslat"><i class="fa-solid fa-play"></i> Başlat</button>
-                <div class="small mt-2" data-rol="mahalleBilgi"></div>
+                <div class="adim-baslik">İl</div>
+                <p>WFS <code>TKGM:iller</code>, yalnızca ad ve kimlik sütunlarıyla. Boş dönerse örnek kayıt kullanılır.</p>
+                <button type="button" class="btn btn-sm btn-gonder mb-2" data-rol="baslat"><i class="fa-solid fa-play"></i> Başlat</button>
+                <select class="form-select form-select-sm" data-rol="ilSecimi" disabled><option>Başlat'a basın</option></select>
+                <div class="not-kutusu uyari small mt-2 d-none" data-rol="ilNotu"></div>
             </li>
             <li data-adim="2" data-durum="bekliyor">
-                <div class="adim-baslik">Ada seç</div>
-                <p>Mahalledeki ada numaraları, yalnızca <code>adano</code> sütunu istenerek hafif bir sorguyla listelenir.</p>
-                <select class="form-select form-select-sm" data-rol="adaSecimi" disabled><option>Önce mahalleyi yükleyin</option></select>
-                <div class="not-kutusu uyari small mt-2 d-none" data-rol="adaNotu">Liste 1000 kayıt sınırına ulaştı; bazı adalar eksik olabilir. Gerçek uygulamada ada numarası bir arama kutusundan da girilebilir.</div>
+                <div class="adim-baslik">İlçe</div>
+                <p><code>TKGM:ilceler</code>, il <code>tapukimlikno</code>'su ile <code>ilref</code> üzerinden süzülür.</p>
+                <select class="form-select form-select-sm" data-rol="ilceSecimi" disabled><option>Önce il seçin</option></select>
+                <div class="not-kutusu uyari small mt-2 d-none" data-rol="ilceNotu"></div>
             </li>
             <li data-adim="3" data-durum="bekliyor">
-                <div class="adim-baslik">Parsel seç</div>
+                <div class="adim-baslik">Mahalle</div>
+                <p><code>TKGM:mahalleler</code>, ilçe <code>tapukimlikno</code>'su ile <code>ilceref</code> üzerinden süzülür (canlı).</p>
+                <select class="form-select form-select-sm" data-rol="mahalleSecimi" disabled><option>Önce ilçe seçin</option></select>
+                <div class="small mt-2" data-rol="mahalleBilgi"></div>
+            </li>
+            <li data-adim="4" data-durum="bekliyor">
+                <div class="adim-baslik">Ada</div>
+                <p>Seçilen mahallenin adaları <code>tapumahalleref</code> ile süzülerek listelenir.</p>
+                <select class="form-select form-select-sm" data-rol="adaSecimi" disabled><option>Önce mahalle seçin</option></select>
+                <div class="not-kutusu uyari small mt-2 d-none" data-rol="adaNotu">Liste 1000 kayıt sınırına ulaştı; bazı adalar eksik olabilir. Gerçek uygulamada ada numarası bir arama kutusundan da girilebilir.</div>
+            </li>
+            <li data-adim="5" data-durum="bekliyor">
+                <div class="adim-baslik">Parsel</div>
                 <p>Seçilen parsel WMS'te <code>CQL_FILTER</code> + <code>SLD_BODY</code> ile sunucu tarafında kırmızıya boyanır.</p>
                 <select class="form-select form-select-sm" data-rol="parselSecimi" disabled><option>Önce ada seçin</option></select>
                 <div class="mt-2" data-rol="parselBilgi"></div>
@@ -42,20 +55,31 @@
     <table class="table table-sm ders-tablosu">
         <thead><tr><th>Adım</th><th>İstek</th><th>Neden böyle?</th></tr></thead>
         <tbody>
-            <tr><td>1</td><td>WFS <code>TKGM:mahalleler</code> + <code>PROPERTYNAME=…,geom</code></td><td>Sınırı çizmek için geometri, sonraki adım için <code>tapukimlikno</code> gerekir.</td></tr>
-            <tr><td>2a</td><td>WFS <code>PROPERTYNAME=adano</code>, <code>CQL_FILTER=durum=3</code></td><td>Liste için geometriye gerek yok; yanıt çok küçük kalır. Eski kayıtlar <code>durum=3</code> ile elenir.</td></tr>
-            <tr><td>2b</td><td>WFS <code>adano='…' AND durum=3</code> + geometri</td><td>Yalnızca seçilen adanın parselleri geometriyle istenir.</td></tr>
-            <tr><td>3</td><td>WMS <code>CQL_FILTER</code> + <code>SLD_BODY</code></td><td>Vurgu sunucuda çizilir. Parsel ne kadar karmaşık olursa olsun tarayıcıya tek bir resim gelir.</td></tr>
+            <tr><td>1</td><td>WFS <code>TKGM:iller</code> + <code>PROPERTYNAME=tapukimlikno,ad</code></td><td>Açılır liste için ad ve kimlik yeter; il sınırlarının geometrisi çok büyüktür, istenmez.</td></tr>
+            <tr><td>2</td><td>WFS <code>TKGM:ilceler</code> + <code>CQL_FILTER=ilref=…</code></td><td>Bir üst seviyenin <code>tapukimlikno</code>'su, alt seviyede <code>…ref</code> sütunudur.</td></tr>
+            <tr><td>3</td><td>WFS <code>TKGM:mahalleler</code> + <code>CQL_FILTER=ilceref=…</code> + <code>geom</code></td><td>Seçilen mahallenin sınırını çizmek için geometri de istenir.</td></tr>
+            <tr><td>4a</td><td>WFS <code>CQL_FILTER=durum=3 AND tapumahalleref=…</code>, <code>PROPERTYNAME=adano,geom</code></td><td>Mahallenin <code>tapukimlikno</code>'su parsellerde <code>tapumahalleref</code>'tir. Eski kayıtlar <code>durum=3</code> ile elenir.</td></tr>
+            <tr><td>4b</td><td>WFS <code>adano='…' AND durum=3 AND tapumahalleref=…</code> + geometri</td><td>Ada numaraları mahalle içinde tekildir; mahalle filtresi olmadan başka mahallelerdeki aynı numaralı adalar da gelir.</td></tr>
+            <tr><td>5</td><td>WMS <code>CQL_FILTER</code> + <code>SLD_BODY</code></td><td>Vurgu sunucuda çizilir. Parsel ne kadar karmaşık olursa olsun tarayıcıya tek bir resim gelir.</td></tr>
         </tbody>
     </table>
 </section>
 
 <div class="kutu tkgm">
-    <div class="kutu-baslik"><i class="fa-solid fa-circle-check"></i> TKGM'de canlı doğrulandı</div>
-    Gerçek bir hesapta ada listesini mahalleye göre süzmek için <code>tapumahalleref=126978</code> yazmanız beklenir. Demo hesapta ise bu filtre
-    tek başına çalışırken <code>PROPERTYNAME</code> ile birlikte kullanıldığında <b>0 kayıt</b> döndürür; <code>tapumahalleref&gt;0</code> ise hiç sonuç vermez.
-    Ağ geçidinin yetki filtresi bu sütunu kendisi kullanıyor olabilir. Demo hesap zaten tek mahalleyi gördüğü için bu ekran mahalle filtresi yazmaz.
-    Kendi hesabınızda bu sütunla filtre yazarken sonucu mutlaka kontrol edin.
+    <div class="kutu-baslik"><i class="fa-solid fa-circle-check"></i> TKGM'de canlı doğrulandı: "veri yok" ile "yetki yok"</div>
+    Demo hesap <code>TKGM:iller</code> ve <code>TKGM:ilceler</code> katmanlarını göremez. WFS, WMS GetFeatureInfo, KML ve kimlik filtresiyle yapılan isteklerin hepsi
+    hata vermeden <b>boş</b> döner. Ekran canlı isteği yine gönderir ve günlüğe yazar; boş dönünce aynı GML yapısındaki örnek kayıtları
+    (<a href="/data/ornek-iller.gml" target="_blank">ornek-iller.gml</a>: Amasya, <code>tapukimlikno=5</code>; <a href="/data/ornek-ilceler.gml" target="_blank">ornek-ilceler.gml</a>: Merkez, <code>tapukimlikno=40</code>, <code>ilref=5</code>) kullanır.
+    Örnekten gelen adım kesikli yeşil işaretle, günlük satırı da "örnek kayıt" olarak gösterilir. Zincirin bundan sonrası (<code>ilceref=40</code> ile mahalleler) yeniden canlıdır.
+    Gerçek bir hesapta örnek kayda hiç düşülmez. Boş sonucu kullanıcıya "kayıt bulunamadı" diye değil, "bu seviyeyi görme yetkiniz yok olabilir" diye anlatmak gerekir.
+</div>
+
+<div class="kutu tkgm">
+    <div class="kutu-baslik"><i class="fa-solid fa-circle-check"></i> TKGM'de canlı doğrulandı: mahalle filtresi</div>
+    <p class="mb-2">Demo hesap mahalle katmanında yalnızca Hızırpaşa'yı görür, ama parsel katmanında çevredeki en az 14 mahallenin parsellerini görür.
+    Bu yüzden ada listesi mutlaka <code>tapumahalleref</code> ile süzülmelidir; süzülmezse örneğin 116 ada (Hızırpaşa'da değil, <code>tapumahalleref=171678</code>) da listeye girer.</p>
+    <p class="mb-0">Dikkat: <code>tapumahalleref</code> filtresi, <code>PROPERTYNAME</code> listesinde <code>geom</code> yoksa TKGM ağ geçidinde <b>0 kayıt</b> döndürür.
+    <code>PROPERTYNAME=adano</code> çalışmaz, <code>PROPERTYNAME=adano,geom</code> çalışır. Yanıt büyür (yaklaşık 650 KB), ama doğru olan budur.</p>
 </div>
 
 <section class="ders-bolum">

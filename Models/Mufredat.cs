@@ -99,7 +99,7 @@ public static class Mufredat
             }),
 
         new("parsel-uygulamasi", "Uygulama", "Uygulama: parsel sorgulama ekranı",
-            "Öğrendiklerinizi birleştirin: mahalle → ada → parsel akışını WMS ve WFS'i birlikte kullanarak kurun.",
+            "Öğrendiklerinizi birleştirin: il → ilçe → mahalle → ada → parsel akışını WMS ve WFS'i birlikte kullanarak kurun.",
             20, "fa-map-location-dot",
             new[]
             {

@@ -34,7 +34,7 @@
                         <tr><th>WMS</th><td><code>https://cbsservis.tkgm.gov.tr/tkgm.ows/wms</code></td><td>Sürüm 1.1.1 (1.3.0 GetMap için de çalışır)</td></tr>
                         <tr><th>WFS</th><td><code>https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs</code></td><td>Sürüm 1.0.0 (1.1.0 da çalışır, 2.0.0 çalışmaz)</td></tr>
                         <tr><th>Kimlik</th><td colspan="2">HTTP Basic Authentication · demo: <code>cbsdemouser</code> / <code>q3b8f+r*</code></td></tr>
-                        <tr><th>Demo kapsamı</th><td colspan="2">Amasya / Merkez / Hızırpaşa mahallesi (<code>tapumahalleref=126978</code>)</td></tr>
+                        <tr><th>Demo kapsamı</th><td colspan="2">Mahalle katmanında yalnızca Amasya / Merkez / Hızırpaşa (<code>tapukimlikno=126978</code>); parsel katmanında bu mahalle ve çevresindeki mahalleler. İl ve ilçe katmanları kapalı.</td></tr>
                         <tr><th>CORS</th><td colspan="2">Yanıtlar <code>Access-Control-Allow-Origin: *</code> taşır, ancak kimlikli isteklerin OPTIONS ön isteğine 401 döner; tarayıcıdan doğrudan fetch yapılamaz, sunucu tarafı proxy gerekir.</td></tr>
                     </tbody>
                 </table>
@@ -45,7 +45,7 @@
                 <table class="table ders-tablosu">
                     <thead><tr><th>Ad</th><th>WMS</th><th>WFS</th><th>Demo hesapta</th><th>Bağlantı sütunu</th></tr></thead>
                     <tbody>
-                        <tr><td><code>TKGM:parseller</code></td><td>✓</td><td>✓</td><td class="text-success">Hızırpaşa parselleri</td><td><code>tapumahalleref</code> → mahalle</td></tr>
+                        <tr><td><code>TKGM:parseller</code></td><td>✓</td><td>✓</td><td class="text-success">Hızırpaşa ve çevresindeki mahallelerin parselleri</td><td><code>tapumahalleref</code> → mahalle</td></tr>
                         <tr><td><code>TKGM:mahalleler</code></td><td>✓</td><td>✓</td><td class="text-success">Yalnızca Hızırpaşa</td><td><code>ilceref</code> → ilçe</td></tr>
                         <tr><td><code>TKGM:ilceler</code></td><td>✓</td><td>✓</td><td class="text-warning">Boş (yetki dışı)</td><td><code>ilref</code> → il</td></tr>
                         <tr><td><code>TKGM:iller</code></td><td>✓</td><td>✓</td><td class="text-warning">Boş (yetki dışı)</td><td>—</td></tr>
@@ -71,7 +71,7 @@
                     <div class="kural"><b>CQL varken BBOX parametresi yok sayılır.</b> <span>Alanı <code>AND BBOX(geom,…)</code> olarak filtreye yazın.</span></div>
                     <div class="kural"><b>DWITHIN derece ile çalışır.</b> <span>"meters" yazılsa da mesafe derece olarak yorumlanır (0.0005° ≈ 50 m).</span></div>
                     <div class="kural"><b>XML filtrede LIKE çalışmaz.</b> <span>Metin araması için <code>CQL_FILTER</code> + <code>ILIKE</code>.</span></div>
-                    <div class="kural"><b>tapumahalleref filtresi demo hesapta güvenilmez.</b> <span>Tek başına çalışır, <code>PROPERTYNAME</code> ile birlikte 0 kayıt döner; <code>tapumahalleref&gt;0</code> hiç sonuç vermez.</span> <a href="@Lab(F + "&REQUEST=GetFeature&TYPENAME=TKGM:parseller&MAXFEATURES=20&PROPERTYNAME=adano,parselno,geom&CQL_FILTER=tapumahalleref=126978")">Dene</a></div>
+                    <div class="kural"><b>tapumahalleref filtresi geom ister.</b> <span>Filtre çalışır, ama <code>PROPERTYNAME</code> listesinde <code>geom</code> yoksa 0 kayıt döner; <code>tapumahalleref&gt;0</code> hiç sonuç vermez.</span> <a href="@Lab(F + "&REQUEST=GetFeature&TYPENAME=TKGM:parseller&MAXFEATURES=20&PROPERTYNAME=adano,parselno,geom&CQL_FILTER=tapumahalleref=126978 AND durum=3")">Dene</a></div>
                     <div class="kural"><b>adano ve parselno metindir.</b> <span>Tırnakla yazın: <code>adano='983'</code>. <code>parselno</code> <code>42/YO</code> gibi değerler alır.</span></div>
                 </div>
             </section>
