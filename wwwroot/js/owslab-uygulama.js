@@ -53,7 +53,7 @@
 
     // Demo hesap TKGM:iller ve TKGM:ilceler katmanlarını göremez (canlı istekler boş döner). Bu durumda
     // aynı yapıdaki örnek GML kayıtları kullanılır; ekran ve günlük bunun canlı veri olmadığını açıkça söyler.
-    const ORNEK_DOSYALAR = { "TKGM:iller": "/data/ornek-iller.gml", "TKGM:ilceler": "/data/ornek-ilceler.gml" };
+    const ORNEK_DOSYALAR = { "TKGM:iller": OwsLab.siteAdresi("data/ornek-iller.gml"), "TKGM:ilceler": OwsLab.siteAdresi("data/ornek-ilceler.gml") };
 
     async function ornekKayitlariOku(katman) {
         const dosya = ORNEK_DOSYALAR[katman];
@@ -257,7 +257,7 @@
 
         const cql = `adano='${ada}' AND parselno='${parselNo}' AND durum=3${mahalleFiltresi}`;
         if (vurguKatmani) vurguKatmani.remove();
-        vurguKatmani = L.tileLayer.wms("/OwsProxy/wms", {
+        vurguKatmani = L.tileLayer.wms(OwsLab.proxyKoku("wms"), {
             layers: "TKGM:parseller", styles: "", format: "image/png", transparent: true, version: "1.1.1",
             CQL_FILTER: cql, SLD_BODY: VURGU_SLD, maxZoom: 20
         }).addTo(harita);

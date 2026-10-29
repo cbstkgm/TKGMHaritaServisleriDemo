@@ -9,6 +9,20 @@
 const OwsLab = (() => {
     "use strict";
 
+    // Sayfa düzeni (_Layout) tarafından yazılır. GitHub Pages sürümünde site bir alt dizinde (ör. /owsLab/) durur
+    // ve istekler TKGM kimliğini ekleyen harici proxy'ye (proxy/cloudflare-worker.js) gider.
+    const AYAR = Object.assign({ kok: "/", proxy: "/OwsProxy" }, window.OwsLabAyar);
+
+    /** Site köküne göre adres üretir: siteAdresi("data/x.gml") → "/owsLab/data/x.gml". */
+    function siteAdresi(yol) {
+        return AYAR.kok.replace(/\/$/, "") + "/" + yol.replace(/^\//, "");
+    }
+
+    /** Proxy üzerinden servis kökü: proxyKoku("wms") → "/OwsProxy/wms" veya "https://…workers.dev/wms". */
+    function proxyKoku(servis) {
+        return `${AYAR.proxy}/${servis}`;
+    }
+
     // --- 1. TKGM SERVİS BİLGİLERİ ------------------------------------------------
 
     const TKGM = {
@@ -200,7 +214,7 @@ const OwsLab = (() => {
         }
         const soruIndeksi = tkgmAdresi.indexOf("?");
         const sorgu = soruIndeksi >= 0 ? tkgmAdresi.substring(soruIndeksi) : "";
-        return `/OwsProxy/${ayrisan.servis}${sorgu}`;
+        return proxyKoku(ayrisan.servis) + sorgu;
     }
 
     // --- 3. İSTEK GÖNDERME VE YANIT SINIFLANDIRMA -----------------------------------
@@ -730,7 +744,7 @@ Not: Birden fazla katmanı tek seferde seçmeyin; her katmanı ayrı ekleyin.`;
 
     return {
         TKGM, KATMANLAR, WMS_STILLERI, PARAMETRELER, SUTUNLAR, KOD_DILLERI,
-        istekAyristir, istekOlustur, parametreAl, parametreSozlugu, proxyAdresi, degerKodla,
+        istekAyristir, istekOlustur, parametreAl, parametreSozlugu, proxyAdresi, proxyKoku, siteAdresi, degerKodla,
         istekGonder, gmlGeoJson, kmlGeoJson,
         xmlGirintile, xmlVurgula, htmlKacis,
         kodUret,

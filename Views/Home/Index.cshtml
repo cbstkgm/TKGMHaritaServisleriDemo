@@ -16,8 +16,8 @@
                     Her örnek TKGM'nin gerçek servisine gider; hata mesajları, sınırlar ve tuhaflıklar dahil.
                 </p>
                 <div class="d-flex flex-wrap gap-2">
-                    <a class="btn btn-lg btn-gonder" href="/ders/@ilkDers.Slug"><i class="fa-solid fa-graduation-cap"></i> İlk derse başla</a>
-                    <a class="btn btn-lg btn-outline-light" href="/Home/Laboratuvar"><i class="fa-solid fa-flask"></i> Laboratuvarı aç</a>
+                    <a class="btn btn-lg btn-gonder" href="~/ders/@ilkDers.Slug"><i class="fa-solid fa-graduation-cap"></i> İlk derse başla</a>
+                    <a class="btn btn-lg btn-outline-light" href="~/Home/Laboratuvar"><i class="fa-solid fa-flask"></i> Laboratuvarı aç</a>
                 </div>
             </div>
             <div class="col-lg-6">
@@ -31,7 +31,7 @@
                         <div class="ua-satir"><span class="ua-etiket">hangi alan</span><code><b class="p4">SRS</b>=EPSG:4326&amp;<b class="p4">BBOX</b>=35.805,40.648,35.820,40.660</code></div>
                         <div class="ua-satir"><span class="ua-etiket">nasıl bir resim</span><code><b class="p5">WIDTH</b>=800&amp;<b class="p5">HEIGHT</b>=640&amp;<b class="p5">FORMAT</b>=image/png</code></div>
                     </div>
-                    <a class="url-karti-alt" href="/Home/Laboratuvar?istek=@Uri.EscapeDataString("https://cbsservis.tkgm.gov.tr/tkgm.ows/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=TKGM:parseller&STYLES=&SRS=EPSG:4326&BBOX=35.805,40.648,35.820,40.660&WIDTH=800&HEIGHT=640&FORMAT=image/png&TRANSPARENT=true")&calistir=1">
+                    <a class="url-karti-alt" href="~/Home/Laboratuvar?istek=@Uri.EscapeDataString("https://cbsservis.tkgm.gov.tr/tkgm.ows/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=TKGM:parseller&STYLES=&SRS=EPSG:4326&BBOX=35.805,40.648,35.820,40.660&WIDTH=800&HEIGHT=640&FORMAT=image/png&TRANSPARENT=true")&calistir=1">
                         Bu isteği laboratuvarda gönder <i class="fa-solid fa-arrow-right"></i>
                     </a>
                 </div>
@@ -87,7 +87,7 @@
             {
                 sira++;
                 <div class="col-md-6 col-xl-4">
-                    <a class="ders-karti" href="/ders/@ders.Slug" data-ders-ilerleme="@string.Join(",", ders.Gorevler.Select(g => g.Kimlik))">
+                    <a class="ders-karti" href="~/ders/@ders.Slug" data-ders-ilerleme="@string.Join(",", ders.Gorevler.Select(g => g.Kimlik))">
                         <div class="ders-karti-ust">
                             <span class="ders-karti-simge"><i class="fa-solid @ders.Ikon"></i></span>
                             <span class="ders-karti-sira">Ders @sira</span>
@@ -111,7 +111,7 @@
         <div>
             <h2 class="bolum-baslik">TKGM servisinin kendine özgü kuralları</h2>
             <p class="text-muted">Genel OGC eğitimlerinde yazmayan, ancak TKGM ile çalışırken bilmeniz gereken davranışlar. Hepsi bu servis üzerinde tek tek denendi.</p>
-            <a class="btn btn-outline-primary" href="/Home/Rehber#tkgm-kurallari">Tamamını rehberde görün</a>
+            <a class="btn btn-outline-primary" href="~/Home/Rehber#tkgm-kurallari">Tamamını rehberde görün</a>
         </div>
         <ul>
             <li><i class="fa-solid fa-layer-group"></i> WMS <code>LAYERS</code> tek katman kabul eder; iki katman "Katman bulunamadı" hatası verir.</li>

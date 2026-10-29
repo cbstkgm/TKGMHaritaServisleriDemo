@@ -41,9 +41,48 @@ TKGM demo hesabı `appsettings.json` içindeki `TkgmOws` bölümündedir. Kendi 
 | URL ayrıştırma, hata çözümleme, GML/KML → GeoJSON, kod üretimi | `wwwroot/js/owslab-cekirdek.js` |
 | Laboratuvar bileşeni | `wwwroot/js/owslab-laboratuvar.js` |
 | Görev denetimi | `wwwroot/js/owslab-gorevler.js` |
+| GitHub Pages proxy'si (Cloudflare Worker) | `proxy/cloudflare-worker.js` |
+| Statik kopya üretimi ve yayın | `scripts/statik-yayin.sh`, `.github/workflows/pages.yml` |
 
-Tarayıcı, Basic Authentication başlıklı istekleri CORS ön isteği nedeniyle doğrudan TKGM'ye gönderemez. Bu yüzden
-uygulama bir sunucu bileşeni gerektirir; statik bir sayfa olarak (örneğin GitHub Pages'te) çalışmaz.
+Tarayıcı, Basic Authentication başlıklı istekleri CORS ön isteği nedeniyle doğrudan TKGM'ye gönderemez (TKGM `OPTIONS`
+isteğine 401 döner). Bu yüzden kimliği ekleyen bir proxy gerekir: `dotnet run` ile çalışırken `OwsProxyController`,
+GitHub Pages sürümünde `proxy/cloudflare-worker.js`.
+
+## GitHub Pages
+
+GitHub Pages yalnızca statik dosya sunduğu için site iki parçaya ayrılır:
+
+| Parça | Nerede | Dosya |
+|---|---|---|
+| Sayfalar (HTML/CSS/JS) | GitHub Pages | `scripts/statik-yayin.sh` üretir, `.github/workflows/pages.yml` yayınlar |
+| TKGM proxy'si | Cloudflare Workers (ücretsiz plan yeterli) | `proxy/cloudflare-worker.js`, `proxy/wrangler.toml` |
+
+**1. Proxy'yi yayınlayın** (Cloudflare hesabı gerekir):
+
+```bash
+cd proxy
+npx wrangler login
+npx wrangler deploy
+```
+
+Komut `https://owslab-proxy.<hesabiniz>.workers.dev` gibi bir adres verir. `wrangler.toml` içindeki `IZINLI_KOKENLER`
+Worker'ı yalnızca sizin sitenizden çağrılabilir yapar; farklı bir GitHub kullanıcı adı kullanıyorsanız güncelleyin.
+
+**2. GitHub ayarları** (depo → Settings):
+
+- *Secrets and variables → Actions → Variables*: `OWSLAB_PROXY_ADRESI` = Worker adresi
+- *Pages → Source*: **GitHub Actions**
+
+**3. Yayın:** `main` dalına her push'ta site `https://<kullanici>.github.io/<depo>/` adresine yeniden yayınlanır
+(Actions sekmesinden elle de çalıştırılabilir).
+
+Statik kopyayı yerelde üretmek için:
+
+```bash
+PROXY_ADRESI=https://owslab-proxy.hesabiniz.workers.dev YOL_TABANI=/owsLab scripts/statik-yayin.sh _site
+```
+
+İlerleme kaydı tarayıcının `localStorage`'ında tutulduğundan statik sürümde de aynen çalışır.
 
 ## Lisans
 

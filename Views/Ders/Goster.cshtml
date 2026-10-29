@@ -23,7 +23,7 @@
 <div class="ders-sayfasi @(tamGenislik ? "tam-genislik" : "")">
     <article class="ders-metni">
         <nav class="ders-ust-bilgi">
-            <a href="/#mufredat">Dersler</a> <i class="fa-solid fa-chevron-right"></i> <span>@Model.Bolum</span>
+            <a href="~/#mufredat">Dersler</a> <i class="fa-solid fa-chevron-right"></i> <span>@Model.Bolum</span>
         </nav>
         <header class="ders-baslik-alani">
             <div class="ders-numarasi">Ders @(sira + 1) / @Mufredat.Dersler.Count</div>
@@ -53,7 +53,7 @@
         <nav class="ders-gezinme">
             @if (onceki != null)
             {
-                <a class="ders-gezinme-oge" href="/ders/@onceki.Slug"><span class="small text-muted"><i class="fa-solid fa-arrow-left"></i> Önceki</span><span>@onceki.Baslik</span></a>
+                <a class="ders-gezinme-oge" href="~/ders/@onceki.Slug"><span class="small text-muted"><i class="fa-solid fa-arrow-left"></i> Önceki</span><span>@onceki.Baslik</span></a>
             }
             else
             {
@@ -61,11 +61,11 @@
             }
             @if (sonraki != null)
             {
-                <a class="ders-gezinme-oge sonraki" href="/ders/@sonraki.Slug"><span class="small text-muted">Sonraki <i class="fa-solid fa-arrow-right"></i></span><span>@sonraki.Baslik</span></a>
+                <a class="ders-gezinme-oge sonraki" href="~/ders/@sonraki.Slug"><span class="small text-muted">Sonraki <i class="fa-solid fa-arrow-right"></i></span><span>@sonraki.Baslik</span></a>
             }
             else
             {
-                <a class="ders-gezinme-oge sonraki" href="/Home/Laboratuvar"><span class="small text-muted">Bitirdiniz <i class="fa-solid fa-arrow-right"></i></span><span>Serbest laboratuvar</span></a>
+                <a class="ders-gezinme-oge sonraki" href="~/Home/Laboratuvar"><span class="small text-muted">Bitirdiniz <i class="fa-solid fa-arrow-right"></i></span><span>Serbest laboratuvar</span></a>
             }
         </nav>
     </article>

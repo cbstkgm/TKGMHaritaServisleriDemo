@@ -52,8 +52,11 @@ const Laboratuvar = (() => {
             this.olaylariBagla();
             this.sablonMenusunuDoldur();
 
-            const baslangic = kok.dataset.baslangic || SABLONLAR[0].url;
-            this.yukle(baslangic, { calistir: kok.dataset.otomatik === "true" });
+            // ?istek=…&calistir=1 bağlantıları (rehberdeki "Dene" düğmeleri) statik kopyada da çalışsın diye tarayıcıda okunur
+            const sorgu = new URLSearchParams(location.search);
+            const adrestekiIstek = kok.matches(".lab-genis") && (sorgu.get("istek") || "").toLowerCase().startsWith(TKGM.temelAdres.toLowerCase() + "/") ? sorgu.get("istek") : null;
+            const baslangic = adrestekiIstek || kok.dataset.baslangic || SABLONLAR[0].url;
+            this.yukle(baslangic, { calistir: adrestekiIstek ? sorgu.get("calistir") === "1" : kok.dataset.otomatik === "true" });
         }
 
         // --- Harita ---------------------------------------------------------------
@@ -66,7 +69,7 @@ const Laboratuvar = (() => {
             }).addTo(this.harita);
 
             // Öğrencinin nerede olduğunu görmesi için soluk bir referans parsel katmanı (kendi proxy'miz üzerinden).
-            this.referansKatman = L.tileLayer.wms("/OwsProxy/wms", {
+            this.referansKatman = L.tileLayer.wms(OwsLab.proxyKoku("wms"), {
                 layers: "TKGM:parseller", styles: "", format: "image/png", transparent: true, version: "1.1.1", opacity: 0.45, maxZoom: 20
             });
             if (this.kok.dataset.referans !== "false") this.referansKatman.addTo(this.harita);

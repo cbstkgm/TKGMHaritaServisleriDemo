@@ -1,0 +1,56 @@
+# owsLab'in statik kopyasını üretip GitHub Pages'e yayınlar.
+#
+# Bir kez yapılacaklar:
+#   1. proxy/ klasöründeki Worker'ı Cloudflare'e yayınlayın (README → "GitHub Pages").
+#   2. Settings → Secrets and variables → Actions → Variables: OWSLAB_PROXY_ADRESI = Worker adresi
+#   3. Settings → Pages → Source: GitHub Actions
+name: GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  derle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Statik siteyi üret
+        env:
+          PROXY_ADRESI: ${{ vars.OWSLAB_PROXY_ADRESI }}
+          YOL_TABANI: /${{ github.event.repository.name }}
+        run: |
+          if [ -z "$PROXY_ADRESI" ]; then
+            echo "::error::OWSLAB_PROXY_ADRESI değişkeni tanımlı değil. proxy/ klasöründeki Worker'ı yayınlayıp adresini Settings → Variables'a ekleyin."
+            exit 1
+          fi
+          scripts/statik-yayin.sh _site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  yayinla:
+    needs: derle
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.yayin.outputs.page_url }}
+    steps:
+      - id: yayin
+        uses: actions/deploy-pages@v4

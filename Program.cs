@@ -11,6 +11,13 @@ builder.Services.Configure<TkgmOwsAyarlari>(builder.Configuration.GetSection(Tkg
 
 var app = builder.Build();
 
+// GitHub Pages gibi alt dizinde yayınlanan statik kopya için (ör. /owsLab). Boşsa site kökte çalışır.
+string? yolTabani = builder.Configuration["YolTabani"];
+if (!string.IsNullOrWhiteSpace(yolTabani))
+{
+    app.UsePathBase(yolTabani);
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

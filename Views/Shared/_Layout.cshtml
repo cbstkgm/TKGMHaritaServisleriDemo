@@ -1,3 +1,7 @@
+@inject Microsoft.Extensions.Options.IOptions<TkgmOwsAyarlari> OwsAyarlari
+@{
+    var proxyKoku = string.IsNullOrWhiteSpace(OwsAyarlari.Value.ProxyAdresi) ? Url.Content("~/OwsProxy") : OwsAyarlari.Value.ProxyAdresi.TrimEnd('/');
+}
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -19,7 +23,7 @@
     <header class="ust-cubuk">
         <nav class="navbar navbar-expand-lg navbar-dark">
             <div class="container-fluid ust-kap">
-                <a class="marka" href="/">
+                <a class="marka" href="~/">
                     <span class="marka-simge"><i class="fa-solid fa-layer-group"></i></span>
                     <span>
                         <span class="marka-ad">owsLab</span>
@@ -44,7 +48,7 @@
                                         <li><h6 class="dropdown-header">@ders.Bolum</h6></li>
                                     }
                                     <li>
-                                        <a class="dropdown-item" href="/ders/@ders.Slug" data-ders-ilerleme="@string.Join(",", ders.Gorevler.Select(g => g.Kimlik))">
+                                        <a class="dropdown-item" href="~/ders/@ders.Slug" data-ders-ilerleme="@string.Join(",", ders.Gorevler.Select(g => g.Kimlik))">
                                             <span class="ders-menu-sira">@sira</span>
                                             <span class="flex-grow-1">@ders.Baslik</span>
                                             <span class="ilerleme-metin"></span>
@@ -53,8 +57,8 @@
                                 }
                             </ul>
                         </li>
-                        <li class="nav-item"><a class="nav-link" href="/Home/Laboratuvar"><i class="fa-solid fa-flask me-1"></i>Laboratuvar</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/Home/Rehber"><i class="fa-solid fa-book me-1"></i>Rehber</a></li>
+                        <li class="nav-item"><a class="nav-link" href="~/Home/Laboratuvar"><i class="fa-solid fa-flask me-1"></i>Laboratuvar</a></li>
+                        <li class="nav-item"><a class="nav-link" href="~/Home/Rehber"><i class="fa-solid fa-book me-1"></i>Rehber</a></li>
                     </ul>
                     <div class="d-flex align-items-center gap-3 flex-wrap">
                         <div class="ust-ilerleme" data-toplam-ilerleme="@Mufredat.ToplamGorev" title="Tamamlanan görevler">
@@ -102,6 +106,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    <script>window.OwsLabAyar = @Json.Serialize(new { kok = Url.Content("~/"), proxy = proxyKoku });</script>
     <script src="~/js/owslab-cekirdek.js" asp-append-version="true"></script>
     <script src="~/js/owslab-kurallar.js" asp-append-version="true"></script>
     <script src="~/js/owslab-laboratuvar.js" asp-append-version="true"></script>
