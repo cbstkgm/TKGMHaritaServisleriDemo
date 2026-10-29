@@ -3,3 +3,6 @@ obj/
 .vscode/
 .DS_Store
 *.user
+
+# Yerel araç önbellekleri
+.local/

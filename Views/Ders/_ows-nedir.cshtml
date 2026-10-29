@@ -1,0 +1,105 @@
+<section class="ders-bolum">
+    <h2>OGC ve OWS: ortak bir dil</h2>
+    <p>
+        Bir kadastro verisini QGIS'te, ArcGIS'te, NetCAD'de, bir web haritasında ve bir mobil uygulamada aynı anda kullanabilmek için
+        her yazılımın aynı "dili" konuşması gerekir. Bu dili <b>OGC</b> (Open Geospatial Consortium) belirler.
+        OGC'nin web servisi standartlarının ortak adı <b>OWS</b>'dir (OGC Web Services).
+    </p>
+    <p>
+        TKGM, kadastro verisini bu standartlarla <code>cbsservis.tkgm.gov.tr</code> adresinden yayınlar.
+        Bu sayede verinin kullanımı için özel bir kütüphaneye ihtiyacınız olmaz: doğru adrese doğru parametrelerle bir HTTP isteği göndermeniz yeterlidir.
+    </p>
+
+    <div class="iki-kart">
+        <div class="servis-karti wms">
+            <div class="servis-karti-baslik"><span class="servis-etiketi">WMS</span> Web Map Service</div>
+            <code>https://cbsservis.tkgm.gov.tr/tkgm.ows/wms</code>
+            <p>Haritayı <b>hazır çizilmiş bir resim</b> (PNG, JPEG, PDF) olarak verir. Görüntülemek içindir; geometriyi düzenleyemez, analiz edemezsiniz.</p>
+        </div>
+        <div class="servis-karti wfs">
+            <div class="servis-karti-baslik"><span class="servis-etiketi">WFS</span> Web Feature Service</div>
+            <code>https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs</code>
+            <p>Verinin kendisini, yani <b>koordinatları ve öznitelikleri</b> (GML, KML) verir. Sorgulama, filtreleme ve analiz içindir.</p>
+        </div>
+    </div>
+
+    <div class="kutu tkgm">
+        <div class="kutu-baslik"><i class="fa-solid fa-circle-check"></i> TKGM'de canlı doğrulandı</div>
+        TKGM yalnızca <b>WMS</b> ve <b>WFS</b> yayınlar. Başka OGC eğitimlerinde göreceğiniz WMTS, WCS, CSW ve WPS adresleri
+        (<code>…/tkgm.ows/wcs</code> vb.) bu sunucuda <b>404</b> döner. Bu portaldaki her örnek bu iki servis üzerinde gerçekten çalışır.
+    </div>
+</section>
+
+<section class="ders-bolum">
+    <h2>Demo hesap ve kapsamı</h2>
+    <p>
+        TKGM servisleri <b>HTTP Basic Authentication</b> ile korunur: her isteğe bir kullanıcı adı ve şifre eklenir.
+        Eğitim için kullanılan hesap:
+    </p>
+    <div class="kimlik-kutusu">
+        <div><span>Kullanıcı adı</span><code>cbsdemouser</code></div>
+        <div><span>Şifre</span><code>q3b8f+r*</code></div>
+    </div>
+    <p>
+        Bu hesabın coğrafi bir sınırı vardır: yalnızca <b>Amasya ili, Merkez ilçesi, Hızırpaşa mahallesi</b> verisini görür.
+        Haritaların bu mahalleyle açılmasının nedeni budur. Kurumunuz için verilen gerçek hesapla aynı istekleri gönderirsiniz;
+        yalnızca kimlik bilgisi ve görebildiğiniz alan değişir.
+    </p>
+</section>
+
+<section class="ders-bolum">
+    <h2>Bir isteğin anatomisi</h2>
+    <p>Her OWS isteği, servis adresine <code>?</code> işaretinden sonra eklenen <code>AD=DEĞER</code> çiftlerinden oluşur. Çiftler <code>&amp;</code> ile ayrılır:</p>
+    <div class="url-anatomi">
+        <span class="u-temel" title="Servis adresi">https://cbsservis.tkgm.gov.tr/tkgm.ows/wms</span><span class="u-ayrac">?</span><span class="u-param p1"><b>SERVICE</b>=WMS</span><span class="u-ayrac">&amp;</span><span class="u-param p2"><b>VERSION</b>=1.1.1</span><span class="u-ayrac">&amp;</span><span class="u-param p3"><b>REQUEST</b>=GetCapabilities</span>
+    </div>
+    <dl class="parametre-listesi">
+        <dt class="p1">SERVICE</dt><dd>Hangi standartla konuştuğunuz: <code>WMS</code> veya <code>WFS</code>.</dd>
+        <dt class="p2">VERSION</dt><dd>Standardın sürümü. Sürüme göre parametre adları ve koordinat sırası değişebilir.</dd>
+        <dt class="p3">REQUEST</dt><dd>Ne istediğiniz: yetenek listesi mi (<code>GetCapabilities</code>), harita mı (<code>GetMap</code>), veri mi (<code>GetFeature</code>)?</dd>
+    </dl>
+    <p class="small text-muted">Parametre adları büyük/küçük harfe duyarlı değildir ve sırası önemli değildir. Değerler ise (örneğin katman adları) olduğu gibi yazılmalıdır.</p>
+</section>
+
+<section class="ders-bolum">
+    <h2>1. Deneme: hiçbir şey istemeyen istek</h2>
+    <p>Önce sunucuya sadece adresini çağırarak ne olduğunu görelim. Laboratuvar bu adresle açıldı; aşağıdaki düğmeye ya da laboratuvardaki <b>Gönder</b>'e basın.</p>
+    <button class="dene" data-istek="https://cbsservis.tkgm.gov.tr/tkgm.ows/wms?"><i class="fa-solid fa-play"></i> Parametresiz isteği gönder</button>
+    <p>
+        TKGM, <b>HTTP 500</b> durum kodu ve bir <code>ows:ExceptionReport</code> XML belgesiyle yanıt verir.
+        Belgedeki "Bilinen Hata içeriği" satırı sorunu söyler: harita servisleri parametresiz sorgulanamaz.
+        "Hata Link" kodu ise TKGM'ye bir sorun bildirirken kullanacağınız takip numarasıdır.
+    </p>
+    <div class="kutu dikkat">
+        <div class="kutu-baslik"><i class="fa-solid fa-triangle-exclamation"></i> Kodunuzda unutmayın</div>
+        OGC servisleri hatayı her zaman bir HTTP hata koduyla bildirmez; bazı sunucular 200 ile birlikte bir ExceptionReport döndürür.
+        Sağlam bir istemci hem durum koduna hem de yanıt gövdesinde <code>ExceptionReport</code> olup olmadığına bakar.
+    </div>
+</section>
+
+<section class="ders-bolum">
+    <h2>2. Deneme: ilk başarılı istek</h2>
+    <p>Şimdi üç zorunlu parametreyi ekleyip servisten kimlik kartını isteyelim:</p>
+    <button class="dene" data-istek="https://cbsservis.tkgm.gov.tr/tkgm.ows/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetCapabilities"><i class="fa-solid fa-play"></i> WMS GetCapabilities</button>
+    <p>Yanıt yaklaşık 150 KB'lık bir XML belgesidir. Laboratuvarın <b>Çözümleme</b> sekmesi onu sizin için okur; <b>Ham yanıt</b> sekmesinde belgenin kendisini görebilirsiniz. Bir sonraki derste bu belgeyi ayrıntılı inceleyeceğiz.</p>
+</section>
+
+<section class="ders-bolum">
+    <h2>Bu laboratuvar istekleri nasıl gönderiyor?</h2>
+    <p>
+        Tarayıcıdaki JavaScript, kimlik bilgisini taşıyan bir isteği başka bir alan adına göndermeden önce bir <code>OPTIONS</code> ön isteği (CORS preflight) yapar.
+        TKGM bu ön isteğe <b>401</b> döndürdüğü için tarayıcı asıl isteği hiç göndermez. Leaflet'in harita karoları ise &lt;img&gt; etiketiyle istendiğinden başlık ekleyemez.
+    </p>
+    <div class="akis-diyagrami">
+        <div class="akis-kutu"><i class="fa-solid fa-display"></i><b>Tarayıcı</b><code>/OwsProxy/wms?…</code></div>
+        <div class="akis-ok"><span>aynı alan adı,<br>kimlik yok</span></div>
+        <div class="akis-kutu"><i class="fa-solid fa-server"></i><b>owsLab sunucusu</b><code>Authorization: Basic …</code></div>
+        <div class="akis-ok"><span>kimlik<br>eklenir</span></div>
+        <div class="akis-kutu tkgm"><i class="fa-solid fa-landmark"></i><b>TKGM</b><code>cbsservis.tkgm.gov.tr</code></div>
+    </div>
+    <p>
+        Bu yüzden laboratuvar istekleri kendi sunucusundaki küçük bir aracı (proxy) üzerinden gönderir; yanıt TKGM'den <b>hiç değiştirilmeden</b> size gelir.
+        Kendi web uygulamanızda da aynı yolu izlersiniz: kimlik bilgisini sunucu tarafında tutar, tarayıcıya yalnızca kendi adresinizi verirsiniz.
+    </p>
+    <p class="small text-muted">Laboratuvardaki <b>TKGM'de aç</b> düğmesi isteği doğrudan TKGM'ye gönderir; tarayıcınız bu durumda kullanıcı adı ve şifre penceresi açar.</p>
+</section>

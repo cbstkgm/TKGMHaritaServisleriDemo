@@ -1,0 +1,70 @@
+<section class="ders-bolum">
+    <h2>Ne kuracağız?</h2>
+    <p>
+        Bir belediye ya da kurum uygulamasındaki tipik "parsel sorgulama" ekranını, yalnızca bu derslerde öğrendiğiniz OGC istekleriyle kuracağız.
+        Ekranı kullanın, sonra sağdaki <b>istek günlüğünde</b> her tıklamanın arkasında hangi isteğin gittiğini inceleyin.
+        Her satırın "Laboratuvarda aç" bağlantısı o isteği laboratuvara taşır.
+    </p>
+</section>
+
+<div class="uygulama" data-parsel-uygulamasi>
+    <div class="uygulama-panel">
+        <ol class="uygulama-adimlari">
+            <li data-adim="1" data-durum="bekliyor">
+                <div class="adim-baslik">Mahalleyi yükle</div>
+                <p>WFS ile mahalle sınırı ve kimliği alınır.</p>
+                <button type="button" class="btn btn-sm btn-gonder" data-rol="baslat"><i class="fa-solid fa-play"></i> Başlat</button>
+                <div class="small mt-2" data-rol="mahalleBilgi"></div>
+            </li>
+            <li data-adim="2" data-durum="bekliyor">
+                <div class="adim-baslik">Ada seç</div>
+                <p>Mahalledeki ada numaraları, yalnızca <code>adano</code> sütunu istenerek hafif bir sorguyla listelenir.</p>
+                <select class="form-select form-select-sm" data-rol="adaSecimi" disabled><option>Önce mahalleyi yükleyin</option></select>
+                <div class="not-kutusu uyari small mt-2 d-none" data-rol="adaNotu">Liste 1000 kayıt sınırına ulaştı; bazı adalar eksik olabilir. Gerçek uygulamada ada numarası bir arama kutusundan da girilebilir.</div>
+            </li>
+            <li data-adim="3" data-durum="bekliyor">
+                <div class="adim-baslik">Parsel seç</div>
+                <p>Seçilen parsel WMS'te <code>CQL_FILTER</code> + <code>SLD_BODY</code> ile sunucu tarafında kırmızıya boyanır.</p>
+                <select class="form-select form-select-sm" data-rol="parselSecimi" disabled><option>Önce ada seçin</option></select>
+                <div class="mt-2" data-rol="parselBilgi"></div>
+            </li>
+        </ol>
+    </div>
+    <div class="uygulama-harita" data-rol="harita"></div>
+    <div class="uygulama-gunluk">
+        <div class="gunluk-baslik"><i class="fa-solid fa-list"></i> İstek günlüğü</div>
+        <ul class="gunluk-listesi" data-rol="gunluk"><li class="gunluk-bos">Henüz istek yok. "Başlat"a basın.</li></ul>
+    </div>
+</div>
+
+<section class="ders-bolum">
+    <h2>Ekranın arkasındaki kararlar</h2>
+    <table class="table table-sm ders-tablosu">
+        <thead><tr><th>Adım</th><th>İstek</th><th>Neden böyle?</th></tr></thead>
+        <tbody>
+            <tr><td>1</td><td>WFS <code>TKGM:mahalleler</code> + <code>PROPERTYNAME=…,geom</code></td><td>Sınırı çizmek için geometri, sonraki adım için <code>tapukimlikno</code> gerekir.</td></tr>
+            <tr><td>2a</td><td>WFS <code>PROPERTYNAME=adano</code>, <code>CQL_FILTER=durum=3</code></td><td>Liste için geometriye gerek yok; yanıt çok küçük kalır. Eski kayıtlar <code>durum=3</code> ile elenir.</td></tr>
+            <tr><td>2b</td><td>WFS <code>adano='…' AND durum=3</code> + geometri</td><td>Yalnızca seçilen adanın parselleri geometriyle istenir.</td></tr>
+            <tr><td>3</td><td>WMS <code>CQL_FILTER</code> + <code>SLD_BODY</code></td><td>Vurgu sunucuda çizilir. Parsel ne kadar karmaşık olursa olsun tarayıcıya tek bir resim gelir.</td></tr>
+        </tbody>
+    </table>
+</section>
+
+<div class="kutu tkgm">
+    <div class="kutu-baslik"><i class="fa-solid fa-circle-check"></i> TKGM'de canlı doğrulandı</div>
+    Gerçek bir hesapta ada listesini mahalleye göre süzmek için <code>tapumahalleref=126978</code> yazmanız beklenir. Demo hesapta ise bu filtre
+    tek başına çalışırken <code>PROPERTYNAME</code> ile birlikte kullanıldığında <b>0 kayıt</b> döndürür; <code>tapumahalleref&gt;0</code> ise hiç sonuç vermez.
+    Ağ geçidinin yetki filtresi bu sütunu kendisi kullanıyor olabilir. Demo hesap zaten tek mahalleyi gördüğü için bu ekran mahalle filtresi yazmaz.
+    Kendi hesabınızda bu sütunla filtre yazarken sonucu mutlaka kontrol edin.
+</div>
+
+<section class="ders-bolum">
+    <h2>Gerçek bir projeye taşırken</h2>
+    <ul>
+        <li><b>Kimlik bilgisi sunucuda kalır.</b> Tarayıcı yalnızca kendi proxy'nizi çağırır; proxy yalnızca TKGM adresine ve izin verdiğiniz işlemlere istek iletmelidir.</li>
+        <li><b>GetCapabilities'i önbelleğe alın.</b> Nadiren değişir ve büyüktür. Bu sitenin proxy'si 30 dakika önbelleğe alır.</li>
+        <li><b>1000 kayıt sınırını tasarıma katın.</b> Listeleri alana veya ada numarasına göre parçalayın; tam 1000 sonuç gelirse kullanıcıyı uyarın.</li>
+        <li><b>Güncel kaydı filtreleyin.</b> Parsel sorgularına <code>durum=3</code> eklemeyi unutmayın.</li>
+        <li><b>Metin sütunlarını tırnaklayın.</b> <code>adano</code> ve <code>parselno</code> metindir; kullanıcı girdisini filtreye koymadan önce tek tırnakları kaçırın (<code>'</code> → <code>''</code>).</li>
+    </ul>
+</section>

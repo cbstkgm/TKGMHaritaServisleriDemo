@@ -1,0 +1,24 @@
+@{
+    ViewData["Title"] = "Laboratuvar";
+    var istek = Context.Request.Query["istek"].ToString();
+    var gecerli = istek.StartsWith("https://cbsservis.tkgm.gov.tr/tkgm.ows/", StringComparison.OrdinalIgnoreCase);
+    ViewData["LabBaslangic"] = gecerli ? istek : null;
+    ViewData["LabOtomatik"] = gecerli && Context.Request.Query["calistir"] == "1";
+    ViewData["LabKimlik"] = "serbest";
+    ViewData["LabSinif"] = "lab-genis";
+}
+
+<div class="container-fluid lab-sayfasi">
+    <div class="lab-sayfa-baslik">
+        <div>
+            <h1>Serbest laboratuvar</h1>
+            <p class="text-muted mb-0">İstediğiniz WMS/WFS isteğini kurun, gönderin ve yanıtı inceleyin. "Hazır istekler" menüsü iyi bir başlangıç noktasıdır.</p>
+        </div>
+        <div class="lab-ipuclari">
+            <span><kbd>Ctrl</kbd>+<kbd>Enter</kbd> gönderir</span>
+            <span><i class="fa-solid fa-hand-pointer"></i> Haritaya tıklama → GetFeatureInfo</span>
+            <span><i class="fa-solid fa-draw-polygon"></i> Alan çizme → INTERSECTS</span>
+        </div>
+    </div>
+    <partial name="_Laboratuvar" view-data="ViewData" />
+</div>

@@ -1,0 +1,174 @@
+@{
+    ViewData["Title"] = "Rehber";
+    const string W = "https://cbsservis.tkgm.gov.tr/tkgm.ows/wms?SERVICE=WMS&VERSION=1.1.1";
+    const string F = "https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs?SERVICE=WFS&VERSION=1.0.0";
+    string Lab(string url) => "/Home/Laboratuvar?istek=" + Uri.EscapeDataString(url) + "&calistir=1";
+}
+
+<div class="container-xl rehber">
+    <div class="row g-4 g-lg-5">
+        <nav class="col-lg-3 d-none d-lg-block">
+            <div class="rehber-icindekiler">
+                <div class="small text-uppercase text-muted fw-semibold mb-2">İçindekiler</div>
+                <a href="#adresler">Servis adresleri</a>
+                <a href="#katmanlar">Katmanlar</a>
+                <a href="#tkgm-kurallari">TKGM'ye özgü kurallar</a>
+                <a href="#istekler">İstek türleri</a>
+                <a href="#cql">CQL hızlı başvuru</a>
+                <a href="#hatalar">Hata sözlüğü</a>
+                <a href="#parametreler">Parametre sözlüğü</a>
+                <a href="#sutunlar">Sütun sözlüğü</a>
+                <a href="#diger-servisler">TKGM'de olmayan servisler</a>
+            </div>
+        </nav>
+
+        <div class="col-lg-9">
+            <h1>Rehber</h1>
+            <p class="lead text-muted">Derslerde öğrendiklerinizin başvuru kartı. Bağlantılar isteği laboratuvarda açıp gönderir.</p>
+            <p class="small text-muted">Buradaki servis davranışları demo hesapla <b>29 Ekim 2026</b> tarihinde denenerek yazılmıştır; TKGM yapılandırmayı değiştirirse farklılık gösterebilir.</p>
+
+            <section id="adresler" class="rehber-bolum">
+                <h2>Servis adresleri ve kimlik doğrulama</h2>
+                <table class="table ders-tablosu">
+                    <tbody>
+                        <tr><th>WMS</th><td><code>https://cbsservis.tkgm.gov.tr/tkgm.ows/wms</code></td><td>Sürüm 1.1.1 (1.3.0 GetMap için de çalışır)</td></tr>
+                        <tr><th>WFS</th><td><code>https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs</code></td><td>Sürüm 1.0.0 (1.1.0 da çalışır, 2.0.0 çalışmaz)</td></tr>
+                        <tr><th>Kimlik</th><td colspan="2">HTTP Basic Authentication · demo: <code>cbsdemouser</code> / <code>q3b8f+r*</code></td></tr>
+                        <tr><th>Demo kapsamı</th><td colspan="2">Amasya / Merkez / Hızırpaşa mahallesi (<code>tapumahalleref=126978</code>)</td></tr>
+                        <tr><th>CORS</th><td colspan="2">Yanıtlar <code>Access-Control-Allow-Origin: *</code> taşır, ancak kimlikli isteklerin OPTIONS ön isteğine 401 döner; tarayıcıdan doğrudan fetch yapılamaz, sunucu tarafı proxy gerekir.</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="katmanlar" class="rehber-bolum">
+                <h2>Katmanlar</h2>
+                <table class="table ders-tablosu">
+                    <thead><tr><th>Ad</th><th>WMS</th><th>WFS</th><th>Demo hesapta</th><th>Bağlantı sütunu</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>TKGM:parseller</code></td><td>✓</td><td>✓</td><td class="text-success">Hızırpaşa parselleri</td><td><code>tapumahalleref</code> → mahalle</td></tr>
+                        <tr><td><code>TKGM:mahalleler</code></td><td>✓</td><td>✓</td><td class="text-success">Yalnızca Hızırpaşa</td><td><code>ilceref</code> → ilçe</td></tr>
+                        <tr><td><code>TKGM:ilceler</code></td><td>✓</td><td>✓</td><td class="text-warning">Boş (yetki dışı)</td><td><code>ilref</code> → il</td></tr>
+                        <tr><td><code>TKGM:iller</code></td><td>✓</td><td>✓</td><td class="text-warning">Boş (yetki dışı)</td><td>—</td></tr>
+                        <tr><td><code>TKGM:MEGSIS</code></td><td>✓</td><td>—</td><td class="text-warning">Boş görüntü</td><td>—</td></tr>
+                    </tbody>
+                </table>
+                <p class="small">Parsel stilleri: <code>parseller</code> (varsayılan), <code>TKGM:parseller_style_v2</code>, <code>hazineparsellerstyle</code>, <code>tematik_parsel_entegrasyon_durum</code>.</p>
+            </section>
+
+            <section id="tkgm-kurallari" class="rehber-bolum">
+                <h2>TKGM'ye özgü kurallar</h2>
+                <div class="kural-listesi">
+                    <div class="kural"><b>Parametresiz istek reddedilir.</b> <span>HTTP 500 · "Harita Servisleri Parametresiz olarak sorgulanamaz".</span> <a href="@Lab("https://cbsservis.tkgm.gov.tr/tkgm.ows/wms?")">Dene</a></div>
+                    <div class="kural"><b>WMS tek katman kabul eder.</b> <span><code>LAYERS=a,b</code> → "Katman bulunamadı". Her katmana ayrı istek.</span> <a href="@Lab(W + "&REQUEST=GetMap&LAYERS=TKGM:mahalleler,TKGM:parseller&STYLES=,&SRS=EPSG:4326&BBOX=35.805,40.648,35.820,40.660&WIDTH=800&HEIGHT=640&FORMAT=image/png")">Dene</a></div>
+                    <div class="kural"><b>Capabilities hep 1.1.1.</b> <span>VERSION=1.3.0 istense de WMS 1.1.1 belgesi döner.</span></div>
+                    <div class="kural"><b>Parseller ölçeğe bağlı çizilir.</b> <span>Varsayılan stil yaklaşık 1:15.000'den küçük ölçeklerde boş görüntü verir.</span></div>
+                    <div class="kural"><b>GetFeatureInfo formatları.</b> <span>Yalnızca <code>application/json</code> ve <code>text/html</code>. WMS 1.3.0'da JSON istense de HTML gelir.</span></div>
+                    <div class="kural"><b>WFS çıktı formatları.</b> <span>GML2, GML3, KML çalışır; JSON, CSV, SHAPE-ZIP hata verir.</span> <a href="@Lab(F + "&REQUEST=GetFeature&TYPENAME=TKGM:parseller&MAXFEATURES=5&OUTPUTFORMAT=application/json")">Dene</a></div>
+                    <div class="kural"><b>WFS 2.0.0 desteklenmez.</b> <span>1.0.0 kullanın; <code>FEATUREID</code> da çalışmaz.</span></div>
+                    <div class="kural"><b>Tek istekte en fazla 1000 kayıt.</b> <span>MAXFEATURES daha büyük olsa da sonuç 1000'de kesilir.</span></div>
+                    <div class="kural"><b>Tarihçeli parsel kayıtları.</b> <span>Aynı ada/parselin eski (<code>durum=2</code>) ve güncel (<code>durum=3</code>) kayıtları birlikte gelir.</span> <a href="@Lab(F + "&REQUEST=GetFeature&TYPENAME=TKGM:parseller&PROPERTYNAME=adano,parselno,durum,sistemkayittarihi,geom&CQL_FILTER=adano='983' AND parselno='2'")">Dene</a></div>
+                    <div class="kural"><b>Yetki dışı veri boş döner.</b> <span>İller/ilçeler için HTTP 200 + boş FeatureCollection; hata yok.</span></div>
+                    <div class="kural"><b>CQL varken BBOX parametresi yok sayılır.</b> <span>Alanı <code>AND BBOX(geom,…)</code> olarak filtreye yazın.</span></div>
+                    <div class="kural"><b>DWITHIN derece ile çalışır.</b> <span>"meters" yazılsa da mesafe derece olarak yorumlanır (0.0005° ≈ 50 m).</span></div>
+                    <div class="kural"><b>XML filtrede LIKE çalışmaz.</b> <span>Metin araması için <code>CQL_FILTER</code> + <code>ILIKE</code>.</span></div>
+                    <div class="kural"><b>tapumahalleref filtresi demo hesapta güvenilmez.</b> <span>Tek başına çalışır, <code>PROPERTYNAME</code> ile birlikte 0 kayıt döner; <code>tapumahalleref&gt;0</code> hiç sonuç vermez.</span> <a href="@Lab(F + "&REQUEST=GetFeature&TYPENAME=TKGM:parseller&MAXFEATURES=20&PROPERTYNAME=adano,parselno,geom&CQL_FILTER=tapumahalleref=126978")">Dene</a></div>
+                    <div class="kural"><b>adano ve parselno metindir.</b> <span>Tırnakla yazın: <code>adano='983'</code>. <code>parselno</code> <code>42/YO</code> gibi değerler alır.</span></div>
+                </div>
+            </section>
+
+            <section id="istekler" class="rehber-bolum">
+                <h2>İstek türleri</h2>
+                <table class="table ders-tablosu">
+                    <thead><tr><th>Servis</th><th>REQUEST</th><th>Döndürdüğü</th><th>Zorunlu parametreler</th><th></th></tr></thead>
+                    <tbody>
+                        <tr><td>WMS</td><td>GetCapabilities</td><td>XML yetenek belgesi</td><td>—</td><td><a href="@Lab(W + "&REQUEST=GetCapabilities")">Dene</a></td></tr>
+                        <tr><td>WMS</td><td>GetMap</td><td>Resim</td><td>LAYERS, STYLES, SRS, BBOX, WIDTH, HEIGHT, FORMAT</td><td><a href="@Lab(W + "&REQUEST=GetMap&LAYERS=TKGM:parseller&STYLES=&SRS=EPSG:4326&BBOX=35.805,40.648,35.820,40.660&WIDTH=800&HEIGHT=640&FORMAT=image/png&TRANSPARENT=true")">Dene</a></td></tr>
+                        <tr><td>WMS</td><td>GetFeatureInfo</td><td>JSON/HTML öznitelik</td><td>GetMap parametreleri + QUERY_LAYERS, X, Y, INFO_FORMAT</td><td><a href="/ders/wms-getfeatureinfo">Ders</a></td></tr>
+                        <tr><td>WMS</td><td>GetLegendGraphic</td><td>Lejant resmi</td><td>LAYER, FORMAT</td><td><a href="@Lab(W + "&REQUEST=GetLegendGraphic&LAYER=TKGM:parseller&FORMAT=image/png")">Dene</a></td></tr>
+                        <tr><td>WMS</td><td>GetStyles</td><td>SLD belgesi</td><td>LAYERS</td><td><a href="@Lab(W + "&REQUEST=GetStyles&LAYERS=TKGM:parseller")">Dene</a></td></tr>
+                        <tr><td>WMS</td><td>DescribeLayer</td><td>WFS karşılığı</td><td>LAYERS</td><td><a href="@Lab(W + "&REQUEST=DescribeLayer&LAYERS=TKGM:parseller")">Dene</a></td></tr>
+                        <tr><td>WFS</td><td>GetCapabilities</td><td>XML yetenek belgesi</td><td>—</td><td><a href="@Lab(F + "&REQUEST=GetCapabilities")">Dene</a></td></tr>
+                        <tr><td>WFS</td><td>DescribeFeatureType</td><td>XSD şeması</td><td>TYPENAME</td><td><a href="@Lab(F + "&REQUEST=DescribeFeatureType&TYPENAME=TKGM:parseller")">Dene</a></td></tr>
+                        <tr><td>WFS</td><td>GetFeature</td><td>GML/KML nesneler</td><td>TYPENAME</td><td><a href="@Lab(F + "&REQUEST=GetFeature&TYPENAME=TKGM:parseller&MAXFEATURES=10")">Dene</a></td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="cql" class="rehber-bolum">
+                <h2>CQL hızlı başvuru</h2>
+                <table class="table ders-tablosu">
+                    <thead><tr><th>İşlem</th><th>Örnek</th></tr></thead>
+                    <tbody>
+                        <tr><td>Eşitlik</td><td><code>adano='983'</code> · <code>durum=3</code></td></tr>
+                        <tr><td>Karşılaştırma</td><td><code>tapualan &gt; 1000</code> · <code>tapualan &lt;= 500</code> · <code>adano &lt;&gt; '0'</code></td></tr>
+                        <tr><td>Aralık</td><td><code>tapualan BETWEEN 500 AND 600</code></td></tr>
+                        <tr><td>Liste</td><td><code>adano IN ('983','984')</code></td></tr>
+                        <tr><td>Metin arama</td><td><code>tapucinsaciklama ILIKE '%apartman%'</code> (LIKE büyük/küçük harfe duyarlı)</td></tr>
+                        <tr><td>Boş değer</td><td><code>tapucinsaciklama IS NULL</code></td></tr>
+                        <tr><td>Mantık</td><td><code>A AND B</code> · <code>A OR B</code> · <code>NOT (A)</code></td></tr>
+                        <tr><td>Dikdörtgen</td><td><code>BBOX(geom, 35.809,40.652, 35.811,40.654)</code></td></tr>
+                        <tr><td>Kesişim</td><td><code>INTERSECTS(geom, POINT(35.81 40.6527))</code></td></tr>
+                        <tr><td>İçinde</td><td><code>WITHIN(geom, POLYGON((x y, x y, …, x y)))</code></td></tr>
+                        <tr><td>Mesafe</td><td><code>DWITHIN(geom, POINT(35.81 40.6527), 0.0005, meters)</code> — mesafe derece</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="hatalar" class="rehber-bolum">
+                <h2>Hata sözlüğü</h2>
+                <table class="table ders-tablosu">
+                    <thead><tr><th>Gördüğünüz</th><th>Olası neden</th><th>Çözüm</th></tr></thead>
+                    <tbody>
+                        <tr><td>HTTP 401</td><td>Kimlik bilgisi yok ya da yanlış</td><td>Basic Authentication başlığını kontrol edin</td></tr>
+                        <tr><td>HTTP 404 (HTML)</td><td>TKGM'de olmayan servis yolu (wcs, csw, wmts…)</td><td>Yalnızca <code>/wms</code> ve <code>/wfs</code></td></tr>
+                        <tr><td>"Parametresiz olarak sorgulanamaz"</td><td>Sorgu dizesi boş</td><td>SERVICE, VERSION, REQUEST ekleyin</td></tr>
+                        <tr><td>"Katman bulunamadı"</td><td>Yanlış katman adı veya birden fazla katman</td><td>GetCapabilities'teki adı tek başına kullanın</td></tr>
+                        <tr><td>"Sistemde Hata oluştu" (ayrıntısız)</td><td>Kapalı format, WFS 2.0, FEATUREID, bozuk CQL</td><td>Parametreleri tek tek çıkararak daraltın</td></tr>
+                        <tr><td>200 ama boş resim</td><td>Alan dışı, ölçek kuralı, yanlış eksen sırası veya yetki dışı katman</td><td>BBOX'u ve sürümü kontrol edin, yaklaşın</td></tr>
+                        <tr><td>200 ama 0 kayıt</td><td>Filtreye uyan kayıt yok veya yetki dışı veri</td><td>Tırnakları, sütun adlarını ve kapsamı kontrol edin</td></tr>
+                        <tr><td>Tam 1000 kayıt</td><td>Sunucu sınırı</td><td>Filtreyi veya alanı daraltın</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="parametreler" class="rehber-bolum">
+                <h2>Parametre sözlüğü</h2>
+                <div data-parametre-sozlugu></div>
+            </section>
+
+            <section id="sutunlar" class="rehber-bolum">
+                <h2>Sütun sözlüğü</h2>
+                <p class="small text-muted">Sütun adları ve tipleri DescribeFeatureType çıktısından alınmıştır. Kod değerlerinin (durum, tip, onaydurum…) resmi anlamları TKGM kod tablolarındadır.</p>
+                <div data-sutun-sozlugu></div>
+            </section>
+
+            <section id="diger-servisler" class="rehber-bolum">
+                <h2>TKGM'de olmayan OGC servisleri</h2>
+                <p>OGC eğitimlerinde sık geçen aşağıdaki servisler TKGM'de yayınlanmaz (adresleri 404 döner). Ne işe yaradıklarını bilmek yine de faydalıdır:</p>
+                <table class="table ders-tablosu">
+                    <tbody>
+                        <tr><th>WMTS</th><td>Önceden üretilmiş harita karoları. TKGM'de WMS karoları (<code>L.tileLayer.wms</code>) aynı işi görür.</td></tr>
+                        <tr><th>WCS</th><td>Raster kapsama verisi (yükseklik modeli, ortofoto bantları).</td></tr>
+                        <tr><th>CSW</th><td>Üst veri (metadata) kataloğu araması.</td></tr>
+                        <tr><th>WPS</th><td>Sunucu tarafı coğrafi işlem (tampon, kesişim). TKGM'de bunun yerine CQL mekânsal filtreleri kullanılır.</td></tr>
+                        <tr><th>SOS</th><td>Sensör gözlemleri.</td></tr>
+                    </tbody>
+                </table>
+            </section>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const k = OwsLab.htmlKacis;
+            document.querySelector("[data-parametre-sozlugu]").innerHTML = `<table class="table ders-tablosu"><thead><tr><th>Parametre</th><th>Açıklama</th><th>Örnek değerler</th></tr></thead><tbody>${
+                Object.entries(OwsLab.PARAMETRELER).map(([ad, t]) => `<tr><td><code>${ad}</code></td><td>${k(t.aciklama)}</td><td class="small">${t.oneriler.filter(Boolean).slice(0, 4).map(o => `<code>${k(o)}</code>`).join(" ")}</td></tr>`).join("")
+            }</tbody></table>`;
+            document.querySelector("[data-sutun-sozlugu]").innerHTML = `<table class="table ders-tablosu"><thead><tr><th>Sütun</th><th>Açıklama</th></tr></thead><tbody>${
+                Object.entries(OwsLab.SUTUNLAR).map(([ad, a]) => `<tr><td><code>${ad}</code></td><td>${k(a)}</td></tr>`).join("")
+            }</tbody></table>`;
+        });
+    </script>
+}

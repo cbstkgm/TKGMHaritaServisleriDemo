@@ -1,0 +1,90 @@
+@model Ders
+@{
+    ViewData["Title"] = Model.Baslik;
+    var sira = Mufredat.Sira(Model);
+    var onceki = sira > 0 ? Mufredat.Dersler[sira - 1] : null;
+    var sonraki = sira < Mufredat.Dersler.Count - 1 ? Mufredat.Dersler[sira + 1] : null;
+    var tamGenislik = Model.Slug == "parsel-uygulamasi";
+    var gorevKimlikleri = string.Join(",", Model.Gorevler.Select(g => g.Kimlik));
+    const string wms = "https://cbsservis.tkgm.gov.tr/tkgm.ows/wms?";
+    const string wfs = "https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs?";
+    var labBaslangic = Model.Slug switch
+    {
+        "ows-nedir" => wms,
+        "getcapabilities" => wms + "SERVICE=WMS&VERSION=1.1.1&REQUEST=GetCapabilities",
+        "wms-stil" => wms + "SERVICE=WMS&VERSION=1.1.1&REQUEST=GetLegendGraphic&LAYER=TKGM:parseller&FORMAT=image/png",
+        "wfs-describefeaturetype" => wfs + "SERVICE=WFS&VERSION=1.0.0&REQUEST=DescribeFeatureType&TYPENAME=TKGM:parseller",
+        "wfs-getfeature" => wfs + "SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=TKGM:parseller&MAXFEATURES=10",
+        "filtreleme" => wfs + "SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=TKGM:parseller&PROPERTYNAME=adano,parselno,tapualan,tapucinsaciklama,durum,geom&CQL_FILTER=adano='983'",
+        _ => wms + "SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=TKGM:parseller&STYLES=&SRS=EPSG:4326&BBOX=35.805,40.648,35.820,40.660&WIDTH=800&HEIGHT=640&FORMAT=image/png&TRANSPARENT=true"
+    };
+}
+
+<div class="ders-sayfasi @(tamGenislik ? "tam-genislik" : "")">
+    <article class="ders-metni">
+        <nav class="ders-ust-bilgi">
+            <a href="/#mufredat">Dersler</a> <i class="fa-solid fa-chevron-right"></i> <span>@Model.Bolum</span>
+        </nav>
+        <header class="ders-baslik-alani">
+            <div class="ders-numarasi">Ders @(sira + 1) / @Mufredat.Dersler.Count</div>
+            <h1>@Model.Baslik</h1>
+            <p class="ders-ozet">@Model.Ozet</p>
+            <div class="ders-meta">
+                <span><i class="fa-regular fa-clock"></i> ~@Model.DakikaSuresi dk</span>
+                <span data-ders-ilerleme="@gorevKimlikleri"><i class="fa-solid fa-list-check"></i> <span class="ilerleme-metin">0/@Model.Gorevler.Count</span> görev</span>
+            </div>
+        </header>
+
+        <aside class="gorev-karti">
+            <div class="gorev-karti-baslik"><i class="fa-solid fa-bullseye"></i> Bu dersin görevleri</div>
+            <ol class="gorev-listesi">
+                @foreach (var gorev in Model.Gorevler)
+                {
+                    <li data-gorev="@gorev.Kimlik"><i class="fa-regular fa-circle gorev-simge"></i><i class="fa-solid fa-circle-check gorev-simge-tamam"></i><span class="gorev-metin">@gorev.Metin</span></li>
+                }
+            </ol>
+            <div class="small text-muted">Görevler, laboratuvarda doğru isteği gönderdiğinizde kendiliğinden işaretlenir.</div>
+        </aside>
+
+        <div class="ders-icerik">
+            <partial name="_@Model.Slug" />
+        </div>
+
+        <nav class="ders-gezinme">
+            @if (onceki != null)
+            {
+                <a class="ders-gezinme-oge" href="/ders/@onceki.Slug"><span class="small text-muted"><i class="fa-solid fa-arrow-left"></i> Önceki</span><span>@onceki.Baslik</span></a>
+            }
+            else
+            {
+                <span></span>
+            }
+            @if (sonraki != null)
+            {
+                <a class="ders-gezinme-oge sonraki" href="/ders/@sonraki.Slug"><span class="small text-muted">Sonraki <i class="fa-solid fa-arrow-right"></i></span><span>@sonraki.Baslik</span></a>
+            }
+            else
+            {
+                <a class="ders-gezinme-oge sonraki" href="/Home/Laboratuvar"><span class="small text-muted">Bitirdiniz <i class="fa-solid fa-arrow-right"></i></span><span>Serbest laboratuvar</span></a>
+            }
+        </nav>
+    </article>
+
+    @if (!tamGenislik)
+    {
+        <div class="ders-lab-sutunu">
+            @{
+                ViewData["LabBaslangic"] = labBaslangic;
+                ViewData["LabKimlik"] = "ders";
+            }
+            <partial name="_Laboratuvar" view-data="ViewData" />
+        </div>
+    }
+</div>
+
+@section Scripts {
+    @if (tamGenislik)
+    {
+        <script src="~/js/owslab-uygulama.js" asp-append-version="true"></script>
+    }
+}

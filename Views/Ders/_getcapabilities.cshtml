@@ -1,0 +1,63 @@
+<section class="ders-bolum">
+    <h2>Neden her iş GetCapabilities ile başlar?</h2>
+    <p>
+        Bir servisi ilk kez kullanırken üç şeyi bilmeniz gerekir: <b>hangi katmanlar var</b>, <b>hangi işlemleri destekliyor</b> ve
+        <b>hangi formatlarda ve koordinat sistemlerinde yanıt verebiliyor</b>. GetCapabilities bunların hepsini tek bir XML belgesinde listeler.
+        QGIS'te bir WMS bağlantısına "Bağlan" dediğinizde arka planda yapılan istek budur.
+    </p>
+</section>
+
+<section class="ders-bolum">
+    <h2>WMS yetenek belgesi</h2>
+    <button class="dene" data-istek="https://cbsservis.tkgm.gov.tr/tkgm.ows/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetCapabilities"><i class="fa-solid fa-play"></i> WMS GetCapabilities</button>
+    <p>Çözümleme sekmesinde şunlara bakın; ham XML'de karşılıklarını bulmayı deneyin:</p>
+    <table class="table table-sm ders-tablosu">
+        <thead><tr><th>XML öğesi</th><th>Ne söyler?</th><th>TKGM'deki değer</th></tr></thead>
+        <tbody>
+            <tr><td><code>&lt;Layer&gt;&lt;Name&gt;</code></td><td>İsteklerde LAYERS'a yazacağınız katman adı</td><td><code>TKGM:parseller</code>, <code>TKGM:mahalleler</code>, <code>TKGM:ilceler</code>, <code>TKGM:iller</code>, <code>TKGM:MEGSIS</code></td></tr>
+            <tr><td><code>queryable="1"</code></td><td>Katmana GetFeatureInfo ile tıklanabilir mi?</td><td>Hepsi sorgulanabilir</td></tr>
+            <tr><td><code>&lt;Style&gt;</code></td><td>STYLES'a yazabileceğiniz hazır stiller</td><td><code>parseller</code>, <code>hazineparsellerstyle</code>, <code>TKGM:parseller_style_v2</code> …</td></tr>
+            <tr><td><code>&lt;SRS&gt;</code></td><td>Desteklenen koordinat sistemleri</td><td>Yüzlerce; pratikte <code>EPSG:4326</code> ve <code>EPSG:3857</code></td></tr>
+            <tr><td><code>&lt;GetMap&gt;&lt;Format&gt;</code></td><td>Harita görüntüsü formatları</td><td>PNG, JPEG, PDF, SVG, KML …</td></tr>
+        </tbody>
+    </table>
+</section>
+
+<section class="ders-bolum">
+    <h2>Sürüm pazarlığı</h2>
+    <p>Aynı isteği <code>VERSION=1.3.0</code> ile gönderin ve yanıttaki kök öğenin <code>version</code> niteliğine bakın:</p>
+    <button class="dene" data-istek="https://cbsservis.tkgm.gov.tr/tkgm.ows/wms?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities"><i class="fa-solid fa-play"></i> 1.3.0 isteyerek GetCapabilities</button>
+    <div class="kutu tkgm">
+        <div class="kutu-baslik"><i class="fa-solid fa-circle-check"></i> TKGM'de canlı doğrulandı</div>
+        1.3.0 istenmesine rağmen TKGM <b>1.1.1</b> belgesi (<code>WMT_MS_Capabilities</code>) döndürür. GetMap ve GetFeatureInfo istekleri ise 1.3.0 ile de çalışır.
+        Bir istemci, Capabilities'te hangi sürümü aldıysa onunla devam etmelidir.
+    </div>
+</section>
+
+<section class="ders-bolum">
+    <h2>WFS yetenek belgesi</h2>
+    <button class="dene" data-istek="https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetCapabilities"><i class="fa-solid fa-play"></i> WFS GetCapabilities</button>
+    <p>WFS belgesinde katmanlara <b>feature type</b> denir. Üç bölüme dikkat edin:</p>
+    <ul>
+        <li><b>FeatureTypeList</b> — sorgulanabilir 4 katman. <code>TKGM:MEGSIS</code> burada yok; o yalnızca bir WMS görüntüsüdür.</li>
+        <li><b>Filter_Capabilities</b> — sunucunun anladığı filtre operatörleri: <code>BBOX</code>, <code>Intersect</code>, <code>Within</code>, <code>DWithin</code>, <code>Like</code>, <code>Between</code> …</li>
+        <li><b>ResultFormat</b> — GetFeature çıktı formatları.</li>
+    </ul>
+    <div class="kutu dikkat">
+        <div class="kutu-baslik"><i class="fa-solid fa-triangle-exclamation"></i> İlan edilen ≠ izin verilen</div>
+        <p class="mb-1">Capabilities belgesi sunucu yazılımının yapabildiklerini listeler, sizin hesabınızın yapabildiklerini değil. TKGM'de demo hesapla:</p>
+        <ul class="mb-0">
+            <li>ResultFormat'taki <b>JSON, CSV, SHAPE-ZIP</b> hata verir; <b>GML2, GML3, KML</b> çalışır.</li>
+            <li><code>TKGM:iller</code> ve <code>TKGM:ilceler</code> listelenir ama boş döner (yetki dışı).</li>
+        </ul>
+    </div>
+</section>
+
+<section class="ders-bolum">
+    <h2>Kendinizi deneyin</h2>
+    <ol class="soru-listesi">
+        <li>WMS belgesinde <code>TKGM:parseller</code> katmanının kaç stili var? <span class="ipucu" tabindex="0">Cevap: Çözümleme tablosundaki "Stiller" sütunu.</span></li>
+        <li>WFS'te <code>LatLongBoundingBox</code> değerlerine bakın. Hangi bölgeyi kapsıyor? <span class="ipucu" tabindex="0">Cevap: Yaklaşık 35.5–36.1 boylam, 40.3–41.0 enlem: Amasya.</span></li>
+        <li>Çözümleme tablosundaki "Şema" düğmesine basın. Bir sonraki adımın neden DescribeFeatureType olduğunu tahmin edin.</li>
+    </ol>
+</section>

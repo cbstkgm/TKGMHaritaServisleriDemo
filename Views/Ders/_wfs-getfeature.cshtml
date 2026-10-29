@@ -1,0 +1,79 @@
+@{
+    const string F = "https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature";
+}
+<section class="ders-bolum">
+    <h2>En basit GetFeature</h2>
+    <p>Zorunlu olan tek şey katman adıdır (<code>TYPENAME</code>). Laboratuvar bu istekle açıldı:</p>
+    <button class="dene" data-istek="@F&TYPENAME=TKGM:parseller&MAXFEATURES=10"><i class="fa-solid fa-play"></i> 10 parsel getir</button>
+    <p>
+        Yanıt <b>GML</b> (Geography Markup Language) biçimindedir: her parsel bir <code>&lt;gml:featureMember&gt;</code>, koordinatları <code>&lt;gml:coordinates&gt;</code> içindedir.
+        Laboratuvar GML'i tarayıcıda GeoJSON'a çevirip haritaya çizer; <b>Tablo</b> sekmesinden bir satıra tıklarsanız o parsel vurgulanır.
+    </p>
+</section>
+
+<section class="ders-bolum">
+    <h2>Yalnızca ihtiyacınız olan sütunlar: PROPERTYNAME</h2>
+    <p>Parseller katmanında 40'tan fazla sütun var. Bir liste ekranı için çoğuna ihtiyacınız yoktur:</p>
+    <div class="dugme-grubu">
+        <button class="dene ikincil" data-istek="@F&TYPENAME=TKGM:parseller&MAXFEATURES=50"><i class="fa-solid fa-play"></i> 50 kayıt, tüm sütunlar</button>
+        <button class="dene" data-istek="@F&TYPENAME=TKGM:parseller&MAXFEATURES=50&PROPERTYNAME=adano,parselno,tapualan,geom"><i class="fa-solid fa-play"></i> 50 kayıt, 4 sütun</button>
+    </div>
+    <p>Durum çubuğundaki yanıt boyutlarını karşılaştırın. Geometri gerekmiyorsa <code>geom</code>'u da çıkarın; yanıt birkaç kat daha küçülür.</p>
+</section>
+
+<section class="ders-bolum">
+    <h2>Kayıt sınırı</h2>
+    <button class="dene ikincil" data-istek="@F&TYPENAME=TKGM:parseller&MAXFEATURES=5000&PROPERTYNAME=adano,parselno"><i class="fa-solid fa-play"></i> 5000 kayıt iste</button>
+    <div class="kutu tkgm">
+        <div class="kutu-baslik"><i class="fa-solid fa-circle-check"></i> TKGM'de canlı doğrulandı</div>
+        TKGM tek istekte en fazla <b>1000</b> kayıt döndürür; MAXFEATURES daha büyük yazılsa da sonuç 1000'de kesilir ve bir uyarı verilmez.
+        Tam 1000 kayıt aldıysanız muhtemelen eksik veri aldınız: filtreyi veya alanı daraltın.
+        (Sayfalama için kullanılan <code>STARTINDEX</code> WFS 2.0 ile gelir; TKGM 2.0'ı desteklemez.)
+    </div>
+</section>
+
+<section class="ders-bolum">
+    <h2>Aynı parselin iki kaydı</h2>
+    <button class="dene" data-istek="@F&TYPENAME=TKGM:parseller&PROPERTYNAME=adano,parselno,tapualan,durum,sistemkayittarihi,geom&CQL_FILTER=adano='983' AND parselno='2'"><i class="fa-solid fa-play"></i> 983 ada 2 parseli getir</button>
+    <p>
+        Tek bir parsel istediğiniz halde iki kayıt gelir: biri <code>durum=2</code> (2020 tarihli önceki kayıt), diğeri <code>durum=3</code> (güncel kayıt).
+        Haritada üst üste çizilirler. Güncel parsel listesi için her sorguya <code>durum=3</code> ekleyin; bir sonraki derste filtrelerle bunu yapacağız.
+    </p>
+</section>
+
+<section class="ders-bolum">
+    <h2>Çıktı formatları</h2>
+    <div class="dugme-grubu">
+        <button class="dene ikincil" data-istek="@F&TYPENAME=TKGM:parseller&MAXFEATURES=10&PROPERTYNAME=adano,parselno,geom&OUTPUTFORMAT=GML3"><i class="fa-solid fa-play"></i> GML3</button>
+        <button class="dene" data-istek="@F&TYPENAME=TKGM:parseller&MAXFEATURES=10&PROPERTYNAME=adano,parselno,geom&OUTPUTFORMAT=KML"><i class="fa-solid fa-play"></i> KML</button>
+        <button class="dene ikincil" data-istek="@F&TYPENAME=TKGM:parseller&MAXFEATURES=10&PROPERTYNAME=adano,parselno,geom&OUTPUTFORMAT=application/json"><i class="fa-solid fa-play"></i> JSON (hata verecek)</button>
+    </div>
+    <table class="table table-sm ders-tablosu">
+        <thead><tr><th>OUTPUTFORMAT</th><th>TKGM'de</th><th>Not</th></tr></thead>
+        <tbody>
+            <tr><td><code>GML2</code> (varsayılan)</td><td class="text-success">çalışır</td><td>Koordinatlar <code>&lt;gml:coordinates&gt;</code> içinde "x,y x,y"</td></tr>
+            <tr><td><code>GML3</code></td><td class="text-success">çalışır</td><td>Koordinatlar <code>&lt;gml:posList&gt;</code> içinde "x y x y"</td></tr>
+            <tr><td><code>KML</code></td><td class="text-success">çalışır</td><td>Google Earth'te doğrudan açılır</td></tr>
+            <tr><td><code>application/json</code>, <code>CSV</code>, <code>SHAPE-ZIP</code></td><td class="text-danger">hata</td><td>İlan edilir ama demo hesapta kapalıdır</td></tr>
+        </tbody>
+    </table>
+    <p class="small text-muted">GeoJSON'a ihtiyacınız varsa GML'i istemcide dönüştürün. Bu laboratuvar da öyle yapıyor (<code>owslab-cekirdek.js</code> içindeki <code>gmlGeoJson</code>).</p>
+</section>
+
+<section class="ders-bolum">
+    <h2>Sürümler</h2>
+    <div class="dugme-grubu">
+        <button class="dene ikincil" data-istek="https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&TYPENAME=TKGM:parseller&MAXFEATURES=5&PROPERTYNAME=adano,parselno,geom"><i class="fa-solid fa-play"></i> 1.1.0</button>
+        <button class="dene ikincil" data-istek="https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=TKGM:parseller&COUNT=5"><i class="fa-solid fa-play"></i> 2.0.0 (hata verecek)</button>
+    </div>
+    <p>WFS 1.0.0 ve 1.1.0 çalışır; 2.0.0 hata verir. 2.0'da parametre adları da değişir (<code>TYPENAMES</code>, <code>COUNT</code>). Başka sunuculardan kopyaladığınız örneklerde bu farka dikkat edin.</p>
+</section>
+
+<section class="ders-bolum">
+    <h2>Yetki dışındaki veri</h2>
+    <button class="dene" data-istek="@F&TYPENAME=TKGM:iller"><i class="fa-solid fa-play"></i> İlleri getir</button>
+    <p>
+        Sonuç <b>HTTP 200</b> ve <b>boş</b> bir FeatureCollection'dır, hata değil. Demo hesap il ve ilçe verisini göremez; sunucu bunu "erişim yok" diye bildirmek yerine "sonuç yok" olarak döndürür.
+        Uygulamanızda boş sonucu "kayıt bulunamadı" diye gösterirken bu olasılığı da düşünün: kullanıcının yetkisi o bölgeye yetmiyor olabilir.
+    </p>
+</section>

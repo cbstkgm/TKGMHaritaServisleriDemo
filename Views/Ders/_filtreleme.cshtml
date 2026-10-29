@@ -1,0 +1,101 @@
+@{
+    const string F = "https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=TKGM:parseller&PROPERTYNAME=adano,parselno,tapualan,tapucinsaciklama,durum,geom";
+}
+<section class="ders-bolum">
+    <h2>İki filtre dili</h2>
+    <p>TKGM'nin arkasındaki GeoServer iki tür filtre anlar:</p>
+    <div class="iki-kart">
+        <div class="servis-karti">
+            <div class="servis-karti-baslik"><span class="servis-etiketi">CQL_FILTER</span> okunur metin</div>
+            <code>adano='983' AND durum=3</code>
+            <p>Yazması ve okuması kolaydır. GeoServer'a özgüdür ama çoğu kurumsal sunucuda vardır. WMS ve WFS'te çalışır.</p>
+        </div>
+        <div class="servis-karti">
+            <div class="servis-karti-baslik"><span class="servis-etiketi">FILTER</span> OGC XML</div>
+            <code>&lt;Filter&gt;&lt;PropertyIsEqualTo&gt;…</code>
+            <p>OGC Filter Encoding standardıdır; her WFS sunucusunda çalışması beklenir. Uzun ve URL'de hantal olduğu için genelde yazılım üretir.</p>
+        </div>
+    </div>
+</section>
+
+<section class="ders-bolum">
+    <h2>Karşılaştırma ve mantık</h2>
+    <p>Laboratuvar <code>adano='983'</code> filtresiyle açıldı. Gönderin ve kaç kayıt geldiğine bakın; sonra aşağıdakileri deneyin:</p>
+    <table class="table table-sm ders-tablosu filtre-tablosu">
+        <thead><tr><th>Amaç</th><th>CQL_FILTER</th><th></th></tr></thead>
+        <tbody>
+            <tr><td>Eşitlik (metin)</td><td><code>adano='983'</code></td><td><button class="dene mini" data-istek="@F&CQL_FILTER=adano='983'">Dene</button></td></tr>
+            <tr><td>Ve</td><td><code>adano='983' AND durum=3</code></td><td><button class="dene mini" data-istek="@F&CQL_FILTER=adano='983' AND durum=3">Dene</button></td></tr>
+            <tr><td>Veya / IN</td><td><code>adano IN ('983','984') AND durum=3</code></td><td><button class="dene mini" data-istek="@F&CQL_FILTER=adano IN ('983','984') AND durum=3">Dene</button></td></tr>
+            <tr><td>Sayısal karşılaştırma</td><td><code>tapualan &gt; 5000 AND durum=3</code></td><td><button class="dene mini" data-istek="@F&CQL_FILTER=tapualan > 5000 AND durum=3">Dene</button></td></tr>
+            <tr><td>Aralık</td><td><code>tapualan BETWEEN 500 AND 600</code></td><td><button class="dene mini" data-istek="@F&MAXFEATURES=100&CQL_FILTER=tapualan BETWEEN 500 AND 600 AND durum=3">Dene</button></td></tr>
+            <tr><td>Boş değer</td><td><code>tapucinsaciklama IS NULL</code><div class="small text-muted">Sonuçtaki <code>durum</code> değerlerine bakın; filtreye <code>AND durum=3</code> eklerseniz 0 kayıt döner. Niteliği boş olanların hepsi eski kayıtlardır.</div></td><td><button class="dene mini" data-istek="@F&MAXFEATURES=100&CQL_FILTER=tapucinsaciklama IS NULL">Dene</button></td></tr>
+        </tbody>
+    </table>
+
+    <div class="kutu gorev">
+        <div class="kutu-baslik"><i class="fa-solid fa-bullseye"></i> Görev</div>
+        <b>983 ada 2 parselin yalnızca güncel kaydını</b> tek bir CQL_FILTER ile getirin. Laboratuvardaki <code>CQL_FILTER</code> satırını düzenleyip gönderin. Sonuç tam 1 kayıt olmalı.
+        <span class="ipucu" tabindex="0">İpucu: üç koşul gerekir ve parselno da metin tipindedir.</span>
+    </div>
+</section>
+
+<section class="ders-bolum">
+    <h2>Metin arama: LIKE ve ILIKE</h2>
+    <p><code>%</code> "herhangi bir metin" demektir. <code>LIKE</code> büyük/küçük harfe duyarlıdır, <code>ILIKE</code> değildir:</p>
+    <div class="dugme-grubu">
+        <button class="dene ikincil" data-istek="@F&MAXFEATURES=200&CQL_FILTER=tapucinsaciklama LIKE '%apartman%' AND durum=3"><i class="fa-solid fa-play"></i> LIKE '%apartman%'</button>
+        <button class="dene" data-istek="@F&MAXFEATURES=200&CQL_FILTER=tapucinsaciklama ILIKE '%apartman%' AND durum=3"><i class="fa-solid fa-play"></i> ILIKE '%apartman%'</button>
+    </div>
+    <p>Tapudaki nitelikler çoğunlukla büyük harfle yazıldığından <code>LIKE '%apartman%'</code> yalnızca küçük harfle girilmiş birkaç kaydı bulur; <code>ILIKE</code> hepsini bulur. Türkçe karakterlerin büyük/küçük dönüşümüne (i/İ, ı/I) de dikkat edin; emin değilseniz değeri veride göründüğü gibi büyük harfle yazın.</p>
+    <div class="kutu dikkat">
+        <div class="kutu-baslik"><i class="fa-solid fa-triangle-exclamation"></i> URL'de %</div>
+        <code>%</code> URL'de özel bir karakterdir ve <code>%25</code> olarak kodlanmalıdır. Elle URL yazarken bu unutulursa sunucu filtreyi bozuk alır. Laboratuvar gönderirken bunu sizin yerinize yapar.
+    </div>
+</section>
+
+<section class="ders-bolum">
+    <h2>Mekânsal filtreler</h2>
+    <p>Geometri sütunu <code>geom</code> ile koordinatlara göre sorgu yapılır. Koordinatlar EPSG:4326'da <b>boylam enlem</b> sırasıyladır.</p>
+    <table class="table table-sm ders-tablosu filtre-tablosu">
+        <thead><tr><th>Fonksiyon</th><th>Anlamı</th><th></th></tr></thead>
+        <tbody>
+            <tr><td><code>BBOX(geom, 35.809,40.652, 35.811,40.654)</code></td><td>Dikdörtgenle kesişenler</td><td><button class="dene mini" data-istek="@F&CQL_FILTER=BBOX(geom,35.809,40.652,35.811,40.654) AND durum=3">Dene</button></td></tr>
+            <tr><td><code>INTERSECTS(geom, POINT(35.81 40.6527))</code></td><td>Noktanın üzerindeki parsel</td><td><button class="dene mini" data-istek="@F&CQL_FILTER=INTERSECTS(geom, POINT(35.81 40.6527)) AND durum=3">Dene</button></td></tr>
+            <tr><td><code>WITHIN(geom, POLYGON((…)))</code></td><td>Tamamen alanın içinde kalanlar</td><td><button class="dene mini" data-istek="@F&CQL_FILTER=WITHIN(geom, POLYGON((35.809 40.652, 35.811 40.652, 35.811 40.654, 35.809 40.654, 35.809 40.652))) AND durum=3">Dene</button></td></tr>
+            <tr><td><code>DWITHIN(geom, POINT(…), 0.0005, meters)</code></td><td>Noktaya belli mesafedeki parseller</td><td><button class="dene mini" data-istek="@F&CQL_FILTER=DWITHIN(geom, POINT(35.81 40.6527), 0.0005, meters) AND durum=3">Dene</button></td></tr>
+        </tbody>
+    </table>
+    <div class="kutu tkgm">
+        <div class="kutu-baslik"><i class="fa-solid fa-circle-check"></i> TKGM'de canlı doğrulandı</div>
+        <ul class="mb-0">
+            <li><code>DWITHIN</code>'deki mesafe, "meters" yazılsa bile verinin koordinat sisteminin biriminde (<b>derece</b>) yorumlanır. 0.0005° yaklaşık 40–55 metredir. Metre ile yazılan 50 değeri tüm mahalleyi kapsar.</li>
+            <li><code>CQL_FILTER</code> varken ayrıca gönderilen <code>BBOX=</code> parametresi <b>yok sayılır</b>. Alan kısıtını filtrenin içine <code>AND BBOX(geom, …)</code> olarak yazın. Laboratuvarın "BBOX'u haritadan al" düğmesi bunu kendisi yapar.</li>
+        </ul>
+    </div>
+    <div class="kutu gorev">
+        <div class="kutu-baslik"><i class="fa-solid fa-draw-polygon"></i> Haritada çizerek sorgulayın</div>
+        Laboratuvar haritasının sol üstündeki <b>çokgen</b> veya <b>dikdörtgen</b> aracıyla bir alan çizin. Açılan pencerede alanın WKT karşılığını görürsünüz;
+        "Bu alanla kesişen parselleri getir" düğmesi bunu <code>INTERSECTS</code> filtresine çevirip gönderir.
+    </div>
+</section>
+
+<section class="ders-bolum">
+    <h2>Aynı sorgu OGC XML ile</h2>
+    <p><code>adano='983' AND durum=3</code> filtresinin standart XML karşılığı:</p>
+<pre class="kod-blok kucuk"><code>&lt;Filter&gt;
+  &lt;And&gt;
+    &lt;PropertyIsEqualTo&gt;&lt;PropertyName&gt;adano&lt;/PropertyName&gt;&lt;Literal&gt;983&lt;/Literal&gt;&lt;/PropertyIsEqualTo&gt;
+    &lt;PropertyIsEqualTo&gt;&lt;PropertyName&gt;durum&lt;/PropertyName&gt;&lt;Literal&gt;3&lt;/Literal&gt;&lt;/PropertyIsEqualTo&gt;
+  &lt;/And&gt;
+&lt;/Filter&gt;</code></pre>
+    <div class="dugme-grubu">
+        <button class="dene" data-istek="@F&FILTER=&lt;Filter&gt;&lt;And&gt;&lt;PropertyIsEqualTo&gt;&lt;PropertyName&gt;adano&lt;/PropertyName&gt;&lt;Literal&gt;983&lt;/Literal&gt;&lt;/PropertyIsEqualTo&gt;&lt;PropertyIsEqualTo&gt;&lt;PropertyName&gt;durum&lt;/PropertyName&gt;&lt;Literal&gt;3&lt;/Literal&gt;&lt;/PropertyIsEqualTo&gt;&lt;/And&gt;&lt;/Filter&gt;"><i class="fa-solid fa-play"></i> FILTER ile gönder</button>
+        <button class="dene ikincil" data-istek="@F&FILTER=&lt;Filter xmlns:gml='http://www.opengis.net/gml'&gt;&lt;BBOX&gt;&lt;PropertyName&gt;geom&lt;/PropertyName&gt;&lt;gml:Box&gt;&lt;gml:coordinates&gt;35.809,40.652 35.811,40.654&lt;/gml:coordinates&gt;&lt;/gml:Box&gt;&lt;/BBOX&gt;&lt;/Filter&gt;"><i class="fa-solid fa-play"></i> XML BBOX filtresi</button>
+    </div>
+    <div class="kutu tkgm">
+        <div class="kutu-baslik"><i class="fa-solid fa-circle-check"></i> TKGM'de canlı doğrulandı</div>
+        XML filtrede <code>PropertyIsEqualTo</code>, <code>And</code>, <code>PropertyIsGreaterThan</code>, <code>PropertyIsBetween</code> ve <code>BBOX</code> çalışır.
+        <code>PropertyIsLike</code> ve nokta ile <code>Intersects</code> ise TKGM ağ geçidinde hata verir; metin araması için <code>CQL_FILTER</code> ve <code>ILIKE</code> kullanın.
+    </div>
+</section>

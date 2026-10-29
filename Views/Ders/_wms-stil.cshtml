@@ -1,0 +1,74 @@
+@{
+    const string W = "https://cbsservis.tkgm.gov.tr/tkgm.ows/wms?SERVICE=WMS&VERSION=1.1.1";
+    const string Harita = "&LAYERS=TKGM:parseller&SRS=EPSG:4326&BBOX=35.805,40.648,35.820,40.660&WIDTH=800&HEIGHT=640&FORMAT=image/png&TRANSPARENT=true";
+}
+<section class="ders-bolum">
+    <h2>Aynı veri, farklı görünüm</h2>
+    <p>
+        WMS sunucusu veriyi bir <b>stil</b> kuralına göre çizer. Stiller <b>SLD</b> (Styled Layer Descriptor) adlı XML belgeleriyle tanımlanır.
+        Bir kural "şu koşuldaki nesneleri, şu ölçek aralığında, şu renkle çiz" der.
+    </p>
+</section>
+
+<section class="ders-bolum">
+    <h2>Lejant: GetLegendGraphic</h2>
+    <button class="dene" data-istek="@W&REQUEST=GetLegendGraphic&LAYER=TKGM:parseller&FORMAT=image/png"><i class="fa-solid fa-play"></i> Parsel lejantı</button>
+    <p>Lejanttaki her satır stildeki bir kuraldır: onaysız parseller, kesin koordinatlı onaylı parseller, geçici koordinatlı olanlar… Renk farkı bir veri farkını anlatır.</p>
+    <button class="dene ikincil" data-istek="@W&REQUEST=GetLegendGraphic&LAYER=TKGM:parseller&STYLE=hazineparsellerstyle&FORMAT=image/png"><i class="fa-solid fa-play"></i> hazineparsellerstyle lejantı</button>
+</section>
+
+<section class="ders-bolum">
+    <h2>Hazır stiller: STYLES</h2>
+    <p>GetCapabilities'te parseller katmanı için ilan edilen stillerle aynı alanı çizin ve farkları karşılaştırın:</p>
+    <div class="dugme-grubu">
+        <button class="dene ikincil" data-istek="@W&REQUEST=GetMap&STYLES=@(Harita)"><i class="fa-solid fa-play"></i> Varsayılan</button>
+        <button class="dene ikincil" data-istek="@W&REQUEST=GetMap&STYLES=hazineparsellerstyle@(Harita)"><i class="fa-solid fa-play"></i> hazineparsellerstyle</button>
+        <button class="dene ikincil" data-istek="@W&REQUEST=GetMap&STYLES=TKGM:parseller_style_v2@(Harita)"><i class="fa-solid fa-play"></i> parseller_style_v2</button>
+        <button class="dene ikincil" data-istek="@W&REQUEST=GetMap&STYLES=tematik_parsel_entegrasyon_durum@(Harita)"><i class="fa-solid fa-play"></i> tematik_parsel_entegrasyon_durum</button>
+    </div>
+    <p class="small text-muted">Bazı stiller yalnızca belirli koşuldaki parselleri boyar; boş görünen alanlar o koşula uymayan parsellerdir.</p>
+</section>
+
+<section class="ders-bolum">
+    <h2>Stilin içine bakmak: GetStyles</h2>
+    <button class="dene" data-istek="@W&REQUEST=GetStyles&LAYERS=TKGM:parseller"><i class="fa-solid fa-play"></i> Parsel stillerinin SLD'si</button>
+    <p>Ham yanıtta şunları arayın:</p>
+    <ul>
+        <li><code>&lt;sld:MaxScaleDenominator&gt;15000.0</code> — GetMap dersinde geniş alanın neden boş geldiğinin cevabı.</li>
+        <li><code>&lt;ogc:Filter&gt;</code> içinde <code>hazineparseldurum</code> — hazine stili renklerini bu sütuna göre seçer.</li>
+        <li><code>&lt;sld:CssParameter name="fill"&gt;</code> — kullanılan renkler.</li>
+    </ul>
+</section>
+
+<section class="ders-bolum">
+    <h2>Kendi stilinizi gönderin: SLD_BODY</h2>
+    <p>Sunucudaki stili değiştirmeden, isteğe kendi SLD belgenizi ekleyebilirsiniz. Aşağıdaki SLD tüm parselleri yarı saydam mora boyar:</p>
+<pre class="kod-blok kucuk"><code>&lt;StyledLayerDescriptor version='1.0.0' xmlns='http://www.opengis.net/sld'&gt;
+  &lt;NamedLayer&gt;&lt;Name&gt;TKGM:parseller&lt;/Name&gt;
+    &lt;UserStyle&gt;&lt;FeatureTypeStyle&gt;&lt;Rule&gt;
+      &lt;PolygonSymbolizer&gt;
+        &lt;Fill&gt;&lt;CssParameter name='fill'&gt;#7048e8&lt;/CssParameter&gt;
+              &lt;CssParameter name='fill-opacity'&gt;0.35&lt;/CssParameter&gt;&lt;/Fill&gt;
+        &lt;Stroke&gt;&lt;CssParameter name='stroke'&gt;#5f3dc4&lt;/CssParameter&gt;&lt;/Stroke&gt;
+      &lt;/PolygonSymbolizer&gt;
+    &lt;/Rule&gt;&lt;/FeatureTypeStyle&gt;&lt;/UserStyle&gt;
+  &lt;/NamedLayer&gt;
+&lt;/StyledLayerDescriptor&gt;</code></pre>
+    <button class="dene" data-istek="@W&REQUEST=GetMap&STYLES=@(Harita)&SLD_BODY=&lt;StyledLayerDescriptor version='1.0.0' xmlns='http://www.opengis.net/sld'&gt;&lt;NamedLayer&gt;&lt;Name&gt;TKGM:parseller&lt;/Name&gt;&lt;UserStyle&gt;&lt;FeatureTypeStyle&gt;&lt;Rule&gt;&lt;PolygonSymbolizer&gt;&lt;Fill&gt;&lt;CssParameter name='fill'&gt;#7048e8&lt;/CssParameter&gt;&lt;CssParameter name='fill-opacity'&gt;0.35&lt;/CssParameter&gt;&lt;/Fill&gt;&lt;Stroke&gt;&lt;CssParameter name='stroke'&gt;#5f3dc4&lt;/CssParameter&gt;&lt;/Stroke&gt;&lt;/PolygonSymbolizer&gt;&lt;/Rule&gt;&lt;/FeatureTypeStyle&gt;&lt;/UserStyle&gt;&lt;/NamedLayer&gt;&lt;/StyledLayerDescriptor&gt;"><i class="fa-solid fa-play"></i> Mor SLD ile çiz</button>
+    <p>Laboratuvardaki <code>SLD_BODY</code> değerinde renk kodunu değiştirip tekrar gönderin. Bu kendi SLD'niz ölçek kuralı içermediği için geniş alanlarda da çizer.</p>
+    <div class="kutu dikkat">
+        <div class="kutu-baslik"><i class="fa-solid fa-triangle-exclamation"></i> URL kodlama</div>
+        SLD içindeki <code>#</code>, <code>&lt;</code>, boşluk gibi karakterler URL'de kodlanmalıdır (<code>#</code> → <code>%23</code>); yoksa <code>#</code>'den sonrası sunucuya hiç gitmez.
+        Laboratuvar kutuda okunur hali gösterir ama gönderirken kodlar; "Kopyala" düğmesi kodlanmış adresi verir. Çok uzun SLD'ler URL uzunluk sınırlarına takılabilir; kısa tutun.
+    </div>
+</section>
+
+<section class="ders-bolum">
+    <h2>WMS'te filtreleme: CQL_FILTER</h2>
+    <p>CQL_FILTER yalnızca WFS'te değil, WMS'te de çalışır: sunucu sadece filtreye uyan nesneleri çizer.</p>
+    <button class="dene" data-istek="@W&REQUEST=GetMap&STYLES=@(Harita)&CQL_FILTER=adano='983' AND durum=3"><i class="fa-solid fa-play"></i> Yalnızca 983 adayı çiz</button>
+    <p>
+        CQL_FILTER ile SLD_BODY'yi birlikte kullanınca "seçili parseli kırmızıyla vurgula" özelliğini sunucuya yaptırmış olursunuz.
+        Uygulama dersindeki parsel ekranı tam olarak böyle çalışır.
+    </p>
+</section>

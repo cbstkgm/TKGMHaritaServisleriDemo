@@ -1,8 +1,124 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Ana sayfa";
+    var bolumler = Mufredat.Dersler.GroupBy(d => d.Bolum).ToList();
+    var sira = 0;
+    var ilkDers = Mufredat.Dersler[0];
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="kahraman">
+    <div class="container-xl">
+        <div class="row align-items-center g-4 g-lg-5">
+            <div class="col-lg-6">
+                <div class="kahraman-etiket"><span class="canli-nokta"></span> cbsservis.tkgm.gov.tr üzerinde canlı</div>
+                <h1>TKGM CBS servislerini, gerçek servise istek göndererek öğrenin.</h1>
+                <p class="kahraman-metin">
+                    WMS ile harita çizdirin, WFS ile parsel verisini çekin, CQL ile filtreleyin, haritada çizdiğiniz alanla sorgulayın.
+                    Her örnek TKGM'nin gerçek servisine gider; hata mesajları, sınırlar ve tuhaflıklar dahil.
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-lg btn-gonder" href="/ders/@ilkDers.Slug"><i class="fa-solid fa-graduation-cap"></i> İlk derse başla</a>
+                    <a class="btn btn-lg btn-outline-light" href="/Home/Laboratuvar"><i class="fa-solid fa-flask"></i> Laboratuvarı aç</a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="url-karti">
+                    <div class="url-karti-ust"><span></span><span></span><span></span><b>Bir WMS isteğinin anatomisi</b></div>
+                    <div class="url-karti-govde">
+                        <div class="ua-satir"><span class="ua-etiket">servis adresi</span><code class="ua-temel">https://cbsservis.tkgm.gov.tr/tkgm.ows/wms?</code></div>
+                        <div class="ua-satir"><span class="ua-etiket">hangi standart</span><code><b class="p1">SERVICE</b>=WMS&amp;<b class="p1">VERSION</b>=1.1.1</code></div>
+                        <div class="ua-satir"><span class="ua-etiket">ne istiyorum</span><code><b class="p3">REQUEST</b>=GetMap</code></div>
+                        <div class="ua-satir"><span class="ua-etiket">hangi katman</span><code><b class="p2">LAYERS</b>=TKGM:parseller&amp;<b class="p2">STYLES</b>=</code></div>
+                        <div class="ua-satir"><span class="ua-etiket">hangi alan</span><code><b class="p4">SRS</b>=EPSG:4326&amp;<b class="p4">BBOX</b>=35.805,40.648,35.820,40.660</code></div>
+                        <div class="ua-satir"><span class="ua-etiket">nasıl bir resim</span><code><b class="p5">WIDTH</b>=800&amp;<b class="p5">HEIGHT</b>=640&amp;<b class="p5">FORMAT</b>=image/png</code></div>
+                    </div>
+                    <a class="url-karti-alt" href="/Home/Laboratuvar?istek=@Uri.EscapeDataString("https://cbsservis.tkgm.gov.tr/tkgm.ows/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=TKGM:parseller&STYLES=&SRS=EPSG:4326&BBOX=35.805,40.648,35.820,40.660&WIDTH=800&HEIGHT=640&FORMAT=image/png&TRANSPARENT=true")&calistir=1">
+                        Bu isteği laboratuvarda gönder <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="gercekler">
+    <div class="container-xl">
+        <div class="gercek"><b>2</b><span>servis: WMS ve WFS</span></div>
+        <div class="gercek"><b>5</b><span>WMS katmanı, 4'ü WFS'te</span></div>
+        <div class="gercek"><b>1000</b><span>kayıt / istek üst sınırı</span></div>
+        <div class="gercek"><b>@Mufredat.Dersler.Count</b><span>ders, @Mufredat.ToplamGorev otomatik denetlenen görev</span></div>
+    </div>
+</section>
+
+<section class="container-xl bolum-araligi">
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="ozellik"><i class="fa-solid fa-satellite-dish"></i><h3>Gerçek servis, gerçek yanıt</h3><p>Uydurma örnek veri yok. Gördüğünüz her XML, resim ve hata TKGM'den geliyor; sizin projenizde de aynısını göreceksiniz.</p></div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="ozellik"><i class="fa-solid fa-microscope"></i><h3>URL anatomisi</h3><p>Her isteğin parametreleri tek tek açıklanır. Değeri değiştirin, tekrar gönderin, farkı görün.</p></div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="ozellik"><i class="fa-solid fa-bug"></i><h3>Hataları okumayı öğrenin</h3><p>TKGM'nin ExceptionReport mesajları çözümlenir: ne oldu, neden oldu, nasıl düzeltilir.</p></div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="ozellik"><i class="fa-solid fa-code"></i><h3>İstekten koda</h3><p>Laboratuvardaki her istek curl, Python, C#, Leaflet, OpenLayers ve QGIS için hazır koda dönüşür.</p></div>
+        </div>
+    </div>
+</section>
+
+<section class="container-xl bolum-araligi" id="mufredat">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+        <div>
+            <h2 class="bolum-baslik">Müfredat</h2>
+            <p class="text-muted mb-0">Sırayla ilerleyin; her ders bir öncekinin üzerine kurulur. Görevler laboratuvarda doğru isteği gönderdiğinizde kendiliğinden işaretlenir.</p>
+        </div>
+        <div class="ust-ilerleme koyu" data-toplam-ilerleme="@Mufredat.ToplamGorev">
+            <i class="fa-solid fa-trophy"></i>
+            <div class="ilerleme-cubugu"><div class="ilerleme-dolgu"></div></div>
+            <span class="ilerleme-metin">0/@Mufredat.ToplamGorev</span>
+        </div>
+    </div>
+
+    @foreach (var bolum in bolumler)
+    {
+        <h3 class="mufredat-bolumu">@bolum.Key</h3>
+        <div class="row g-3 mb-2">
+            @foreach (var ders in bolum)
+            {
+                sira++;
+                <div class="col-md-6 col-xl-4">
+                    <a class="ders-karti" href="/ders/@ders.Slug" data-ders-ilerleme="@string.Join(",", ders.Gorevler.Select(g => g.Kimlik))">
+                        <div class="ders-karti-ust">
+                            <span class="ders-karti-simge"><i class="fa-solid @ders.Ikon"></i></span>
+                            <span class="ders-karti-sira">Ders @sira</span>
+                            <span class="ders-karti-bitti"><i class="fa-solid fa-circle-check"></i></span>
+                        </div>
+                        <h4>@ders.Baslik</h4>
+                        <p>@ders.Ozet</p>
+                        <div class="ders-karti-alt">
+                            <span><i class="fa-regular fa-clock"></i> ~@ders.DakikaSuresi dk</span>
+                            <span class="ders-karti-ilerleme"><span class="ilerleme-cubugu"><span class="ilerleme-dolgu"></span></span><span class="ilerleme-metin">0/@ders.Gorevler.Count</span></span>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+</section>
+
+<section class="container-xl bolum-araligi">
+    <div class="tkgm-kurallar">
+        <div>
+            <h2 class="bolum-baslik">TKGM servisinin kendine özgü kuralları</h2>
+            <p class="text-muted">Genel OGC eğitimlerinde yazmayan, ancak TKGM ile çalışırken bilmeniz gereken davranışlar. Hepsi bu servis üzerinde tek tek denendi.</p>
+            <a class="btn btn-outline-primary" href="/Home/Rehber#tkgm-kurallari">Tamamını rehberde görün</a>
+        </div>
+        <ul>
+            <li><i class="fa-solid fa-layer-group"></i> WMS <code>LAYERS</code> tek katman kabul eder; iki katman "Katman bulunamadı" hatası verir.</li>
+            <li><i class="fa-solid fa-file-code"></i> WFS'te yalnızca GML2, GML3 ve KML çalışır; JSON kapalıdır.</li>
+            <li><i class="fa-solid fa-clock-rotate-left"></i> Parsellerin eski kayıtları da gelir; güncel olanlar için <code>durum=3</code>.</li>
+            <li><i class="fa-solid fa-eye-slash"></i> Yetki dışı veri hata değil, boş sonuç olarak döner.</li>
+            <li><i class="fa-solid fa-ruler"></i> <code>DWITHIN</code> mesafesi metre değil derece olarak yorumlanır.</li>
+        </ul>
+    </div>
+</section>

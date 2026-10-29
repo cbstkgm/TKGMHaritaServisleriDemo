@@ -1,7 +1,12 @@
+using owsLab.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Servisleri konteynere ekle
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
+builder.Services.Configure<TkgmOwsAyarlari>(builder.Configuration.GetSection(TkgmOwsAyarlari.Bolum));
 
 var app = builder.Build();
 
@@ -19,6 +24,11 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "ders",
+    pattern: "ders/{slug}",
+    defaults: new { controller = "Ders", action = "Goster" });
 
 app.MapControllerRoute(
     name: "default",

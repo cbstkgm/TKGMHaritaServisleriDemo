@@ -1,0 +1,71 @@
+@*
+    Ortak laboratuvar bileşeni. ViewData:
+      LabBaslangic : başlangıçta yüklenecek TKGM istek adresi
+      LabOtomatik  : true ise sayfa açılınca istek gönderilir
+      LabReferans  : false ise soluk referans parsel katmanı kapalı başlar
+      LabSinif     : kök öğeye eklenecek ek CSS sınıfı
+*@
+@{
+    var baslangic = ViewData["LabBaslangic"] as string ?? "https://cbsservis.tkgm.gov.tr/tkgm.ows/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetCapabilities";
+    var otomatik = (ViewData["LabOtomatik"] as bool?) == true ? "true" : "false";
+    var referans = (ViewData["LabReferans"] as bool?) == false ? "false" : "true";
+}
+<section class="lab @(ViewData["LabSinif"])" data-laboratuvar data-baslangic="@baslangic" data-otomatik="@otomatik" data-referans="@referans" aria-label="İstek laboratuvarı">
+    <div class="lab-ust">
+        <div class="lab-baslik">
+            <i class="fa-solid fa-flask"></i> Laboratuvar
+            <span class="lab-servis-rozeti" data-rol="servisRozeti">WMS</span>
+        </div>
+        <div class="d-flex gap-1">
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-light dropdown-toggle" data-bs-toggle="dropdown"><i class="fa-solid fa-bolt"></i> Hazır istekler</button>
+                <ul class="dropdown-menu dropdown-menu-end sablon-menusu" data-rol="sablonlar"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="lab-url">
+        <label class="lab-etiket" for="labUrl-@ViewData["LabKimlik"]">İstek adresi <span class="text-muted fw-normal">(düzenleyebilirsiniz · Ctrl+Enter gönderir)</span></label>
+        <textarea id="labUrl-@ViewData["LabKimlik"]" class="form-control lab-url-alani" data-rol="url" rows="3" spellcheck="false"></textarea>
+        <div class="lab-url-dugmeler">
+            <button type="button" class="btn btn-sm btn-gonder" data-eylem="gonder"><i class="fa-solid fa-paper-plane"></i> Gönder</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-eylem="haritadan" title="BBOX/WIDTH/HEIGHT değerlerini haritanın görünümünden doldur"><i class="fa-solid fa-crop-simple"></i> BBOX'u haritadan al</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-eylem="kopyala"><i class="fa-regular fa-copy"></i> Kopyala</button>
+            <a class="btn btn-sm btn-outline-secondary" data-rol="tkgmLink" href="#" target="_blank" rel="noopener" title="İsteği doğrudan TKGM'ye gönderir; tarayıcı kullanıcı adı ve şifre soracaktır"><i class="fa-solid fa-arrow-up-right-from-square"></i> TKGM'de aç</a>
+        </div>
+    </div>
+
+    <div class="lab-harita-kabi">
+        <div class="lab-harita" data-rol="harita"></div>
+        <div class="lab-yukleniyor d-none" data-rol="yukleniyor"><span class="spinner-border spinner-border-sm"></span> TKGM'den yanıt bekleniyor…</div>
+        <div class="lab-harita-alt">
+            <span class="font-monospace" data-rol="koordinat">Haritaya tıklayın veya ◻ ile alan çizin</span>
+            <span class="d-flex gap-3 align-items-center">
+                <label class="form-check-label small"><input type="checkbox" class="form-check-input me-1" data-rol="referans">Referans parseller</label>
+                <button type="button" class="btn btn-link btn-sm p-0" data-eylem="temizle">Temizle</button>
+            </span>
+        </div>
+    </div>
+
+    <div class="lab-yanit">
+        <div class="lab-durum" data-rol="durum"><span class="text-muted small">Henüz istek gönderilmedi.</span></div>
+        <div class="lab-sekmeler" role="tablist">
+            <button type="button" class="lab-sekme" data-eylem="sekme" data-sekme="parametre">URL anatomisi <span class="sekme-sayi" data-rol="parametreSayisi"></span></button>
+            <button type="button" class="lab-sekme aktif" data-eylem="sekme" data-sekme="ozet">Çözümleme</button>
+            <button type="button" class="lab-sekme" data-eylem="sekme" data-sekme="ham">Ham yanıt</button>
+            <button type="button" class="lab-sekme" data-eylem="sekme" data-sekme="tablo">Tablo <span class="sekme-sayi"></span></button>
+            <button type="button" class="lab-sekme" data-eylem="sekme" data-sekme="kod">Kod</button>
+        </div>
+        <div class="lab-panel d-none" data-rol="panel-parametre">
+            <p class="small text-muted mb-1">İstek adresindeki her parametre ve anlamı. Değerleri burada değiştirdiğinizde adres de güncellenir.</p>
+            <table class="table table-sm param-tablosu mb-1"><tbody data-rol="parametreTablosu"></tbody></table>
+            <button type="button" class="btn btn-sm btn-link px-0" data-eylem="parametreEkle"><i class="fa-solid fa-plus"></i> Parametre ekle</button>
+        </div>
+        <div class="lab-panel" data-rol="panel-ozet">
+            <p class="small text-muted mb-0">Bir istek gönderdiğinizde TKGM'nin yanıtı burada çözümlenip açıklanır.</p>
+        </div>
+        <div class="lab-panel d-none" data-rol="panel-ham"></div>
+        <div class="lab-panel d-none" data-rol="panel-tablo"></div>
+        <div class="lab-panel d-none" data-rol="panel-kod"></div>
+    </div>
+</section>
