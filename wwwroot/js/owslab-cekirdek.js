@@ -11,19 +11,24 @@ const OwsLab = (() => {
 
     // Sayfa düzeni (_Layout) tarafından yazılır. GitHub Pages sürümünde site bir alt dizinde (ör. /owsLab/) durur
     // ve istekler TKGM kimliğini ekleyen Türkiye'deki kurum sunucusunun /OwsProxy adresine gider.
-    // proxy null ise (proxy'siz statik yayın) canlı istekler kapalıdır.
+    // proxy null ise (proxy'siz statik yayın) istekler doğrudan TKGM'ye gider: kullanıcı TKGM'ye bir kez
+    // tarayıcının şifre penceresiyle giriş yapar, tarayıcı da sonraki isteklere bu kimliği kendisi ekler.
     const AYAR = Object.assign({ kok: "/", proxy: "/OwsProxy" }, window.OwsLabAyar);
-    const canliAcik = Boolean(AYAR.proxy);
+    const dogrudan = !AYAR.proxy;
 
     /** Site köküne göre adres üretir: siteAdresi("data/x.gml") → "/owsLab/data/x.gml". */
     function siteAdresi(yol) {
         return AYAR.kok.replace(/\/$/, "") + "/" + yol.replace(/^\//, "");
     }
 
-    /** Proxy üzerinden servis kökü: proxyKoku("wms") → "/OwsProxy/wms" veya "https://sunucu/OwsProxy/wms". */
+    /** İsteklerin gideceği servis kökü: "/OwsProxy/wms", "https://sunucu/OwsProxy/wms" ya da doğrudan TKGM. */
     function proxyKoku(servis) {
-        return `${AYAR.proxy}/${servis}`;
+        return dogrudan ? `https://cbsservis.tkgm.gov.tr/tkgm.ows/${servis}` : `${AYAR.proxy}/${servis}`;
     }
+
+    /** Doğrudan modda giriş için açılan örnek sorgu: Amasya / Merkez / Hızırpaşa, 983 ada, güncel parseller. */
+    const GIRIS_SORGUSU = "https://cbsservis.tkgm.gov.tr/tkgm.ows/wfs?SERVICE=WFS&VERSION=1.0.0&REQUEST=GetFeature&TYPENAME=TKGM:parseller"
+        + "&PROPERTYNAME=adano,parselno,tapualan,durum,geom&CQL_FILTER=" + encodeURIComponent("tapumahalleref=126978 AND adano='983' AND durum=3");
 
     // --- 1. TKGM SERVİS BİLGİLERİ ------------------------------------------------
 
@@ -221,6 +226,43 @@ const OwsLab = (() => {
 
     // --- 3. İSTEK GÖNDERME VE YANIT SINIFLANDIRMA -----------------------------------
 
+    const GIRIS_HATASI = {
+        baslik: "TKGM'ye giriş yapılmadı",
+        aciklama: "Bu sayfa TKGM'ye doğrudan bağlanır. Tarayıcı, TKGM'ye giriş yapılmadan isteğin yanıtını sayfaya vermez.",
+        cozum: "Sayfanın üstündeki \"TKGM'ye giriş yap\" düğmesine basın, açılan sekmede kullanıcı adı cbsdemouser, şifre q3b8f+r* girin, sonra isteği yeniden gönderin.",
+        ham: ""
+    };
+
+    /** Doğrudan modda giriş durumunu sayfa üstündeki banda yansıtır ve dinleyenlere (haritalar) haber verir. */
+    let girisYapildi = null;
+    function girisDurumu(basarili) {
+        if (girisYapildi === basarili) return;
+        girisYapildi = basarili;
+        document.documentElement.classList.toggle("tkgm-giris-yapildi", basarili);
+        if (basarili) document.dispatchEvent(new CustomEvent("owslab:giris"));
+    }
+
+    /** Giriş sekmesinden dönülünce bağlantıyı küçük bir istekle yeniden dener. */
+    async function girisiDenetle() {
+        try {
+            const r = await fetch(GIRIS_SORGUSU, { credentials: "include" });
+            girisDurumu(r.status !== 401);
+        } catch {
+            girisDurumu(false);
+        }
+        return girisYapildi;
+    }
+
+    if (dogrudan) {
+        document.addEventListener("click", e => {
+            if (!e.target.closest("[data-tkgm-giris]")) return;
+            // Kullanıcı açılan sekmede şifreyi girip bu sekmeye döndüğünde bağlantı kendiliğinden denetlenir
+            window.addEventListener("focus", async () => {
+                if (await girisiDenetle()) bildir("TKGM bağlantısı kuruldu; istekler artık çalışır.", "basari");
+            }, { once: true });
+        });
+    }
+
     async function istekGonder(tkgmAdresi) {
         // Okunur biçimde yazılmış adresler de (# boşluk < > içeren) doğru kodlanarak gönderilir
         const ayrisan = istekAyristir(tkgmAdresi);
@@ -245,16 +287,6 @@ const OwsLab = (() => {
             hata: null
         };
 
-        if (ayrisan.servis && !canliAcik) {
-            sonuc.hata = {
-                baslik: "Bu yayında canlı istek kapalı",
-                aciklama: "Bu kopya proxy'siz yayınlandı. TKGM, kimlik isteyen servisine başka bir siteden tarayıcıyla erişime izin vermediği için istek gönderilemiyor.",
-                cozum: "\"TKGM'de aç\" düğmesiyle isteği yeni sekmede açıp demo hesapla (cbsdemouser) giriş yapın; ya da Kopyala ile alıp QGIS, curl, Python gibi araçlarda çalıştırın.",
-                ham: ""
-            };
-            return sonuc;
-        }
-
         if (!proxy) {
             sonuc.hata = {
                 baslik: "Geçersiz servis adresi",
@@ -268,10 +300,19 @@ const OwsLab = (() => {
         const baslangic = performance.now();
         let yanit;
         try {
-            yanit = await fetch(proxy);
+            yanit = await fetch(proxy, dogrudan ? { credentials: "include" } : undefined);
         } catch (hata) {
-            sonuc.hata = { baslik: "Bağlantı hatası", aciklama: hata.message, cozum: "İnternet bağlantınızı ve uygulamanın çalıştığını kontrol edin.", ham: "" };
+            sonuc.hata = dogrudan ? GIRIS_HATASI : { baslik: "Bağlantı hatası", aciklama: hata.message, cozum: "İnternet bağlantınızı ve uygulamanın çalıştığını kontrol edin.", ham: "" };
+            if (dogrudan) girisDurumu(false);
             return sonuc;
+        }
+        if (dogrudan) {
+            girisDurumu(yanit.status !== 401);
+            if (yanit.status === 401) {
+                sonuc.durum = 401;
+                sonuc.hata = GIRIS_HATASI;
+                return sonuc;
+            }
         }
 
         const govde = await yanit.blob();
@@ -756,7 +797,7 @@ Not: Birden fazla katmanı tek seferde seçmeyin; her katmanı ayrı ekleyin.`;
 
     return {
         TKGM, KATMANLAR, WMS_STILLERI, PARAMETRELER, SUTUNLAR, KOD_DILLERI,
-        istekAyristir, istekOlustur, parametreAl, parametreSozlugu, proxyAdresi, proxyKoku, siteAdresi, canliAcik, degerKodla,
+        istekAyristir, istekOlustur, parametreAl, parametreSozlugu, proxyAdresi, proxyKoku, siteAdresi, dogrudan, GIRIS_SORGUSU, degerKodla,
         istekGonder, gmlGeoJson, kmlGeoJson,
         xmlGirintile, xmlVurgula, htmlKacis,
         kodUret,

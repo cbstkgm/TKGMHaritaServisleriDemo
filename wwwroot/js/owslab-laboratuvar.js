@@ -72,7 +72,9 @@ const Laboratuvar = (() => {
             this.referansKatman = L.tileLayer.wms(OwsLab.proxyKoku("wms"), {
                 layers: "TKGM:parseller", styles: "", format: "image/png", transparent: true, version: "1.1.1", opacity: 0.45, maxZoom: 20
             });
-            if (this.kok.dataset.referans !== "false" && OwsLab.canliAcik) this.referansKatman.addTo(this.harita);
+            if (this.kok.dataset.referans !== "false") this.referansKatman.addTo(this.harita);
+            // Doğrudan modda giriş yapılınca karolar kimlikle yeniden istenir
+            document.addEventListener("owslab:giris", () => this.referansKatman.redraw());
 
             this.sonucKatmani = L.featureGroup().addTo(this.harita);
             this.cizimKatmani = L.featureGroup().addTo(this.harita);

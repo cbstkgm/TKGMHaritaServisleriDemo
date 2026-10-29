@@ -85,8 +85,12 @@ h1, h2, h3, h4 { letter-spacing: -.015em; }
 .alt-bilgi { background: #fff; border-top: 1px solid var(--cizgi); padding: 1rem 0; font-size: .8rem; color: var(--metin-soluk); margin-top: 3rem; }
 .alt-bilgi-link { font-size: .8rem; color: var(--metin-soluk); }
 
-.canli-kapali-bandi { background: var(--sari-acik); border-bottom: 1px solid #ffe066; color: #7a4a00; font-size: .85rem; padding: .55rem 1.25rem; }
-.canli-kapali-bandi i { margin-right: .35rem; }
+.tkgm-giris-bandi { background: var(--sari-acik); border-bottom: 1px solid #ffe066; color: #7a4a00; font-size: .85rem; padding: .5rem 1.25rem; }
+.tkgm-giris-bandi i { margin-right: .35rem; }
+.tkgm-giris-bandi .giris-tamam { display: none; color: #146c43; }
+.tkgm-giris-yapildi .tkgm-giris-bandi { background: #e9f7ef; border-color: #b7e4c7; }
+.tkgm-giris-yapildi .tkgm-giris-bandi .giris-bekliyor { display: none; }
+.tkgm-giris-yapildi .tkgm-giris-bandi .giris-tamam { display: inline; }
 
 /* --- Bildirimler ------------------------------------------------------------ */
 

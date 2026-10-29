@@ -3,7 +3,7 @@
 # Bir kez yapılacaklar:
 #   1. Uygulamayı Türkiye'deki kurum sunucusuna kurun (README → "Kurum sunucusuna kurulum").
 #   2. Settings → Secrets and variables → Actions → Variables: OWSLAB_PROXY_ADRESI = https://<sunucu>/OwsProxy
-#      (tanımlanmazsa site canlı istekler kapalı olarak yayınlanır)
+#      (tanımlanmazsa site TKGM'ye doğrudan bağlanır; kullanıcı TKGM'ye tarayıcıdan bir kez giriş yapar)
 #   3. Settings → Pages → Source: GitHub Actions
 name: GitHub Pages
 
@@ -37,7 +37,7 @@ jobs:
           YOL_TABANI: /${{ github.event.repository.name }}
         run: |
           if [ -z "$PROXY_ADRESI" ]; then
-            echo "::warning::OWSLAB_PROXY_ADRESI tanımlı değil; site canlı TKGM istekleri kapalı olarak yayınlanıyor."
+            echo "::notice::OWSLAB_PROXY_ADRESI tanımlı değil; site TKGM'ye doğrudan bağlanır (kullanıcı TKGM'ye bir kez giriş yapar)."
           fi
           scripts/statik-yayin.sh _site
 

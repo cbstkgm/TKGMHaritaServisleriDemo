@@ -1,9 +1,9 @@
 @inject Microsoft.Extensions.Options.IOptions<TkgmOwsAyarlari> OwsAyarlari
 @{
     var proxyAyari = OwsAyarlari.Value.ProxyAdresi;
-    // "yok": proxy'siz statik yayın (GitHub Pages); canlı TKGM istekleri kapalıdır
-    var canliKapali = string.Equals(proxyAyari, "yok", StringComparison.OrdinalIgnoreCase);
-    string? proxyKoku = canliKapali ? null : string.IsNullOrWhiteSpace(proxyAyari) ? Url.Content("~/OwsProxy") : proxyAyari.TrimEnd('/');
+    // "yok": proxy'siz statik yayın (GitHub Pages); tarayıcı TKGM'ye doğrudan, kullanıcının girdiği kimlikle bağlanır
+    var dogrudan = string.Equals(proxyAyari, "yok", StringComparison.OrdinalIgnoreCase);
+    string? proxyKoku = dogrudan ? null : string.IsNullOrWhiteSpace(proxyAyari) ? Url.Content("~/OwsProxy") : proxyAyari.TrimEnd('/');
 }
 <!DOCTYPE html>
 <html lang="tr">
@@ -88,13 +88,16 @@
         </nav>
     </header>
 
-    @if (canliKapali)
+    @if (dogrudan)
     {
-        <div class="canli-kapali-bandi">
-            <i class="fa-solid fa-circle-info"></i>
-            Bu yayında canlı TKGM istekleri kapalı: dersleri ve rehberi okuyabilir, istek adreslerini kurup kopyalayabilirsiniz;
-            ancak laboratuvar ve parsel uygulaması TKGM'ye istek gönderemez. Tarayıcılar, TKGM'nin kimlik isteyen servisine
-            başka bir siteden erişime izin vermez; canlı sürüm Türkiye'deki bir sunucuda çalışır.
+        <div class="tkgm-giris-bandi">
+            <span class="giris-bekliyor">
+                <i class="fa-solid fa-key"></i>
+                Canlı istekler için TKGM'ye bir kez giriş yapın: düğmeye basın, açılan sekmede kullanıcı adı <code>cbsdemouser</code>,
+                şifre <code>q3b8f+r*</code> girin ve bu sekmeye dönün.
+                <a class="btn btn-sm btn-warning ms-1" data-tkgm-giris target="_blank" rel="noopener" id="tkgmGirisDugmesi"><i class="fa-solid fa-arrow-up-right-from-square"></i> TKGM'ye giriş yap</a>
+            </span>
+            <span class="giris-tamam"><i class="fa-solid fa-circle-check"></i> TKGM'ye bağlısınız; istekler doğrudan cbsservis.tkgm.gov.tr'ye gidiyor.</span>
         </div>
     }
     <main>
@@ -120,6 +123,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
     <script>window.OwsLabAyar = @Json.Serialize(new { kok = Url.Content("~/"), proxy = proxyKoku });</script>
     <script src="~/js/owslab-cekirdek.js" asp-append-version="true"></script>
+    @if (dogrudan)
+    {
+        <script>document.getElementById("tkgmGirisDugmesi").href = OwsLab.GIRIS_SORGUSU;</script>
+    }
     <script src="~/js/owslab-kurallar.js" asp-append-version="true"></script>
     <script src="~/js/owslab-laboratuvar.js" asp-append-version="true"></script>
     <script src="~/js/owslab-gorevler.js" asp-append-version="true"></script>

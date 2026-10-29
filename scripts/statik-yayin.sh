@@ -11,7 +11,7 @@ set -euo pipefail
 CIKTI="${1:-_site}"
 YOL_TABANI="${YOL_TABANI:-/owsLab}"
 PORT="${PORT:-5299}"
-# Boş bırakılırsa site canlı istekler kapalı olarak üretilir (dersler ve rehber çalışır, laboratuvar istek gönderemez)
+# Boş bırakılırsa site TKGM'ye doğrudan bağlanır: kullanıcı sayfadaki düğmeyle TKGM'ye bir kez giriş yapar
 PROXY_ADRESI="${PROXY_ADRESI:-yok}"
 
 KOK="$(cd "$(dirname "$0")/.." && pwd)"

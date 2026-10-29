@@ -116,11 +116,6 @@
         ["ilNotu", "ilceNotu", "adaNotu"].forEach(r => sec(r).classList.add("d-none"));
         ["mahalleBilgi", "parselBilgi"].forEach(r => { sec(r).innerHTML = ""; });
         ["ilceSecimi", "mahalleSecimi", "adaSecimi", "parselSecimi"].forEach(r => { sec(r).disabled = true; });
-        if (!OwsLab.canliAcik) {
-            adimDurumu(1, "hata");
-            OwsLab.bildir("Bu yayında canlı TKGM istekleri kapalı; parsel uygulaması yalnızca canlı sürümde çalışır.");
-            return;
-        }
         adimDurumu(1, "calisiyor");
 
         const sonuc = await idariListeGetir({ adim: 1, katman: "TKGM:iller", baslik: "İl listesi", notRol: "ilNotu" });
@@ -262,7 +257,7 @@
 
         const cql = `adano='${ada}' AND parselno='${parselNo}' AND durum=3${mahalleFiltresi}`;
         if (vurguKatmani) vurguKatmani.remove();
-        if (OwsLab.canliAcik) vurguKatmani = L.tileLayer.wms(OwsLab.proxyKoku("wms"), {
+        vurguKatmani = L.tileLayer.wms(OwsLab.proxyKoku("wms"), {
             layers: "TKGM:parseller", styles: "", format: "image/png", transparent: true, version: "1.1.1",
             CQL_FILTER: cql, SLD_BODY: VURGU_SLD, maxZoom: 20
         }).addTo(harita);
