@@ -41,12 +41,55 @@ TKGM demo hesabı `appsettings.json` içindeki `TkgmOws` bölümündedir. Kendi 
 | URL ayrıştırma, hata çözümleme, GML/KML → GeoJSON, kod üretimi | `wwwroot/js/owslab-cekirdek.js` |
 | Laboratuvar bileşeni | `wwwroot/js/owslab-laboratuvar.js` |
 | Görev denetimi | `wwwroot/js/owslab-gorevler.js` |
-| GitHub Pages proxy'si (Cloudflare Worker) | `proxy/cloudflare-worker.js` |
 | Statik kopya üretimi ve yayın | `scripts/statik-yayin.sh`, `.github/workflows/pages.yml` |
 
 Tarayıcı, Basic Authentication başlıklı istekleri CORS ön isteği nedeniyle doğrudan TKGM'ye gönderemez (TKGM `OPTIONS`
 isteğine 401 döner). Bu yüzden kimliği ekleyen bir proxy gerekir: `dotnet run` ile çalışırken `OwsProxyController`,
-GitHub Pages sürümünde `proxy/cloudflare-worker.js`.
+GitHub Pages sürümünde Türkiye'deki kurum sunucusuna kurulan aynı uygulamanın `/OwsProxy` adresi.
+
+## Kurum sunucusuna kurulum
+
+TKGM CBS Servisi **yalnızca Türkiye IP adreslerine** yanıt verir; yurt dışındaki bulut servisleri (Cloudflare, Vercel,
+GitHub Actions …) TKGM'ye bağlanamaz. Bu yüzden canlı istekleri ileten uygulama Türkiye'deki bir sunucuda çalışmalıdır.
+
+**Paketi hazırlama** (geliştirici bilgisayarında):
+
+```bash
+dotnet publish -c Release -o yayin/owsLab
+```
+
+Çıkan `yayin/owsLab` klasörü Windows ve Linux'ta aynen çalışır.
+
+**Windows Server + IIS:**
+
+1. Sunucuya [ASP.NET Core 8 Hosting Bundle](https://dotnet.microsoft.com/download/dotnet/8.0) kurun, ardından `iisreset`.
+2. `owsLab` klasörünü sunucuya kopyalayın (ör. `C:\inetpub\owsLab`).
+3. IIS Yöneticisi → yeni site (veya mevcut siteye *Uygulama ekle*), fiziksel yol bu klasör.
+   Uygulama havuzunda *.NET CLR sürümü*: **Yönetilen kod yok**.
+4. HTTPS bağlaması ekleyin (GitHub Pages HTTPS olduğu için proxy de HTTPS olmalıdır).
+
+**Linux:**
+
+```bash
+sudo apt install aspnetcore-runtime-8.0
+ASPNETCORE_URLS=http://127.0.0.1:5000 dotnet /opt/owsLab/owsLab.dll
+```
+
+Önüne HTTPS sonlandıran bir nginx/Apache koyun ve bir systemd hizmetiyle sürekli çalıştırın.
+
+**Sunucuda gereken ağ izni:** sunucudan `cbsservis.tkgm.gov.tr:443` adresine giden HTTPS trafiği açık olmalıdır.
+
+Kurulumdan sonra `https://<sunucu>/` portalın tamamıdır; GitHub Pages olmadan da kullanılabilir.
+`https://<sunucu>/OwsProxy/wms?SERVICE=WMS&REQUEST=GetCapabilities` XML döndürüyorsa proxy çalışıyordur.
+
+**GitHub Pages ile birlikte kullanmak için** GitHub'daki `OWSLAB_PROXY_ADRESI` değişkenine `https://<sunucu>/OwsProxy`
+yazın. Proxy'yi hangi sitelerin çağırabileceği `appsettings.json` → `TkgmOws:IzinliKokenler` listesindedir
+(varsayılan: `https://cbstkgm.github.io`).
+
+> **Demo hesap sınırı:** `cbsdemouser` hesabının günlük istek kotası vardır; aşıldığında TKGM
+> "günlük servis kullanım limitinizi aştınız" hatası döner. Herkese açık bir yayın için TKGM'den kuruma ait
+> ayrı bir hesap alıp `TkgmOws:KullaniciAdi` / `TkgmOws:Sifre` değerlerini (veya `TkgmOws__KullaniciAdi`,
+> `TkgmOws__Sifre` ortam değişkenlerini) değiştirin.
 
 ## GitHub Pages
 
@@ -55,22 +98,13 @@ GitHub Pages yalnızca statik dosya sunduğu için site iki parçaya ayrılır:
 | Parça | Nerede | Dosya |
 |---|---|---|
 | Sayfalar (HTML/CSS/JS) | GitHub Pages | `scripts/statik-yayin.sh` üretir, `.github/workflows/pages.yml` yayınlar |
-| TKGM proxy'si | Cloudflare Workers (ücretsiz plan yeterli) | `proxy/cloudflare-worker.js`, `proxy/wrangler.toml` |
+| TKGM proxy'si | Türkiye'deki kurum sunucusu (yukarıya bakın) | `Controllers/OwsProxyController.cs` |
 
-**1. Proxy'yi yayınlayın** (Cloudflare hesabı gerekir):
-
-```bash
-cd proxy
-npx wrangler login
-npx wrangler deploy
-```
-
-Komut `https://owslab-proxy.<hesabiniz>.workers.dev` gibi bir adres verir. `wrangler.toml` içindeki `IZINLI_KOKENLER`
-Worker'ı yalnızca sizin sitenizden çağrılabilir yapar; farklı bir GitHub kullanıcı adı kullanıyorsanız güncelleyin.
+**1. Proxy'yi kurun:** yukarıdaki "Kurum sunucusuna kurulum" bölümü.
 
 **2. GitHub ayarları** (depo → Settings):
 
-- *Secrets and variables → Actions → Variables*: `OWSLAB_PROXY_ADRESI` = Worker adresi
+- *Secrets and variables → Actions → Variables*: `OWSLAB_PROXY_ADRESI` = `https://<sunucu>/OwsProxy`
 - *Pages → Source*: **GitHub Actions**
 
 **3. Yayın:** `main` dalına her push'ta site `https://<kullanici>.github.io/<depo>/` adresine yeniden yayınlanır
@@ -79,7 +113,7 @@ Worker'ı yalnızca sizin sitenizden çağrılabilir yapar; farklı bir GitHub k
 Statik kopyayı yerelde üretmek için:
 
 ```bash
-PROXY_ADRESI=https://owslab-proxy.hesabiniz.workers.dev YOL_TABANI=/owsLab scripts/statik-yayin.sh _site
+PROXY_ADRESI=https://sunucu.kurum.gov.tr/OwsProxy YOL_TABANI=/owsLab scripts/statik-yayin.sh _site
 ```
 
 İlerleme kaydı tarayıcının `localStorage`'ında tutulduğundan statik sürümde de aynen çalışır.

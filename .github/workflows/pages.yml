@@ -1,8 +1,8 @@
 # owsLab'in statik kopyasını üretip GitHub Pages'e yayınlar.
 #
 # Bir kez yapılacaklar:
-#   1. proxy/ klasöründeki Worker'ı Cloudflare'e yayınlayın (README → "GitHub Pages").
-#   2. Settings → Secrets and variables → Actions → Variables: OWSLAB_PROXY_ADRESI = Worker adresi
+#   1. Uygulamayı Türkiye'deki kurum sunucusuna kurun (README → "Kurum sunucusuna kurulum").
+#   2. Settings → Secrets and variables → Actions → Variables: OWSLAB_PROXY_ADRESI = https://<sunucu>/OwsProxy
 #   3. Settings → Pages → Source: GitHub Actions
 name: GitHub Pages
 
@@ -36,7 +36,7 @@ jobs:
           YOL_TABANI: /${{ github.event.repository.name }}
         run: |
           if [ -z "$PROXY_ADRESI" ]; then
-            echo "::error::OWSLAB_PROXY_ADRESI değişkeni tanımlı değil. proxy/ klasöründeki Worker'ı yayınlayıp adresini Settings → Variables'a ekleyin."
+            echo "::error::OWSLAB_PROXY_ADRESI değişkeni tanımlı değil. Kurum sunucusundaki /OwsProxy adresini Settings → Variables'a ekleyin."
             exit 1
           fi
           scripts/statik-yayin.sh _site

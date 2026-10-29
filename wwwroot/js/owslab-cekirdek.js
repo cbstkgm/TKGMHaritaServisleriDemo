@@ -10,7 +10,7 @@ const OwsLab = (() => {
     "use strict";
 
     // Sayfa düzeni (_Layout) tarafından yazılır. GitHub Pages sürümünde site bir alt dizinde (ör. /owsLab/) durur
-    // ve istekler TKGM kimliğini ekleyen harici proxy'ye (proxy/cloudflare-worker.js) gider.
+    // ve istekler TKGM kimliğini ekleyen Türkiye'deki kurum sunucusunun /OwsProxy adresine gider.
     const AYAR = Object.assign({ kok: "/", proxy: "/OwsProxy" }, window.OwsLabAyar);
 
     /** Site köküne göre adres üretir: siteAdresi("data/x.gml") → "/owsLab/data/x.gml". */
@@ -18,7 +18,7 @@ const OwsLab = (() => {
         return AYAR.kok.replace(/\/$/, "") + "/" + yol.replace(/^\//, "");
     }
 
-    /** Proxy üzerinden servis kökü: proxyKoku("wms") → "/OwsProxy/wms" veya "https://…workers.dev/wms". */
+    /** Proxy üzerinden servis kökü: proxyKoku("wms") → "/OwsProxy/wms" veya "https://sunucu/OwsProxy/wms". */
     function proxyKoku(servis) {
         return `${AYAR.proxy}/${servis}`;
     }

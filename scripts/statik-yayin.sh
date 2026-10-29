@@ -2,15 +2,16 @@
 # owsLab'in GitHub Pages'e konacak statik kopyasını üretir.
 #
 # Uygulama yerelde çalıştırılır, tüm sayfalar HTML olarak indirilir ve wwwroot ile birlikte
-# çıktı klasörüne yazılır. Canlı TKGM istekleri tarayıcıdan PROXY_ADRESI'ndeki Worker'a gider.
+# çıktı klasörüne yazılır. Canlı TKGM istekleri tarayıcıdan PROXY_ADRESI'ndeki proxy'ye (Türkiye'deki
+# kurum sunucusunda çalışan bu uygulamanın /OwsProxy adresi) gider.
 #
-# Kullanım:  PROXY_ADRESI=https://owslab-proxy.<hesap>.workers.dev YOL_TABANI=/owsLab scripts/statik-yayin.sh [cikti]
+# Kullanım:  PROXY_ADRESI=https://sunucu.kurum.gov.tr/OwsProxy YOL_TABANI=/owsLab scripts/statik-yayin.sh [cikti]
 set -euo pipefail
 
 CIKTI="${1:-_site}"
 YOL_TABANI="${YOL_TABANI:-/owsLab}"
 PORT="${PORT:-5299}"
-: "${PROXY_ADRESI:?PROXY_ADRESI tanımlı değil - proxy/cloudflare-worker.js Worker adresini verin}"
+: "${PROXY_ADRESI:?PROXY_ADRESI tanımlı değil - kurum sunucusundaki /OwsProxy adresini verin}"
 
 KOK="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$KOK"

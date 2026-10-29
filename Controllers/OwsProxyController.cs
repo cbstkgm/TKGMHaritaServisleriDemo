@@ -43,6 +43,15 @@ public class OwsProxyController : Controller
             return NotFound($"TKGM CBS Servisi yalnızca WMS ve WFS yayınlar. '{servis}' adresi yoktur.");
         }
 
+        // GitHub Pages'teki statik kopya bu proxy'yi başka bir kökenden çağırır
+        string koken = Request.Headers.Origin.ToString();
+        if (koken.Length > 0 && _ayarlar.IzinliKokenler.Contains(koken, StringComparer.OrdinalIgnoreCase))
+        {
+            Response.Headers.AccessControlAllowOrigin = koken;
+            Response.Headers.AccessControlExposeHeaders = "X-Owslab-Hedef, X-Owslab-Sure-Ms, X-Owslab-Onbellek";
+            Response.Headers.Vary = "Origin";
+        }
+
         string sorgu = Request.QueryString.HasValue ? Request.QueryString.Value! : string.Empty;
         string hedefAdres = $"{_ayarlar.TemelAdres.TrimEnd('/')}/{servis.ToLowerInvariant()}{sorgu}";
 
